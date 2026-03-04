@@ -142,12 +142,12 @@ classDiagram
     Jugador --> Entidad
     EntidadEnemigo --> Entidad
     Jefe --> EntidadEnemigo
-    PresentadorJuego --> Jugador
-    PresentadorJuego --> TileManager
-    PresentadorJuego --> EntidadEnemigo
-    PresentadorJuego --> Jefe
-    PresentadorJuego --> PresentadorCombate
-    PresentadorCombate --> Minijuego
+    GamePresenter --> Jugador
+    GamePresenter --> TileManager
+    GamePresenter --> EnemigoEntidad
+    GamePresenter --> Boss
+    GamePresenter --> CombatPresenter
+    CombatPresenter --> Minijuego
 ```
 
 ---
