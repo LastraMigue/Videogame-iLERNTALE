@@ -1,23 +1,42 @@
 package equipoilerntale.view;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Dimension;
 
 public class MainFrame extends JFrame {
 
+    private CardLayout cardLayout;
+    private JPanel mainContainer;
+
     public MainFrame() {
-        // Set the title of the window
+        // Configuración básica de la ventana
         setTitle("iLERNTALE");
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setResizable(false);
 
-        // Ensure the application exits when the window is closed
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Setup del CardLayout (Gestor de pantallas)
+        cardLayout = new CardLayout();
+        mainContainer = new JPanel(cardLayout);
 
-        // Set an initial size
-        setSize(800, 600);
+        // Creamos un panel temporal negro (Base para feature)
+        JPanel blackScreen = new JPanel();
+        blackScreen.setBackground(Color.BLACK);
+        blackScreen.setPreferredSize(new Dimension(800, 600));
 
-        // Center the window on the screen
+        // Añadimos el panel al contenedor
+        mainContainer.add(blackScreen, "BASE");
+
+        add(mainContainer);
+        pack();
         setLocationRelativeTo(null);
-
-        // Make the window visible
         setVisible(true);
+    }
+
+    public void cambiarPantalla(String nombre) {
+        cardLayout.show(mainContainer, nombre);
     }
 }
