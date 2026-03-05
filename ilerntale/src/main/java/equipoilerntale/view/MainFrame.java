@@ -1,42 +1,59 @@
 package equipoilerntale.view;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Dimension;
+import javax.swing.*;
+
+import equipoilerntale.view.screens.CharacterSelector;
+import equipoilerntale.view.screens.CombatPanel;
+import equipoilerntale.view.screens.GamePanel;
+import equipoilerntale.view.screens.MainMenu;
+import equipoilerntale.view.screens.PausePanel;
+
+import java.awt.*;
 
 public class MainFrame extends JFrame {
 
     private CardLayout cardLayout;
-    private JPanel mainContainer;
+    private JPanel contenedor;
+    private MainMenu menu;
+    private CharacterSelector personajes;
+    private GamePanel mapa;
+    private PausePanel pause;
+    private CombatPanel combate;
 
     public MainFrame() {
         // Configuración básica de la ventana
+        cardLayout = new CardLayout();
+        contenedor = new JPanel(cardLayout); // El contenedor que baraja los paneles
         setTitle("iLERNTALE");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
 
-        // Setup del CardLayout (Gestor de pantallas)
-        cardLayout = new CardLayout();
-        mainContainer = new JPanel(cardLayout);
+        // Inicializamos los paneles y pasamos el 'this' (el JFrame) por si necesitamos
+        // controlar el cambiio desde dentro de los paneles
+        // Creamos un panel temporal azul (Base para feature)
+        menu = new MainMenu(this);
+        mapa = new GamePanel(this);
+        personajes = new CharacterSelector(this);
+        pause = new PausePanel(this);
+        combate = new CombatPanel(this);
 
-        // Creamos un panel temporal negro (Base para feature)
-        JPanel blackScreen = new JPanel();
-        blackScreen.setBackground(Color.BLACK);
-        blackScreen.setPreferredSize(new Dimension(800, 600));
+        // Añadimos el panel al contenedor con un nombre único
+        contenedor.add(menu, "MENU");
+        contenedor.add(mapa, "MAPA");
+        contenedor.add(personajes, "PERSONAJES");
+        contenedor.add(pause, "PAUSE");
+        contenedor.add(combate, "COMBATE");
 
-        // Añadimos el panel al contenedor
-        mainContainer.add(blackScreen, "BASE");
+        add(contenedor);
 
-        add(mainContainer);
+        cardLayout.show(contenedor, "MENU");
+
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
     public void cambiarPantalla(String nombre) {
-        cardLayout.show(mainContainer, nombre);
+        cardLayout.show(contenedor, nombre);
     }
 }

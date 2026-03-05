@@ -1,5 +1,15 @@
 package equipoilerntale.view.screens;
 
-public class PausePanel {
+import javax.swing.JPanel;
+
+import equipoilerntale.view.MainFrame;
+
+public class PausePanel extends JPanel {
+    private MainFrame mainFrame;
+
+    public PausePanel(MainFrame frame) {
+        this.mainFrame = frame;
+        // Aquí añade tu contenido del menú
+    }
 
 }
