@@ -1,6 +1,13 @@
 package equipoilerntale.view;
 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Dimension;
 import javax.swing.*;
+import java.awt.*;
 
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
