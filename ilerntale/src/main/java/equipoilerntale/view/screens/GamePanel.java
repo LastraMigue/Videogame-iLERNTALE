@@ -231,12 +231,6 @@ public class GamePanel extends JPanel {
         panelContenido.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.WHITE, 2));
         dialogo.setContentPane(panelContenido);
 
-        // Imagen del personaje en el diálogo (ligeramente más pequeña)
-        Image imgDialogo = imagen.getImage().getScaledInstance(80, 80, Image.SCALE_DEFAULT);
-        JLabel labelImagen = new JLabel(new ImageIcon(imgDialogo));
-        labelImagen.setBounds(15, 20, 80, 80);
-        panelContenido.add(labelImagen);
-
         // Área de texto estilizada
         JTextArea textoArea = new JTextArea(texto);
         textoArea.setBounds(110, 20, 360, 80);
