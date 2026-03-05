@@ -6,6 +6,10 @@ import javax.swing.WindowConstants;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import javax.swing.*;
+import java.awt.*;
+
+import equipoilerntale.view.screens.MainMenu;
 
 public class MainFrame extends JFrame {
 
@@ -22,13 +26,16 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         mainContainer = new JPanel(cardLayout);
 
-        // Creamos un panel temporal negro (Base para feature)
+        // Creamos el menú principal pasándole la referencia al frame
+        MainMenu mainMenu = new MainMenu();
+        mainMenu.setPreferredSize(new Dimension(800, 600));
+        mainContainer.add(mainMenu, "MENU");
+
+        // Creamos un panel temporal negro para el juego
         JPanel blackScreen = new JPanel();
         blackScreen.setBackground(Color.BLACK);
         blackScreen.setPreferredSize(new Dimension(800, 600));
-
-        // Añadimos el panel al contenedor
-        mainContainer.add(blackScreen, "BASE");
+        mainContainer.add(blackScreen, "GAME");
 
         add(mainContainer);
         pack();

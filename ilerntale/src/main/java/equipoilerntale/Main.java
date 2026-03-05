@@ -3,6 +3,8 @@ package equipoilerntale;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.MainFrame;
 import javax.swing.SwingUtilities;
+import javax.swing.*;
+import java.awt.*;
 
 public class Main {
     public static void main(String[] args) {
