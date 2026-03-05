@@ -1,126 +1,96 @@
 package equipoilerntale.view.screens;
 
-import javax.swing.*;
-import javax.swing.border.LineBorder;
-import javax.swing.BoxLayout;
-import javax.swing.Box;
-import java.awt.*;
-// Prueba de importar color
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.ImageIcon;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
 
-// import equipoilerntale.view.MainFrame;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import equipoilerntale.view.MainFrame;
 
 public class MainMenu extends JPanel {
 
-    // Atributos (botones)
-    JButton botonIniciarPartida, botonOpciones, botonSalir;
+    private MainFrame mainFrame;
+    private JButton btnJugar;
+    private JButton btnSalir;
 
-    // Traer la imagen
-    // private Image imagenMenu;
+    public MainMenu(MainFrame frame) {
+        this.mainFrame = frame;
 
-    // Constructor
-    public MainMenu() {
+        setPreferredSize(new Dimension(1000, 600));
+        setLayout(null);
 
-        // Distribución vertical para los botones (Box Layout)
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        // Dejar el fondo vacío por defecto (el gris es para probar)
-        setBackground(Color.GRAY);
-
-        // Centrar botones y añadir espacio
-        botonIniciarPartida = new JButton("Iniciar Partida");
-        botonIniciarPartida.setAlignmentX(CENTER_ALIGNMENT);
-        botonIniciarPartida.setOpaque(false);
-        botonIniciarPartida.setForeground(Color.WHITE);
-        botonIniciarPartida.setFocusPainted(false);
-        botonIniciarPartida.setContentAreaFilled(false);
-        botonIniciarPartida.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
-        botonIniciarPartida.setFont(new Font("Arial", Font.BOLD, 20));
-
-        /*
-         * Esto hay que revisarlo porque como listener sólo habría que
-         * traer si se pulsa Enter, que se definirá en Controlador
-         * y si se pulsa, se pasará al GamePanel
-         * 
-         * botonIniciarPartida.addActionListener(new ActionListener() {
-         * 
-         * @Override
-         * public void actionPerformed(ActionEvent e) {
-         * mainFrame.cambiarPantalla("GAME");
-         * }
-         * });
-         */
-
-        botonOpciones = new JButton("Opciones");
-        botonOpciones.setAlignmentX(CENTER_ALIGNMENT);
-        botonOpciones.setOpaque(false);
-        botonOpciones.setForeground(Color.WHITE);
-        botonOpciones.setFocusPainted(false);
-        botonOpciones.setContentAreaFilled(false);
-        botonOpciones.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
-        /*
-         * Ajustar el listener
-         * botonOpciones.addActionListener(new ActionListener() {
-         * 
-         * @Override
-         * public void actionPerformed(ActionEvent e) {
-         * JOptionPane.showMessageDialog(mainFrame, "Panel de Opciones en desarrollo",
-         * "Opciones",
-         * JOptionPane.INFORMATION_MESSAGE);
-         * }
-         * });
-         */
-
-        botonSalir = new JButton("Salir");
-        botonSalir.setAlignmentX(CENTER_ALIGNMENT);
-        botonSalir.setOpaque(false);
-        botonSalir.setForeground(Color.WHITE);
-        botonSalir.setFocusPainted(false);
-        botonSalir.setContentAreaFilled(false);
-        botonSalir.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
-
-        /*
-         * Ajustar el listener
-         * 
-         * botonSalir.addActionListener(new ActionListener() {
-         * 
-         * @Override
-         * public void actionPerformed(ActionEvent e) {
-         * int confirm = JOptionPane.showConfirmDialog(mainFrame,
-         * "¿Estás seguro de que quieres salir?", "Salir",
-         * JOptionPane.YES_NO_OPTION);
-         * if (confirm == JOptionPane.YES_OPTION) {
-         * System.exit(0);
-         * }
-         * }
-         * });
-         */
-
-        // Añadir espacio vertical antes de los botones para centrar
-        this.add(Box.createVerticalGlue());
-        this.add(botonIniciarPartida);
-        this.add(Box.createVerticalStrut(20));
-        this.add(botonOpciones);
-        this.add(Box.createVerticalStrut(20));
-        this.add(botonSalir);
-        this.add(Box.createVerticalGlue());
+        inicializarComponentes();
+        cargarImagenMenu();
     }
 
-    // Método para Asignar la imagen de fondo del menú
+    private void inicializarComponentes() {
+        btnJugar = new JButton("NUEVA PARTIDA");
+        btnJugar.setFont(new Font("Arial", Font.BOLD, 24));
+        btnJugar.setOpaque(false);
+        btnJugar.setContentAreaFilled(false);
+        btnJugar.setBorderPainted(false);
+        btnJugar.setFocusPainted(false);
+        btnJugar.setForeground(Color.WHITE);
+        btnJugar.setBounds(350, 400, 300, 60);
+        btnJugar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainFrame.cambiarPantalla("PERSONAJES");
+            }
+        });
 
-    @Override
-    public void paintComponent(Graphics g) {
-        Dimension dimension = this.getSize();
-        // Para el proyecto ILERNTALE sería "/resource/title/menu1.jpg"
-        ImageIcon icon = new ImageIcon(getClass().getResource("/resource/title/menu1.jpg"));
-        g.drawImage(icon.getImage(), 0, 0, dimension.width, dimension.height, null);
-        setOpaque(false);
-        super.paintChildren(g);
+        btnSalir = new JButton("SALIR");
+        btnSalir.setFont(new Font("Arial", Font.BOLD, 24));
+        btnSalir.setOpaque(false);
+        btnSalir.setContentAreaFilled(false);
+        btnSalir.setBorderPainted(false);
+        btnSalir.setFocusPainted(false);
+        btnSalir.setForeground(Color.WHITE);
+        btnSalir.setBounds(350, 480, 300, 60);
+        btnSalir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+        add(btnJugar);
+        add(btnSalir);
+    }
+
+    private ImageIcon asignarImagenMenu(String ruta) {
+        URL url = getClass().getResource(ruta);
+        if (url == null) {
+            System.err.println("No se encontro la imagen: " + ruta);
+            return null;
+        }
+        return new ImageIcon(url);
+    }
+
+    private void cargarImagenMenu() {
+        ImageIcon imagenMenu = asignarImagenMenu("/title/menu1.jpg");
+
+        int ancho = 1000;
+        int alto = 600;
+
+        if (imagenMenu != null) {
+            Image imagenEscalada = imagenMenu.getImage().getScaledInstance(ancho, alto, Image.SCALE_DEFAULT);
+            JLabel labelMenu = new JLabel(new ImageIcon(imagenEscalada));
+            labelMenu.setBounds(0, 0, ancho, alto);
+            add(labelMenu);
+            System.out.println("Menu cargado correctamente");
+        } else {
+            setBackground(new Color(20, 20, 30));
+            System.err.println("ERROR: No se pudo cargar la imagen de fondo");
+        }
     }
 
 }
