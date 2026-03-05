@@ -53,7 +53,7 @@ public class MainFrame extends JFrame {
 
         add(contenedor);
 
-        cardLayout.show(contenedor, "MAPA");
+        cardLayout.show(contenedor, "MENU");
 
         pack();
         setLocationRelativeTo(null);
