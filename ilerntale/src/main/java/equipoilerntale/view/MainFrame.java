@@ -53,7 +53,7 @@ public class MainFrame extends JFrame {
 
         add(contenedor);
 
-        cardLayout.show(contenedor, "MENU");
+        cardLayout.show(contenedor, "MAPA");
 
         pack();
         setLocationRelativeTo(null);
@@ -62,5 +62,9 @@ public class MainFrame extends JFrame {
 
     public void cambiarPantalla(String nombre) {
         cardLayout.show(contenedor, nombre);
+    }
+
+    public GamePanel getMapa() {
+        return mapa;
     }
 }
