@@ -7,8 +7,12 @@ import java.awt.FontFormatException;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.Cursor;
+import java.io.InputStream;
 import java.io.IOException;
+import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -31,12 +35,13 @@ public class CharacterSelector extends JPanel {
         JLabel titleLabel = new JLabel("SELECCIONA A TU PERSONAJE", SwingConstants.CENTER);
 
         try {
-            String fontPath = "ilerntale/src/main/resources/font/deltarune.ttf";
-            File fontFile = new File(fontPath);
-
-            Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontFile).deriveFont(52f);
-            titleLabel.setFont(deltaruneFont);
-
+            InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
+            if (fontStream != null) {
+                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(52f);
+                titleLabel.setFont(deltaruneFont);
+            } else {
+                throw new IOException("No se encontró el archivo de la fuente.");
+            }
         } catch (FontFormatException | IOException e) {
             titleLabel.setFont(new Font("Monospaced", Font.BOLD, 32));
             System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
@@ -64,14 +69,37 @@ public class CharacterSelector extends JPanel {
 
     private JButton createCharacterButton(String characterName) {
         JButton button = new JButton();
-        button.setBackground(Color.DARK_GRAY);
+
+        Color colorNormal = Color.DARK_GRAY;
+        Color colorHover = Color.GRAY;
+
+        button.setBackground(colorNormal);
         button.setFocusPainted(false);
         button.setBorder(javax.swing.BorderFactory.createLineBorder(Color.WHITE, 2));
+        button.setOpaque(true);
 
-        String imagePath = "ilerntale/src/main/resources/player/" + characterName + "/abajo1" + characterName + ".png";
+        URL imageUrl = getClass().getResource("/player/" + characterName + "/abajo1" + characterName + ".png");
+        if (imageUrl != null) {
+            button.setIcon(new ImageIcon(imageUrl));
+        } else {
+            System.err.println("Imagen no encontrada para: " + characterName);
+            button.setText(characterName.toUpperCase());
+            button.setForeground(Color.WHITE);
+        }
 
-        ImageIcon icon = new ImageIcon(imagePath);
-        button.setIcon(icon);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(colorHover);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(colorNormal);
+            }
+        });
 
         button.addActionListener(new ActionListener() {
             @Override

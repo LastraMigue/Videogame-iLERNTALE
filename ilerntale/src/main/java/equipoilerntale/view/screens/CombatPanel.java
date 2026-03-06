@@ -6,14 +6,12 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.Insets;
+import java.awt.Cursor;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.JButton;
-import javax.swing.BoxLayout;
 import javax.swing.BorderFactory;
 
 import equipoilerntale.view.MainFrame;
@@ -48,17 +46,15 @@ public class CombatPanel extends JPanel {
 
     private void inicializarPaneles() {
         JPanel upperRectangle = createRectangle(180, 180);
-        upperRectangle.setBounds(400, 50, 180, 180);
-        upperRectangle.setBackground(Color.BLACK);
+        upperRectangle.setBounds(405, 30, 180, 180);
         add(upperRectangle);
 
         JPanel centerRectangle = createRectangle(600, 250);
-        centerRectangle.setBounds(200, 280, 600, 250);
-        centerRectangle.setBackground(Color.BLACK);
+        centerRectangle.setBounds(200, 240, 600, 250);
         add(centerRectangle);
 
         JPanel buttonPanel = createButtonPanel();
-        buttonPanel.setBounds(100, 550, 1000, 50);
+        buttonPanel.setBounds(0, 510, 1000, 70);
         add(buttonPanel);
     }
 
@@ -67,27 +63,25 @@ public class CombatPanel extends JPanel {
         rectangle.setPreferredSize(new Dimension(width, height));
         rectangle.setMaximumSize(new Dimension(width, height));
         rectangle.setMinimumSize(new Dimension(width, height));
-        rectangle.setBackground(new Color(0, 0, 0, 200));
-        rectangle.setBorder(BorderFactory.createLineBorder(Color.WHITE));
-        rectangle.setOpaque(false);
+        rectangle.setBackground(Color.BLACK);
+        rectangle.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
         return rectangle;
     }
 
     private JPanel createButtonPanel() {
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+        buttonPanel.setLayout(null);
         buttonPanel.setOpaque(false);
 
-        JButton btnFight = createButton("fight");
-        JButton btnAct = createButton("act");
-        JButton btnItem = createButton("item");
-        JButton btnMercy = createButton("mercy");
+        btnFight = createButton("fight");
+        btnAct = createButton("act");
+        btnItem = createButton("item");
+        btnMercy = createButton("mercy");
 
-        // Set Bounds para colocar los botones
-        btnFight.setBounds(50, 100, 200, 50);
-        btnAct.setBounds(250, 480, 200, 50);
-        btnItem.setBounds(450, 480, 200, 50);
-        btnMercy.setBounds(650, 480, 200, 50);
+        btnFight.setBounds(40, 10, 200, 60);
+        btnAct.setBounds(280, 10, 200, 60);
+        btnItem.setBounds(520, 10, 200, 60);
+        btnMercy.setBounds(760, 10, 200, 60);
 
         buttonPanel.add(btnFight);
         buttonPanel.add(btnAct);
@@ -98,10 +92,10 @@ public class CombatPanel extends JPanel {
     }
 
     private JButton createButton(String accion) {
-        JButton button = new JButton(accion);
-        button.setPreferredSize(new Dimension(200, 50));
-        button.setMaximumSize(new Dimension(200, 50));
-        button.setMinimumSize(new Dimension(200, 50));
+        JButton button = new JButton();
+        button.setPreferredSize(new Dimension(200, 60));
+        button.setMaximumSize(new Dimension(200, 60));
+        button.setMinimumSize(new Dimension(200, 60));
         button.setOpaque(false);
         button.setContentAreaFilled(false);
         button.setBorderPainted(false);
@@ -110,41 +104,45 @@ public class CombatPanel extends JPanel {
         button.setIconTextGap(0);
         button.setText("");
 
-        String imagePath = "ilerntale/src/main/resources/attack/" + accion + "2.png";
+        URL urlImagen = getClass().getResource("/attack/" + accion + "1.png");
+        if (urlImagen != null) {
+            ImageIcon icon = new ImageIcon(urlImagen);
+            Image img = icon.getImage();
+            Image imgEscalada = img.getScaledInstance(200, 60, Image.SCALE_SMOOTH);
+            button.setIcon(new ImageIcon(imgEscalada));
+        }
 
-        ImageIcon icon = new ImageIcon(imagePath);
-        Image img = icon.getImage();
-        Image imgEscalada = img.getScaledInstance(200, 50, Image.SCALE_SMOOTH);
-        ImageIcon iconEscalado = new ImageIcon(imgEscalada);
+        URL urlImagenPressed = getClass().getResource("/attack/" + accion + "2.png");
+        if (urlImagenPressed != null) {
+            ImageIcon iconPressed = new ImageIcon(urlImagenPressed);
+            Image imgPressed = iconPressed.getImage();
+            Image imgEscaladaPressed = imgPressed.getScaledInstance(200, 60, Image.SCALE_SMOOTH);
 
-        button.setIcon(iconEscalado);
+            button.setPressedIcon(new ImageIcon(imgEscaladaPressed));
+        }
+
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
             }
         });
+
         return button;
     }
 
     private void cargarImagenCombate() {
         ImageIcon imagenMenuCombate = asignarImagenCombate("/attack/ataque.jpg");
-
         if (imagenMenuCombate != null) {
             imagenFondo = imagenMenuCombate.getImage().getScaledInstance(1000, 600, Image.SCALE_DEFAULT);
-            System.out.println("Fondo de combate cargado correctamente");
-        } else {
-            setBackground(new Color(20, 20, 30));
-            System.err.println("ERROR: No se pudo cargar la imagen de fondo");
         }
     }
 
     private ImageIcon asignarImagenCombate(String ruta) {
         URL url = getClass().getResource(ruta);
-        if (url == null) {
-            System.err.println("No se encontro la imagen: " + ruta);
+        if (url == null)
             return null;
-        }
         return new ImageIcon(url);
     }
 }
