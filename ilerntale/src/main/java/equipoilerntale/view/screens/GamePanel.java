@@ -46,7 +46,7 @@ public class GamePanel extends JPanel {
 
     private PasoDialogo[] secuenciaDialogos = {
             new PasoDialogo("Soraya", "¡Hola! Soy Soraya."),
-            new PasoDialogo("Jesica", "¡Hola! Soy Jesica."),
+            new PasoDialogo("Jesica", "¡Hola! Soy Jessica."),
             new PasoDialogo("Soraya", "Bienvenido al mundo de iLERNTALE."),
             new PasoDialogo("Jesica", "¡Vamos a explorar juntos!")
     };
