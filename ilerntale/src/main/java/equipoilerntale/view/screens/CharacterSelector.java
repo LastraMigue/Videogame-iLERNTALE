@@ -33,9 +33,6 @@ public class CharacterSelector extends JPanel {
         try {
             String fontPath = "ilerntale/src/main/resources/font/deltarune.ttf";
             File fontFile = new File(fontPath);
-            if (!fontFile.exists()) {
-                fontFile = new File("src/main/resources/font/deltarune.ttf");
-            }
 
             Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontFile).deriveFont(52f);
             titleLabel.setFont(deltaruneFont);
@@ -72,10 +69,6 @@ public class CharacterSelector extends JPanel {
         button.setBorder(javax.swing.BorderFactory.createLineBorder(Color.WHITE, 2));
 
         String imagePath = "ilerntale/src/main/resources/player/" + characterName + "/abajo1" + characterName + ".png";
-        File file = new File(imagePath);
-        if (!file.exists()) {
-            imagePath = "src/main/resources/player/" + characterName + "/abajo1" + characterName + ".png";
-        }
 
         ImageIcon icon = new ImageIcon(imagePath);
         button.setIcon(icon);

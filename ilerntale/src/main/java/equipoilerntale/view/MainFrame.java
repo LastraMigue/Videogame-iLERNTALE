@@ -14,6 +14,7 @@ import equipoilerntale.view.screens.CombatPanel;
 import equipoilerntale.view.screens.GamePanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
+import equipoilerntale.view.screens.VideoScreen;
 
 import java.awt.*;
 
@@ -26,6 +27,7 @@ public class MainFrame extends JFrame {
     private GamePanel mapa;
     private PausePanel pause;
     private CombatPanel combate;
+    private VideoScreen videoScreen;
 
     public MainFrame() {
         // Configuración básica de la ventana
@@ -43,6 +45,7 @@ public class MainFrame extends JFrame {
         personajes = new CharacterSelector(this);
         pause = new PausePanel(this);
         combate = new CombatPanel(this);
+        videoScreen = new VideoScreen(this);
 
         // Añadimos el panel al contenedor con un nombre único
         contenedor.add(menu, "MENU");
@@ -50,6 +53,7 @@ public class MainFrame extends JFrame {
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(pause, "PAUSE");
         contenedor.add(combate, "COMBATE");
+        contenedor.add(videoScreen, "VIDEO");
 
         add(contenedor);
 
@@ -62,6 +66,11 @@ public class MainFrame extends JFrame {
 
     public void cambiarPantalla(String nombre) {
         cardLayout.show(contenedor, nombre);
+
+        // Si vamos a la pantalla del video, iniciamos el video
+        if (nombre.equals("VIDEO")) {
+            videoScreen.playVideo();
+        }
     }
 
     public GamePanel getMapa() {

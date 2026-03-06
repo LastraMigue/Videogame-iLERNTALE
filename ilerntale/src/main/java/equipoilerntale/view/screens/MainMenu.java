@@ -25,7 +25,7 @@ public class MainMenu extends JPanel {
         this.mainFrame = frame;
 
         setPreferredSize(new Dimension(1000, 600));
-        setLayout(null);
+        setLayout(null); // Diseño absoluto, usamos coordenadas
 
         inicializarComponentes();
         cargarImagenMenu();
@@ -43,7 +43,8 @@ public class MainMenu extends JPanel {
         btnJugar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainFrame.cambiarPantalla("PERSONAJES");
+                // El cambio que querías: directo, limpio y unificado
+                mainFrame.cambiarPantalla("VIDEO");
             }
         });
 
@@ -92,5 +93,4 @@ public class MainMenu extends JPanel {
             System.err.println("ERROR: No se pudo cargar la imagen de fondo");
         }
     }
-
 }
