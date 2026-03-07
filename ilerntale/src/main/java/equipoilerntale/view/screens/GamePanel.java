@@ -167,7 +167,9 @@ public class GamePanel extends JPanel {
             System.out.println("Jesica añadida (oculta)");
         }
 
-        setComponentZOrder(labelFondo, getComponentCount() - 1);
+        if (labelFondo != null) {
+            setComponentZOrder(labelFondo, getComponentCount() - 1);
+        }
 
         System.out.println("Total componentes en panel: " + getComponentCount());
     }
@@ -258,7 +260,12 @@ public class GamePanel extends JPanel {
         int yBase = this.getHeight() - altoDialogo - 20; // 20px de margen inferior
 
         // Convertir coordenadas locales a coordenadas de pantalla para el JDialog
-        java.awt.Point ubicacionPanel = this.getLocationOnScreen();
+        java.awt.Point ubicacionPanel;
+        try {
+            ubicacionPanel = this.getLocationOnScreen();
+        } catch (IllegalStateException e) {
+            ubicacionPanel = new java.awt.Point(0, 0);
+        }
         dialogo.setLocation(ubicacionPanel.x + (xCentro - anchoDialogo / 2), ubicacionPanel.y + yBase);
 
         // TIMER PARA CIERRE AUTOMÁTICO (4 segundos)
@@ -281,6 +288,7 @@ public class GamePanel extends JPanel {
                     pausa.start();
                 } else {
                     System.out.println("Fin de la secuencia narrativa.");
+                    mainFrame.cambiarPantalla("EXPLORACION");
                 }
             }
         });
