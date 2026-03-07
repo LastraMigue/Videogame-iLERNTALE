@@ -73,7 +73,7 @@ public class CharacterSelector extends JPanel {
 
         String imagePath = "/player/" + characterName + "/abajo1" + characterName + ".png";
         URL imageUrl = getClass().getResource(imagePath);
-        
+
         if (imageUrl != null) {
             ImageIcon icon = new ImageIcon(imageUrl);
             Image img = icon.getImage().getScaledInstance(150, 150, Image.SCALE_DEFAULT);
@@ -94,7 +94,7 @@ public class CharacterSelector extends JPanel {
 
         return button;
     }
-    
+
     public String getSelectedCharacter() {
         return selectedCharacter;
     }

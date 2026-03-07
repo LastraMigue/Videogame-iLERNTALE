@@ -2,104 +2,96 @@ package equipoilerntale.view.screens;
 
 import java.awt.*;
 import javax.swing.*;
+import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationController;
 import equipoilerntale.view.MainFrame;
+import equipoilerntale.view.renderers.MapRenderer;
+import equipoilerntale.view.renderers.PlayerRenderer;
 
 /**
- * Senior Architect Refactor: ExploredPanel
- * Pure view class. Only renders data from the controller.
+ * PANEL DE EXPLORACIÓN.
+ * Es la pantalla principal donde el jugador se mueve por el mapa.
+ * Esta clase es una VISTA: pide datos al controlador y los utiliza
+ * para "pintar" la escena mediante renderizadores modulares.
  */
 public class ExploredPanel extends JPanel {
 
-    private final MainFrame mainFrame;
     private final ExplorationController controller;
+    private final MapRenderer mapRenderer;
+    private final PlayerRenderer playerRenderer;
     private Image background;
 
+    /**
+     * Constructor del panel de exploración.
+     * 
+     * @param mainFrame  Referencia al marco principal de la aplicación.
+     * @param personaje  Nombre de la carpeta de sprites del héroe elegido.
+     * @param controller El controlador lógico que gestionará este nivel.
+     */
     public ExploredPanel(MainFrame mainFrame, String personaje, ExplorationController controller) {
-        this.mainFrame = mainFrame;
         this.controller = controller;
+        this.mapRenderer = new MapRenderer();
+        this.playerRenderer = new PlayerRenderer();
 
-        setPreferredSize(new Dimension(ExplorationController.ANCHO_PANEL, ExplorationController.ALTO_PANEL));
+        // Configuración de la ventana Swing
+        setPreferredSize(new Dimension(GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA));
         setFocusable(true);
         addKeyListener(controller.getInputHandler());
 
-        cargarRecursos("/mapa/Pasillo1.png");
+        cargarFondo("/mapa/Pasillo1.png");
     }
 
-    public void cargarRecursos(String rutaFondo) {
-        // We reuse the controller's sprite manager if we want, or use a temporary one
-        // For backgrounds, we just load them directly here or via a utility
+    /**
+     * Carga y escala el fondo del mapa.
+     */
+    private void cargarFondo(String ruta) {
         try {
-            java.net.URL url = getClass().getResource(rutaFondo);
+            java.net.URL url = getClass().getResource(ruta);
             if (url != null) {
                 background = new ImageIcon(url).getImage().getScaledInstance(
-                        ExplorationController.ANCHO_PANEL,
-                        ExplorationController.ALTO_PANEL,
+                        GameSettings.ANCHO_PANTALLA,
+                        GameSettings.ALTO_PANTALLA,
                         Image.SCALE_SMOOTH);
             }
         } catch (Exception e) {
-            System.err.println("Error loading background: " + e.getMessage());
+            System.err.println("Error cargando recurso de fondo: " + e.getMessage());
         }
     }
 
+    /**
+     * MÉTODO DE DIBUJO de Swing.
+     * Delega el pixel art real a los renderizadores especializados.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        // 1. Draw Background
-        if (background != null) {
-            g2d.drawImage(background, 0, 0, null);
-        } else {
-            g2d.setColor(Color.BLACK);
-            g2d.fillRect(0, 0, getWidth(), getHeight());
-        }
+        if (controller == null)
+            return;
 
-        // 2. Draw Objects & Players
-        if (controller != null) {
-            renderizarObjetos(g2d);
-            renderizarJugador(g2d);
+        // 1. Dibujar Escenario
+        mapRenderer.dibujarFondo(g2d, background, getWidth(), getHeight());
+        mapRenderer.dibujarEtiquetaZona(g2d, controller.getZonaPuerta(), "Aula 124");
 
-            if (ExplorationController.DEBUG_MODE) {
-                renderizarDebug(g2d);
-            }
-        }
-    }
+        // 2. Dibujar Jugador
+        playerRenderer.dibujarJugador(g2d,
+                controller.getCurrentSprite(),
+                controller.getJugadorX(),
+                controller.getJugadorY());
 
-    private void renderizarObjetos(Graphics2D g2d) {
-        // Draw Aula 124 Label
-        Rectangle door = controller.getZonaPuerta();
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Arial", Font.BOLD, 14));
-        String text = "Aula 124";
-        int width = g2d.getFontMetrics().stringWidth(text);
-        g2d.drawString(text, door.x + (door.width / 2) - (width / 2), door.y - 10);
-    }
-
-    private void renderizarJugador(Graphics2D g2d) {
-        Image sprite = controller.getCurrentSprite();
-        int x = controller.getJugadorX();
-        int y = controller.getJugadorY();
-
-        if (sprite != null) {
-            g2d.drawImage(sprite, x, y, null);
-        } else {
-            // Fallback square
-            g2d.setColor(Color.RED);
-            g2d.fillRect(x, y, ExplorationController.TAMANO_JUGADOR, ExplorationController.TAMANO_JUGADOR);
+        // 3. Dibujar Capa de Debug
+        if (ExplorationController.DEBUG_MODE) {
+            mapRenderer.dibujarDebug(g2d,
+                    controller.getParedes(),
+                    controller.getHitboxJugador(),
+                    controller.getZonaPuerta());
         }
     }
 
-    private void renderizarDebug(Graphics2D g2d) {
-        g2d.setColor(Color.GREEN);
-        for (Rectangle r : controller.getParedes()) {
-            g2d.draw(r);
-        }
-        g2d.setColor(Color.BLUE);
-        g2d.draw(controller.getHitboxJugador());
-        g2d.draw(controller.getZonaPuerta());
-    }
-
+    /**
+     * Solicita una actualización visual desde el Timer de MainFrame.
+     */
     public void requestRender() {
         repaint();
     }

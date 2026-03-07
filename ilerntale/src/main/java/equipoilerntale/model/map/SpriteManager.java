@@ -1,4 +1,4 @@
-package equipoilerntale.view.screens;
+package equipoilerntale.model.map;
 
 import java.awt.Color;
 import java.awt.Graphics2D;

@@ -5,7 +5,8 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import equipoilerntale.view.screens.SpriteManager;
+
+import equipoilerntale.model.map.SpriteManager;
 
 /**
  * Senior Architect Refactor: ExplorationController
@@ -57,12 +58,12 @@ public class ExplorationController {
 
     private void inicializarColisiones() {
         // Paredes y obstáculos
-        paredes.add(new Rectangle(0, 0, ANCHO_PANEL, 300)); // Hitbox superior
+        paredes.add(new Rectangle(0, 0, ANCHO_PANEL, 150)); // Hitbox superior
         paredes.add(new Rectangle(0, 0, 10, ALTO_PANEL)); // Pared Izq
         paredes.add(new Rectangle(ANCHO_PANEL - 10, 0, 10, ALTO_PANEL)); // Pared Der
         paredes.add(new Rectangle(0, 590, ANCHO_PANEL, 10)); // Hitbox inferior
 
-        zonaPuerta = new Rectangle(630, 300, 70, 70);
+        zonaPuerta = new Rectangle(630, 150, 70, 70);
     }
 
     public void update() {
