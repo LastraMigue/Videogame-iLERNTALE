@@ -1,6 +1,8 @@
 package equipoilerntale.controller;
 
 import equipoilerntale.view.MainFrame;
+import equipoilerntale.view.screens.CombatPanel;
+import javax.swing.JPanel;
 
 public class MainController implements Runnable {
 
@@ -40,11 +42,16 @@ public class MainController implements Runnable {
     }
 
     private void update() {
-        // Aquí se llamará a los sub-controladores (Exploration, Combat, etc.)
+        // Obtenemos el panel activo desde MainFrame (asegúrate de tener este método en
+        // MainFrame)
+        JPanel panelActual = mainFrame.getPanelActual();
+
+        if (panelActual instanceof CombatPanel) {
+            ((CombatPanel) panelActual).updateCombat();
+        }
     }
 
     private void draw() {
-        // Forzamos a la ventana a repintar el panel activo
         mainFrame.repaint();
     }
 }

@@ -76,4 +76,13 @@ public class MainFrame extends JFrame {
     public GamePanel getMapa() {
         return mapa;
     }
+
+    public JPanel getPanelActual() {
+        for (Component comp : contenedor.getComponents()) {
+            if (comp.isVisible() && comp instanceof JPanel) {
+                return (JPanel) comp;
+            }
+        }
+        return null;
+    }
 }
