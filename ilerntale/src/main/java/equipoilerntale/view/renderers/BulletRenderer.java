@@ -8,19 +8,31 @@ import javax.swing.ImageIcon;
 import equipoilerntale.model.combat.ProjectileModel;
 
 public class BulletRenderer {
-    private Image imagenBala;
+    private Image imagenMalo;
+    private Image imagenBueno;
 
     public BulletRenderer() {
-        URL url = getClass().getResource("/boss/sergio/sergionormal.png");
+        imagenMalo = cargar("/attack/malo.png");
+        imagenBueno = cargar("/attack/bueno.png");
+    }
+
+    private Image cargar(String ruta) {
+        URL url = getClass().getResource(ruta);
         if (url != null) {
-            imagenBala = new ImageIcon(url).getImage();
+            return new ImageIcon(url).getImage();
         }
+        return null;
     }
 
     public void render(Graphics2D g2d, List<ProjectileModel> balas) {
-        if (balas != null && imagenBala != null) {
-            for (ProjectileModel bala : balas) {
-                g2d.drawImage(imagenBala, bala.getX(), bala.getY(), bala.getSize(), bala.getSize(), null);
+        if (balas == null)
+            return;
+
+        for (ProjectileModel bala : balas) {
+            Image img = (bala.getType() == 0) ? imagenMalo : imagenBueno;
+
+            if (img != null) {
+                g2d.drawImage(img, bala.getX(), bala.getY(), bala.getSize(), bala.getSize(), null);
             }
         }
     }

@@ -6,7 +6,7 @@ public class MouseModel {
     private int x, y;
     private int ancho = 20;
     private int alto = 30;
-    private int velocidad = 5;
+    private int velocidad = 3;
 
     public MouseModel(int x, int y) {
         this.x = x;

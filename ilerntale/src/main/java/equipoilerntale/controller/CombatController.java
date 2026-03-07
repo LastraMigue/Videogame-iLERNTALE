@@ -16,7 +16,6 @@ public class CombatController {
     public void update() {
         if (arenaModel != null) {
 
-            // 1. Mover al jugador
             if (arenaModel.getMouse() != null) {
                 int dx = 0;
                 int dy = 0;
@@ -34,11 +33,9 @@ public class CombatController {
                 }
             }
 
-            // 2. Mover proyectiles y generar nuevos
             if (arenaModel.getProjectiles() != null) {
                 arenaModel.actualizarProjectiles();
 
-                // Dispara un proyectil nuevo cada ~0.5 segundos (30 frames a 60fps)
                 tickCounter++;
                 if (tickCounter >= 30) {
                     arenaModel.spawnProjectile();

@@ -4,15 +4,17 @@ import java.awt.Rectangle;
 
 public class ProjectileModel {
     private int x, y;
-    private int size; // Ancho y alto son iguales (es un cuadrado)
-    private int dx, dy; // Velocidad X e Y
+    private int size;
+    private int dx, dy;
+    private int type;
 
-    public ProjectileModel(int x, int y, int size, int dx, int dy) {
+    public ProjectileModel(int x, int y, int size, int dx, int dy, int type) {
         this.x = x;
         this.y = y;
         this.size = size;
         this.dx = dx;
         this.dy = dy;
+        this.type = type;
     }
 
     public void mover() {
@@ -58,5 +60,9 @@ public class ProjectileModel {
 
     public void setDy(int dy) {
         this.dy = dy;
+    }
+
+    public int getType() {
+        return type;
     }
 }
