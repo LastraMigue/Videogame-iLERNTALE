@@ -5,10 +5,11 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -31,15 +32,14 @@ public class CharacterSelector extends JPanel {
         JLabel titleLabel = new JLabel("SELECCIONA A TU PERSONAJE", SwingConstants.CENTER);
 
         try {
-            String fontPath = "ilerntale/src/main/resources/font/deltarune.ttf";
-            File fontFile = new File(fontPath);
-            if (!fontFile.exists()) {
-                fontFile = new File("src/main/resources/font/deltarune.ttf");
+            URL fontUrl = getClass().getResource("/font/deltarune.ttf");
+            if (fontUrl != null) {
+                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontUrl.openStream()).deriveFont(52f);
+                titleLabel.setFont(deltaruneFont);
+            } else {
+                titleLabel.setFont(new Font("Monospaced", Font.BOLD, 32));
+                System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
             }
-
-            Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontFile).deriveFont(52f);
-            titleLabel.setFont(deltaruneFont);
-
         } catch (FontFormatException | IOException e) {
             titleLabel.setFont(new Font("Monospaced", Font.BOLD, 32));
             System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
@@ -71,24 +71,31 @@ public class CharacterSelector extends JPanel {
         button.setFocusPainted(false);
         button.setBorder(javax.swing.BorderFactory.createLineBorder(Color.WHITE, 2));
 
-        String imagePath = "ilerntale/src/main/resources/player/" + characterName + "/abajo1" + characterName + ".png";
-        File file = new File(imagePath);
-        if (!file.exists()) {
-            imagePath = "src/main/resources/player/" + characterName + "/abajo1" + characterName + ".png";
-        }
+        String imagePath = "/player/" + characterName + "/abajo1" + characterName + ".png";
+        URL imageUrl = getClass().getResource(imagePath);
 
-        ImageIcon icon = new ImageIcon(imagePath);
-        button.setIcon(icon);
+        if (imageUrl != null) {
+            ImageIcon icon = new ImageIcon(imageUrl);
+            Image img = icon.getImage().getScaledInstance(150, 150, Image.SCALE_DEFAULT);
+            button.setIcon(new ImageIcon(img));
+        } else {
+            System.err.println("No se encontró la imagen: " + imagePath);
+        }
 
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 selectedCharacter = characterName;
                 System.out.println("Personaje seleccionado: " + selectedCharacter);
+                mainFrame.setPersonajeSeleccionado(selectedCharacter);
                 mainFrame.cambiarPantalla("MAPA");
             }
         });
 
         return button;
+    }
+
+    public String getSelectedCharacter() {
+        return selectedCharacter;
     }
 }

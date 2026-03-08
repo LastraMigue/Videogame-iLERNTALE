@@ -1,22 +1,50 @@
 package equipoilerntale.controller;
 
 import equipoilerntale.view.MainFrame;
+import equipoilerntale.model.map.GameResources;
+import java.util.logging.Logger;
 
 public class MainController implements Runnable {
+
+    private static final Logger LOG = Logger.getLogger(MainController.class.getName());
 
     private MainFrame mainFrame;
     private Thread gameThread;
     private boolean running;
     private final int FPS = 60;
 
-    public MainController(MainFrame mainFrame) {
+    // Controladores del juego
+    private ExplorationController explorationController;
+
+    public MainController(MainFrame mainFrame, String personaje) {
         this.mainFrame = mainFrame;
+        GameResources.initialize(32);
+        inicializarControladores(personaje);
+    }
+
+    private void inicializarControladores(String personaje) {
+        LOG.info("Inicializando controladores para: " + personaje);
+
+        // Inicializar ExplorationController con el personaje seleccionado
+        explorationController = new ExplorationController(mainFrame, personaje);
+
+        LOG.info("Controladores inicializados");
     }
 
     public void startGameThread() {
         running = true;
         gameThread = new Thread(this);
         gameThread.start();
+        LOG.info("Game thread iniciado");
+    }
+
+    public void stopGameThread() {
+        running = false;
+        try {
+            gameThread.join();
+        } catch (InterruptedException e) {
+            LOG.severe("Error al detener el game thread: " + e.getMessage());
+        }
     }
 
     @Override
@@ -33,18 +61,41 @@ public class MainController implements Runnable {
 
             if (delta >= 1) {
                 update();
-                draw();
                 delta--;
             }
+
+            // El renderizado lo maneja Swing automáticamente
         }
+
+        LOG.info("Game thread detenido");
     }
 
     private void update() {
-        // Aquí se llamará a los sub-controladores (Exploration, Combat, etc.)
+        // Actualizar Exploration si está activo
+        if (explorationController != null) {
+            explorationController.update();
+        }
     }
 
-    private void draw() {
-        // Forzamos a la ventana a repintar el panel activo
-        mainFrame.repaint();
+    // ============ GETTERS ============
+
+    public ExplorationController getExplorationController() {
+        return explorationController;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    // ============ CICLO DE VIDA ============
+
+    public void dispose() {
+        LOG.info("MainController dispose");
+        stopGameThread();
+
+        if (explorationController != null) {
+            explorationController.dispose();
+            explorationController = null;
+        }
     }
 }

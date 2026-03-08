@@ -2,289 +2,133 @@ package equipoilerntale.view.screens;
 
 import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.net.URL;
-
-import javax.swing.ImageIcon;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.JButton;
-import javax.swing.Timer;
-
+import java.awt.Point;
+import java.awt.Window;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import javax.swing.*;
+import equipoilerntale.GameSettings;
 import equipoilerntale.view.MainFrame;
+import equipoilerntale.view.ui.CajaTexto;
 
+/**
+ * PANTALLA DE INTRODUCCIÓN (NARRATIVA).
+ * Su única tarea es gestionar el orden de los diálogos automáticos entre Soraya
+ * y Jesica.
+ * La UI real es delegada a la clase CajaTexto.
+ */
 public class GamePanel extends JPanel {
-    private MainFrame mainFrame;
-    public static final int WIDTH = 800;
-    public static final int HEIGHT = 600;
 
-    private static final int TAMANO_PERSONAJE = 256;
-    private static final int X_SORAYA = 0;
-    private static final int Y_SORAYA = 344;
-    private static final int X_JESICA = 544;
-    private static final int Y_JESICA = 344;
-
-    private JLabel labelFondo;
-    private JLabel labelSoraya;
-    private JLabel labelJesica;
-    private ImageIcon iconoSoraya;
-    private ImageIcon iconoJesica;
-    private Timer timerSiguienteDialogo;
-
-    private static class PasoDialogo {
-        String personaje;
-        String texto;
-
-        PasoDialogo(String p, String t) {
-            this.personaje = p;
-            this.texto = t;
-        }
-    }
-
-    private PasoDialogo[] secuenciaDialogos = {
-            new PasoDialogo("Soraya", "¡Hola! Soy Soraya."),
-            new PasoDialogo("Jesica", "¡Hola! Soy Jesica."),
-            new PasoDialogo("Soraya", "Bienvenido al mundo de iLERNTALE."),
-            new PasoDialogo("Jesica", "¡Vamos a explorar juntos!")
-    };
-
+    private final MainFrame mainFrame;
+    private final JLabel labelFondo = new JLabel();
+    private final JLabel labelSoraya = new JLabel();
+    private final JLabel labelJesica = new JLabel();
     private int indicePasos = 0;
+    private Timer timerHistoria;
+
+    // --- Guion de la Historia ---
+    private final String[][] script = {
+            { "Soraya", "¡Hola! Soy Soraya. Bienvenido al mundo de iLERNTALE." },
+            { "Jesica", "¡Y yo soy Jesica! ¡Qué emoción tenerte aquí!" },
+            { "Soraya", "En iLERNTALE exploraremos el instituto juntos." },
+            { "Jesica", "¡Vamos a explorar juntos! ¡Usa las flechas!" }
+    };
 
     public GamePanel(MainFrame frame) {
         this.mainFrame = frame;
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setDoubleBuffered(true);
-        setFocusable(true);
+        setPreferredSize(new Dimension(GameSettings.INTRO_WIDTH, GameSettings.INTRO_HEIGHT));
         setLayout(null);
 
-        cargarFondo();
-        cargarNPCs();
-        configurarEventos();
+        inicializarPersonajes();
+        configurarCicloVida();
     }
 
-    private void configurarEventos() {
-        // Anclaje dinámico de personajes (especialmente Jesica en la esquina inferior
-        // derecha)
-        this.addComponentListener(new java.awt.event.ComponentAdapter() {
-            @Override
-            public void componentResized(java.awt.event.ComponentEvent e) {
-                reubicarPersonajes();
-            }
+    private void inicializarPersonajes() {
+        // Carga y escalado de imágenes
+        ImageIcon iconoFondo = cargarIcono("/mapa/Pasillo.png", GameSettings.ANCHO_PANTALLA,
+                GameSettings.ALTO_PANTALLA);
+        ImageIcon iconoSoraya = cargarIcono("/dialogue/soraya.png", 256, 256);
+        ImageIcon iconoJesica = cargarIcono("/dialogue/jesica.png", 256, 256);
 
-            @Override
-            public void componentShown(java.awt.event.ComponentEvent e) {
-                iniciarDialogoBucle();
-            }
+        if (iconoFondo != null)
+            labelFondo.setIcon(iconoFondo);
+        if (iconoSoraya != null)
+            labelSoraya.setIcon(iconoSoraya);
+        if (iconoJesica != null)
+            labelJesica.setIcon(iconoJesica);
 
+        labelFondo.setBounds(0, 0, GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA);
+        labelSoraya.setBounds(0, 344, 256, 256);
+        labelJesica.setBounds(750, 344, 256, 256);
+
+        labelSoraya.setVisible(false);
+        labelJesica.setVisible(false);
+
+        add(labelSoraya);
+        add(labelJesica);
+        add(labelFondo);
+    }
+
+    private void configurarCicloVida() {
+        addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentHidden(java.awt.event.ComponentEvent e) {
-                detenerDialogoBucle();
+            public void componentShown(ComponentEvent e) {
+                indicePasos = 0;
+
+                timerHistoria = new Timer(3000, evt -> avanzarHistoria());
+                timerHistoria.setRepeats(false);
+                timerHistoria.start();
             }
         });
     }
 
-    private void reubicarPersonajes() {
-        if (labelSoraya != null) {
-            labelSoraya.setBounds(0, getHeight() - TAMANO_PERSONAJE, TAMANO_PERSONAJE, TAMANO_PERSONAJE);
-        }
-        if (labelJesica != null) {
-            labelJesica.setBounds(getWidth() - TAMANO_PERSONAJE, getHeight() - TAMANO_PERSONAJE, TAMANO_PERSONAJE,
-                    TAMANO_PERSONAJE);
-        }
-    }
+    /**
+     * Lógica que maneja el paso del guion.
+     */
+    private void avanzarHistoria() {
+        if (indicePasos >= script.length) {
 
-    private ImageIcon cargarImagen(String ruta) {
-        URL url = getClass().getResource(ruta);
-        if (url == null) {
-            System.err.println("ERROR: No se encontró la imagen en la ruta: " + ruta);
-            return null;
-        }
-        System.out.println("Cargando imagen: " + url);
-        return new ImageIcon(url);
-    }
+            if (timerHistoria != null) {
+                timerHistoria.stop();
+            }
 
-    private void cargarFondo() {
-        ImageIcon iconoFondo = cargarImagen("/mapa/Pasillo.png");
-        if (iconoFondo != null) {
-            Image imagenEscalada = iconoFondo.getImage().getScaledInstance(1000, 600, Image.SCALE_DEFAULT);
-            labelFondo = new JLabel(new ImageIcon(imagenEscalada));
-            labelFondo.setBounds(0, 0, 1000, 600);
-            labelFondo.setOpaque(false);
-            add(labelFondo);
-            System.out.println("Fondo cargado correctamente");
-        } else {
-            labelFondo = new JLabel("FONDO NO CARGADO");
-            labelFondo.setBounds(0, 0, WIDTH, HEIGHT);
-            add(labelFondo);
-        }
-    }
-
-    private void cargarNPCs() {
-        System.out.println("Cargando NPCs...");
-
-        iconoSoraya = cargarImagen("/dialogue/soraya.png");
-        System.out.println("Soraya: " + (iconoSoraya != null ? "CARGADA" : "FALLIDA"));
-
-        if (iconoSoraya != null) {
-            Image imgSoraya = iconoSoraya.getImage().getScaledInstance(TAMANO_PERSONAJE, TAMANO_PERSONAJE,
-                    Image.SCALE_DEFAULT);
-            labelSoraya = new JLabel(new ImageIcon(imgSoraya));
-            labelSoraya.setBounds(X_SORAYA, Y_SORAYA, TAMANO_PERSONAJE, TAMANO_PERSONAJE);
-            labelSoraya.setVisible(false); // Ocultar inicialmente
-            labelSoraya.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    // Si se hace clic, podemos forzar el inicio si no ha empezado
-                    if (indicePasos == 0 && (timerSiguienteDialogo == null || !timerSiguienteDialogo.isRunning())) {
-                        lanzarSiguienteDialogo();
-                    }
+            for (Window w : Window.getWindows()) {
+                if (w instanceof JDialog) {
+                    w.dispose();
                 }
-            });
-            add(labelSoraya);
-            System.out.println("Soraya añadida (oculta)");
-        }
+            }
 
-        iconoJesica = cargarImagen("/dialogue/jesica.png");
-        System.out.println("Jesica: " + (iconoJesica != null ? "CARGADA" : "FALLIDA"));
-
-        if (iconoJesica != null) {
-            Image imgJesica = iconoJesica.getImage().getScaledInstance(TAMANO_PERSONAJE, TAMANO_PERSONAJE,
-                    Image.SCALE_DEFAULT);
-            labelJesica = new JLabel(new ImageIcon(imgJesica));
-            labelJesica.setBounds(X_JESICA, Y_JESICA, TAMANO_PERSONAJE, TAMANO_PERSONAJE);
-            labelJesica.setVisible(false); // Ocultar inicialmente
-            labelJesica.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    // Click manual no reinicia, solo informa
-                    System.out.println("Click en Jesica detectado");
-                }
-            });
-            add(labelJesica);
-            System.out.println("Jesica añadida (oculta)");
-        }
-
-        setComponentZOrder(labelFondo, getComponentCount() - 1);
-
-        System.out.println("Total componentes en panel: " + getComponentCount());
-    }
-
-    private void gestionarVisibilidad(boolean visible, String nombre) {
-        if ("Soraya".equals(nombre) && labelSoraya != null) {
-            labelSoraya.setVisible(visible);
-        } else if ("Jesica".equals(nombre) && labelJesica != null) {
-            labelJesica.setVisible(visible);
-        }
-    }
-
-    public void iniciarDialogoBucle() {
-        if (timerSiguienteDialogo != null && timerSiguienteDialogo.isRunning()) {
+            mainFrame.cambiarPantalla("EXPLORACION");
             return;
         }
 
-        // Timer de 3 segundos para el primer diálogo
-        timerSiguienteDialogo = new Timer(3000, e -> lanzarSiguienteDialogo());
-        timerSiguienteDialogo.setRepeats(false);
-        timerSiguienteDialogo.start();
-        System.out.println("Sistema de secuencia narrativa iniciado");
-    }
+        String personaje = script[indicePasos][0];
+        String texto = script[indicePasos][1];
 
-    private void lanzarSiguienteDialogo() {
-        if (!isShowing() || indicePasos >= secuenciaDialogos.length) {
-            return;
-        }
+        // Cambiar quién es visible según quién habla
+        labelSoraya.setVisible(personaje.equals("Soraya"));
+        labelJesica.setVisible(personaje.equals("Jesica"));
 
-        PasoDialogo paso = secuenciaDialogos[indicePasos];
-        ImageIcon iconoActual = paso.personaje.equals("Soraya") ? iconoSoraya : iconoJesica;
+        // Dibujar globo de texto centrado usando el componente reutilizable
+        Point p = (isShowing()) ? getLocationOnScreen() : new Point(0, 0);
+        JDialog caja = CajaTexto.crearDialogo(mainFrame, texto, p.x + 250, p.y + 450);
 
-        if (iconoActual != null) {
-            gestionarVisibilidad(true, paso.personaje);
-            mostrarDialogo(paso.personaje, iconoActual, paso.texto);
+        // Timer de auto-cierre idéntico a la funcionalidad original
+        Timer timerCierre = new Timer(4000, e -> {
+            caja.dispose();
             indicePasos++;
-        }
+            avanzarHistoria();
+        });
+        timerCierre.setRepeats(false);
+        timerCierre.start();
+
+        caja.setVisible(true);
     }
 
-    public void detenerDialogoBucle() {
-        if (timerSiguienteDialogo != null) {
-            timerSiguienteDialogo.stop();
-            System.out.println("Sistema de turnos detenido");
-        }
-    }
-
-    private void mostrarDialogo(String nombre, ImageIcon imagen, String texto) {
-        // Dimensiones del diálogo tipo "videojuego"
-        int anchoDialogo = 500;
-        int altoDialogo = 120;
-
-        JDialog dialogo = new JDialog(mainFrame);
-        dialogo.setUndecorated(true); // Sin bordes ni barra de título
-        dialogo.setSize(anchoDialogo, altoDialogo);
-        dialogo.setModal(false);
-
-        // Panel principal del diálogo (negro con borde blanco fino)
-        JPanel panelContenido = new JPanel();
-        panelContenido.setBackground(java.awt.Color.BLACK);
-        panelContenido.setLayout(null);
-        panelContenido.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.WHITE, 2));
-        dialogo.setContentPane(panelContenido);
-
-        // Área de texto estilizada
-        JTextArea textoArea = new JTextArea(texto);
-        textoArea.setBounds(110, 20, 360, 80);
-        textoArea.setEditable(false);
-        textoArea.setLineWrap(true);
-        textoArea.setWrapStyleWord(true);
-        textoArea.setBackground(java.awt.Color.BLACK);
-        textoArea.setForeground(java.awt.Color.WHITE);
-        textoArea.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.BOLD, 16));
-        panelContenido.add(textoArea);
-
-        // Boton Invisible/Invisible para permitir interactividad (o simplemente omitir
-        // si es auto)
-        JButton botonInvisible = new JButton();
-        botonInvisible.setBounds(0, 0, anchoDialogo, altoDialogo);
-        botonInvisible.setOpaque(false);
-        botonInvisible.setContentAreaFilled(false);
-        botonInvisible.setBorderPainted(false);
-        botonInvisible.addActionListener(e -> dialogo.dispose());
-        panelContenido.add(botonInvisible);
-
-        // CÁLCULO DE POSICIÓN
-        // Intentamos centrarlo entre Soraya (izq) y Jesica (der)
-        int xCentro = this.getWidth() / 2;
-        int yBase = this.getHeight() - altoDialogo - 20; // 20px de margen inferior
-
-        // Convertir coordenadas locales a coordenadas de pantalla para el JDialog
-        java.awt.Point ubicacionPanel = this.getLocationOnScreen();
-        dialogo.setLocation(ubicacionPanel.x + (xCentro - anchoDialogo / 2), ubicacionPanel.y + yBase);
-
-        // TIMER PARA CIERRE AUTOMÁTICO (4 segundos)
-        Timer timerAutoCierre = new Timer(4000, e -> {
-            if (dialogo.isShowing()) {
-                dialogo.dispose();
-            }
-        });
-        timerAutoCierre.setRepeats(false);
-        timerAutoCierre.start();
-
-        // Al cerrar el diálogo, programamos el siguiente paso de la secuencia
-        dialogo.addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosed(java.awt.event.WindowEvent e) {
-                gestionarVisibilidad(false, nombre);
-                if (indicePasos < secuenciaDialogos.length) {
-                    Timer pausa = new Timer(1500, evt -> lanzarSiguienteDialogo());
-                    pausa.setRepeats(false);
-                    pausa.start();
-                } else {
-                    System.out.println("Fin de la secuencia narrativa.");
-                }
-            }
-        });
-
-        dialogo.setVisible(true);
+    private ImageIcon cargarIcono(String ruta, int w, int h) {
+        java.net.URL url = getClass().getResource(ruta);
+        if (url == null)
+            return null;
+        return new ImageIcon(new ImageIcon(url).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
     }
 }
