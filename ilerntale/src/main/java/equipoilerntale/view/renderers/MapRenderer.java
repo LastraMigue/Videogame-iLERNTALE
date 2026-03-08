@@ -10,13 +10,15 @@ public class MapRenderer {
 
     /**
      * Dibuja el fondo cargado o un color negro por defecto.
+     * Si el fondo es más grande que la pantalla, se recorta automáticamente.
      */
-    public void dibujarFondo(Graphics2D g2d, Image fondo, int ancho, int alto) {
+    public void dibujarFondo(Graphics2D g2d, Image fondo, int mapWidth, int mapHeight) {
         if (fondo != null) {
-            g2d.drawImage(fondo, 0, 0, null);
+            // Dibujar solo la parte visible del mapa
+            g2d.drawImage(fondo, 0, 0, mapWidth, mapHeight, null);
         } else {
             g2d.setColor(Color.BLACK);
-            g2d.fillRect(0, 0, ancho, alto);
+            g2d.fillRect(0, 0, mapWidth, mapHeight);
         }
     }
 

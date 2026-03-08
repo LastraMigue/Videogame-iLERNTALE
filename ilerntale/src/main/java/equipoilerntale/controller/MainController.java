@@ -1,6 +1,7 @@
 package equipoilerntale.controller;
 
 import equipoilerntale.view.MainFrame;
+import equipoilerntale.model.map.GameResources;
 import java.util.logging.Logger;
 
 public class MainController implements Runnable {
@@ -17,6 +18,7 @@ public class MainController implements Runnable {
 
     public MainController(MainFrame mainFrame, String personaje) {
         this.mainFrame = mainFrame;
+        GameResources.initialize(32);
         inicializarControladores(personaje);
     }
 

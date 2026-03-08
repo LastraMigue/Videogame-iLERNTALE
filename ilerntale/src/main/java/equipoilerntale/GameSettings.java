@@ -19,6 +19,10 @@ public class GameSettings {
     public static final int PLAYER_INICIO_Y = 300;
     public static final long MS_ENTRE_FRAMES = 100;
 
+    // --- Parámetros del Mapa (Pasillo Largo) ---
+    public static final int MAP_WIDTH = 4500;
+    public static final int MAP_HEIGHT = 600;
+
     // --- Parámetros de Narrativa (Intro) ---
     public static final int INTRO_WIDTH = 800;
     public static final int INTRO_HEIGHT = 600;

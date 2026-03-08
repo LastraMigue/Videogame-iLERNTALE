@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import equipoilerntale.model.map.SpriteManager;
+import equipoilerntale.GameSettings;
+import equipoilerntale.model.map.GameResources;
 
 /**
  * Senior Architect Refactor: ExplorationController
@@ -18,14 +19,16 @@ public class ExplorationController {
 
     // ============ CONFIGURACIÓN ============
     public static final boolean DEBUG_MODE = false;
-    public static final int ANCHO_PANEL = 1000;
-    public static final int ALTO_PANEL = 600;
+    public static final int ANCHO_PANEL = GameSettings.ANCHO_PANTALLA;
+    public static final int ALTO_PANEL = GameSettings.ALTO_PANTALLA;
+    public static final int MAP_WIDTH = GameSettings.MAP_WIDTH;
+    public static final int MAP_HEIGHT = GameSettings.MAP_HEIGHT;
 
     // ---------- Jugador ----------
-    public static final int VELOCIDAD = 5;
-    public static final int TAMANO_JUGADOR = 100;
-    public static final int INICIO_JUGADOR_X = 30;
-    public static final int INICIO_JUGADOR_Y = 300;
+    public static final int VELOCIDAD = GameSettings.PLAYER_VELOCIDAD;
+    public static final int TAMANO_JUGADOR = GameSettings.PLAYER_TAMANO;
+    public static final int INICIO_JUGADOR_X = GameSettings.PLAYER_INICIO_X;
+    public static final int INICIO_JUGADOR_Y = GameSettings.PLAYER_INICIO_Y;
 
     // ---------- Animación ----------
     private static final long FRAME_DELAY_MS = 100; // 120ms per frame
@@ -40,7 +43,8 @@ public class ExplorationController {
 
     // ---------- Componentes ----------
     private final InputHandler inputHandler;
-    private final SpriteManager spriteManager;
+    private final GameResources resources;
+    private final String nombrePersonaje;
     private final Object mainFrame;
 
     // ---------- Zonas de colisión ----------
@@ -49,21 +53,39 @@ public class ExplorationController {
 
     public ExplorationController(Object mainFrame, String nombrePersonaje) {
         this.mainFrame = mainFrame;
+        this.nombrePersonaje = nombrePersonaje;
         this.inputHandler = new InputHandler();
-        this.spriteManager = new SpriteManager(nombrePersonaje, TAMANO_JUGADOR);
+
+        GameResources.getInstance().loadCharacterSprites(nombrePersonaje, TAMANO_JUGADOR);
+        this.resources = GameResources.getInstance();
 
         inicializarColisiones();
         LOG.info("ExplorationController (Senior Refactor) para " + nombrePersonaje);
     }
 
     private void inicializarColisiones() {
-        // Paredes y obstáculos
-        paredes.add(new Rectangle(0, 0, ANCHO_PANEL, 150)); // Hitbox superior
-        paredes.add(new Rectangle(0, 0, 10, ALTO_PANEL)); // Pared Izq
-        paredes.add(new Rectangle(ANCHO_PANEL - 10, 0, 10, ALTO_PANEL)); // Pared Der
-        paredes.add(new Rectangle(0, 590, ANCHO_PANEL, 10)); // Hitbox inferior
+        // Paredes del mapa completo (4500 x 600)
+        // Pared superior
+        paredes.add(new Rectangle(0, 0, MAP_WIDTH, 300));
+        // Pared inferior
+        paredes.add(new Rectangle(0, MAP_HEIGHT - 10, MAP_WIDTH, 10));
+        // Pared izquierda
+        paredes.add(new Rectangle(0, 0, 10, MAP_HEIGHT));
+        // Pared derecha
+        paredes.add(new Rectangle(MAP_WIDTH - 10, 0, 10, MAP_HEIGHT));
 
-        zonaPuerta = new Rectangle(630, 150, 70, 70);
+        // Obstáculos del pasillo (columnas/arcadas)
+        /*
+         * for (int x = 400; x < MAP_WIDTH - 200; x += 500) {
+         * // Pared superior en cada arco
+         * paredes.add(new Rectangle(x, 150, 80, 200));
+         * // Pared inferior en cada arco
+         * paredes.add(new Rectangle(x, 400, 80, 200));
+         * }
+         */
+
+        // Puerta al final del pasillo
+        zonaPuerta = new Rectangle(MAP_WIDTH - 150, 300, 100, 100);
     }
 
     public void update() {
@@ -96,16 +118,16 @@ public class ExplorationController {
 
         if (dx != 0) {
             String tempDir = (dx < 0) ? "izquierda" : "derecha";
-            // Update direction if not currently moving vertically or prioritizing
-            // horizontal
             if (inputHandler.preferHorizontal || (!inputHandler.upPressed && !inputHandler.downPressed)) {
                 if (!direccionActual.equals(tempDir)) {
                     direccionActual = tempDir;
-                    frameIndex = 0; // Reset animation on direction change
+                    frameIndex = 0;
                 }
             }
-            if (!verificarColisiones(new Rectangle(jugadorX + dx, jugadorY, TAMANO_JUGADOR, TAMANO_JUGADOR))) {
-                jugadorX += dx;
+            int nuevoX = jugadorX + dx;
+            nuevoX = Math.max(0, Math.min(nuevoX, MAP_WIDTH - TAMANO_JUGADOR));
+            if (!verificarColisiones(new Rectangle(nuevoX, jugadorY, TAMANO_JUGADOR, TAMANO_JUGADOR))) {
+                jugadorX = nuevoX;
             }
         }
 
@@ -124,8 +146,10 @@ public class ExplorationController {
                     frameIndex = 0;
                 }
             }
-            if (!verificarColisiones(new Rectangle(jugadorX, jugadorY + dy, TAMANO_JUGADOR, TAMANO_JUGADOR))) {
-                jugadorY += dy;
+            int nuevoY = jugadorY + dy;
+            nuevoY = Math.max(150, Math.min(nuevoY, MAP_HEIGHT - TAMANO_JUGADOR - 10));
+            if (!verificarColisiones(new Rectangle(jugadorX, nuevoY, TAMANO_JUGADOR, TAMANO_JUGADOR))) {
+                jugadorY = nuevoY;
             }
         }
     }
@@ -138,7 +162,7 @@ public class ExplorationController {
 
         long now = System.currentTimeMillis();
         if (now - lastFrameTime >= FRAME_DELAY_MS) {
-            List<Image> frames = spriteManager.getFrames(direccionActual);
+            List<Image> frames = resources.getCharacterFrames(nombrePersonaje, direccionActual);
             if (frames != null && !frames.isEmpty()) {
                 // Advance frame (start at index 1 for walking loop if frame 0 is idle)
                 // If only 2 frames exist, cycle between 0 and 1.
@@ -166,7 +190,7 @@ public class ExplorationController {
     }
 
     public Image getCurrentSprite() {
-        return spriteManager.getSprite(direccionActual, frameIndex);
+        return resources.getCharacterSprite(nombrePersonaje, direccionActual, frameIndex);
     }
 
     private boolean verificarColisiones(Rectangle hitbox) {
@@ -213,7 +237,7 @@ public class ExplorationController {
     }
 
     public void dispose() {
-        spriteManager.dispose();
+        resources.dispose();
         paredes.clear();
     }
 }
