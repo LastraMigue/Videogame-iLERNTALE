@@ -1,5 +1,7 @@
 package equipoilerntale.model.entity;
 
+import java.awt.Rectangle;
+
 import equipoilerntale.GameSettings;
 
 /**
@@ -26,5 +28,23 @@ public class Player extends Entity {
      */
     public Player(int mapWidth, int mapHeight) {
         this(START_X, START_Y, mapWidth, mapHeight);
+    }
+
+    /**
+     * SOBRESCRIBE EL HITBOX PARA REDUCIRLO A LOS "PIES" DEL PERSONAJE.
+     * ESTO DA UNA SENSACIÓN DE PROFUNDIDAD (2.5D) CONTRA LOS MUROS.
+     */
+    @Override
+    public Rectangle getHitbox(int currentX, int currentY) {
+        // Reducimos el ancho a aproximadamente el 60%
+        int hitboxWidth = (int) (SIZE * 0.6);
+        // Reducimos el alto, colocando el hitbox solo en el tercio inferior del sprite
+        int hitboxHeight = (int) (SIZE * 0.35);
+        // Centramos horizontalmente
+        int hitboxX = currentX + (SIZE - hitboxWidth) / 2;
+        // Colocamos en la parte inferior
+        int hitboxY = currentY + SIZE - hitboxHeight;
+
+        return new Rectangle(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
     }
 }

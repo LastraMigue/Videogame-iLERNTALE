@@ -91,7 +91,7 @@ public class CharacterSelector extends JPanel {
                 selectedCharacter = characterName;
                 System.out.println("Personaje seleccionado: " + selectedCharacter);
                 mainFrame.setPersonajeSeleccionado(selectedCharacter);
-                mainFrame.cambiarPantalla("MAPA");
+                mainFrame.cambiarPantalla("EXPLORACION");
             }
         });
 

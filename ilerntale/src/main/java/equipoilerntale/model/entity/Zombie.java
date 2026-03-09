@@ -153,4 +153,21 @@ public class Zombie extends Entity {
     public void updateMovement(int targetX, int targetY, List<Rectangle> walls) {
         updateMovement(targetX, targetY, walls, List.of());
     }
+
+    /**
+     * SOBRESCRIBE EL HITBOX PARA REDUCIRLO A LOS "PIES" DEL ZOMBIE.
+     */
+    @Override
+    public Rectangle getHitbox(int currentX, int currentY) {
+        // Reducimos el ancho a aproximadamente el 60%
+        int hitboxWidth = (int) (SIZE * 0.6);
+        // Reducimos el alto, colocando el hitbox solo en el tercio inferior del sprite
+        int hitboxHeight = (int) (SIZE * 0.35);
+        // Centramos horizontalmente
+        int hitboxX = currentX + (SIZE - hitboxWidth) / 2;
+        // Colocamos en la parte inferior
+        int hitboxY = currentY + SIZE - hitboxHeight;
+
+        return new Rectangle(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
+    }
 }

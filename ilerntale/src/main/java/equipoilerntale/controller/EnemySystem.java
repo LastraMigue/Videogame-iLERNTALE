@@ -60,7 +60,8 @@ public class EnemySystem {
             int rx = area.x + random.nextInt(Math.max(1, area.width - Zombie.SIZE));
             int ry = area.y + random.nextInt(Math.max(1, area.height - Zombie.SIZE));
 
-            Rectangle spawnBounds = new Rectangle(rx, ry, Zombie.SIZE, Zombie.SIZE);
+            Rectangle spawnBounds = new Zombie(rx, ry, GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT).getHitbox(rx,
+                    ry);
 
             // Verificar que no colisione con muros
             boolean hitsWall = walls.stream().anyMatch(w -> w.intersects(spawnBounds));
@@ -99,28 +100,13 @@ public class EnemySystem {
         }
     }
 
-    /**
-     * COMPRUEBA COLISIÓN CON EL JUGADOR USANDO HITBOXES REDUCIDOS
-     * (20% DEL JUGADOR, 10% DEL ZOMBIE) PARA IGNORAR ZONAS TRANSPARENTES DE LOS PNG.
-     */
     public boolean collidesWithPlayer(Rectangle playerHitbox) {
-        int shrinkP = (int) (playerHitbox.width * 0.40); // 40% POR LADO = 80% REDUCCIÓN TOTAL
-        Rectangle innerPlayer = new Rectangle(
-                playerHitbox.x + shrinkP,
-                playerHitbox.y + shrinkP,
-                playerHitbox.width - shrinkP * 2,
-                playerHitbox.height - shrinkP * 2);
-
         return zombies.stream().anyMatch(z -> {
             if (!z.isAlive())
                 return false;
-            int shrinkZ = (int) (z.getSize() * 0.45); // 45% POR LADO = 90% REDUCCIÓN TOTAL
-            Rectangle innerZombie = new Rectangle(
-                    z.getX() + shrinkZ,
-                    z.getY() + shrinkZ,
-                    z.getSize() - shrinkZ * 2,
-                    z.getSize() - shrinkZ * 2);
-            return innerPlayer.intersects(innerZombie);
+
+            Rectangle zHitbox = z.getHitbox(z.getX(), z.getY());
+            return playerHitbox.intersects(zHitbox);
         });
     }
 

@@ -98,17 +98,26 @@ public abstract class Entity {
     }
 
     /**
-     * OBTIENE EL RECTÁNGULO DE COLISIÓN DE LA ENTIDAD.
+     * OBTIENE EL RECTÁNGULO DE COLISIÓN DE LA ENTIDAD CON SU TAMAÑO COMPLETO.
      */
     public Rectangle getBounds() {
         return new Rectangle(x, y, size, size);
     }
 
     /**
-     * VERIFICA SI ESTA ENTIDAD INTERSECTA CON UN RECTÁNGULO DADO.
+     * OBTIENE EL HITBOX DE LA ENTIDAD EN UNA POSICIÓN ESPECÍFICA.
+     * POR DEFECTO ES IGUAL A getBounds(), PERO PUEDE SER SOBRESCRITO PARA
+     * COLISIONES MÁS PRECISAS.
+     */
+    public Rectangle getHitbox(int currentX, int currentY) {
+        return new Rectangle(currentX, currentY, size, size);
+    }
+
+    /**
+     * VERIFICA SI ESTA ENTIDAD INTERSECTA CON UN RECTÁNGULO DADO USANDO SU HITBOX.
      */
     public boolean intersects(Rectangle other) {
-        return getBounds().intersects(other);
+        return getHitbox(x, y).intersects(other);
     }
 
     /**
@@ -124,10 +133,10 @@ public abstract class Entity {
         nextX = Math.max(0, Math.min(nextX, mapWidth - size));
         nextY = Math.max(150, Math.min(nextY, mapHeight - size - 10));
 
-        Rectangle nextBounds = new Rectangle(nextX, nextY, size, size);
+        Rectangle nextHitbox = getHitbox(nextX, nextY);
 
         for (Rectangle wall : walls) {
-            if (nextBounds.intersects(wall)) {
+            if (nextHitbox.intersects(wall)) {
                 return false;
             }
         }

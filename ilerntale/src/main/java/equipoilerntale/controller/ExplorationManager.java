@@ -37,7 +37,7 @@ public class ExplorationManager {
     private boolean active = false;
 
     // FLAG PARA VISUALIZAR LOS MUROS EN MODO DEBUG
-    private boolean debugMurosVisibles = false;
+    private boolean debugMurosVisibles = true;
 
     /**
      * CONSTRUCTOR DEL GESTOR DE EXPLORACIÓN.
@@ -60,11 +60,11 @@ public class ExplorationManager {
      * CREA LOS MUROS PERIMETRALES Y EL ÁREA DE LA PUERTA.
      */
     private void initializeWorld() {
-        walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 300));
+        walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
         walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
         walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
         walls.add(new Rectangle(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT));
-        doorArea = new Rectangle(GameSettings.MAP_WIDTH - 150, 300, 100, 100);
+        doorArea = new Rectangle(GameSettings.MAP_WIDTH - 250, 230, 100, 120);
         // Los zombies se generan en activate(), NO aquí, para evitar que corran antes
         // de la pantalla
     }
@@ -156,7 +156,7 @@ public class ExplorationManager {
         if (inputHandler.ePressed && player.intersects(doorArea)) {
             triggerScreenChange("COMBATE");
         }
-        if (enemySystem.collidesWithPlayer(player.getBounds())) {
+        if (enemySystem.collidesWithPlayer(player.getHitbox(player.getX(), player.getY()))) {
             triggerScreenChange("COMBATE");
         }
     }

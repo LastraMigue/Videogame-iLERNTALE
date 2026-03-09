@@ -13,7 +13,6 @@ import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
 import equipoilerntale.view.screens.ExplorationPanel;
-import equipoilerntale.view.screens.GamePanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
 
@@ -29,7 +28,6 @@ public class MainFrame extends JFrame {
     private JPanel contenedor;
     private MainMenu menu;
     private CharacterSelector personajes;
-    private GamePanel mapa;
     private PausePanel pause;
     private CombatPanel combate;
     private ExplorationPanel exploracion;
@@ -56,7 +54,6 @@ public class MainFrame extends JFrame {
 
         // INICIALIZAR PANELES DE LAS PANTALLAS
         menu = new MainMenu(this);
-        mapa = new GamePanel(this);
         personajes = new CharacterSelector(this);
         pause = new PausePanel(this);
         combate = new CombatPanel(this);
@@ -66,7 +63,6 @@ public class MainFrame extends JFrame {
 
         // AÑADIR PANELES AL CONTENEDOR DE CARDLAYOUT
         contenedor.add(menu, "MENU");
-        contenedor.add(mapa, "MAPA");
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(pause, "PAUSE");
         contenedor.add(combate, "COMBATE");
@@ -156,7 +152,6 @@ public class MainFrame extends JFrame {
         // Refrescar el contenedor de pantallas
         contenedor.removeAll();
         contenedor.add(menu, "MENU");
-        contenedor.add(mapa, "MAPA");
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(pause, "PAUSE");
         contenedor.add(combate, "COMBATE");
@@ -187,13 +182,6 @@ public class MainFrame extends JFrame {
      */
     public CharacterSelector getPersonajes() {
         return personajes;
-    }
-
-    /**
-     * OBTIENE EL PANEL DEL MAPA (INTRODUCCIÓN).
-     */
-    public GamePanel getMapa() {
-        return mapa;
     }
 
     /**
