@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
@@ -22,7 +23,9 @@ import java.awt.*;
 public class MainFrame extends JFrame {
 
     private CardLayout cardLayout;
+    private JLayeredPane layeredPane;
     private JPanel contenedor;
+    private String pantallaActual = "MENU";
     private MainMenu menu;
     private CharacterSelector personajes;
     private GamePanel mapa;
@@ -53,13 +56,37 @@ public class MainFrame extends JFrame {
         contenedor.add(menu, "MENU");
         contenedor.add(mapa, "MAPA");
         contenedor.add(personajes, "PERSONAJES");
-        contenedor.add(pause, "PAUSE");
         contenedor.add(combate, "COMBATE");
+        videoScreen.setName("VIDEO"); // Útil para exclusiones
         contenedor.add(videoScreen, "VIDEO");
 
-        add(contenedor);
+        // Configuramos el LayeredPane para el overlay
+        layeredPane = new JLayeredPane();
+        layeredPane.setPreferredSize(new Dimension(1000, 600));
 
-        cardLayout.show(contenedor, "COMBATE");
+        // Capa inferior: El contenedor principal con CardLayout
+        contenedor.setBounds(0, 0, 1000, 600);
+        layeredPane.add(contenedor, JLayeredPane.DEFAULT_LAYER);
+
+        // Capa superior: El panel de pausa (inicialmente invisible)
+        pause.setBounds(0, 0, 1000, 600);
+        pause.setVisible(false);
+        layeredPane.add(pause, JLayeredPane.PALETTE_LAYER);
+
+        add(layeredPane);
+
+        // Registro global de la tecla ESC
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                if (puedePausar()) {
+                    togglePause();
+                    return true; // Consumir el evento
+                }
+            }
+            return false;
+        });
+
+        cardLayout.show(contenedor, "MENU");
 
         pack();
         setLocationRelativeTo(null);
@@ -67,12 +94,34 @@ public class MainFrame extends JFrame {
     }
 
     public void cambiarPantalla(String nombre) {
+        this.pantallaActual = nombre;
         cardLayout.show(contenedor, nombre);
 
         // Si vamos a la pantalla del video, iniciamos el video
         if (nombre.equals("VIDEO")) {
             videoScreen.playVideo();
         }
+    }
+
+    public void togglePause() {
+        if (pause.isVisible()) {
+            pause.setVisible(false);
+            if (mainController != null)
+                mainController.resumeGame();
+        } else {
+            pause.setVisible(true);
+            if (mainController != null)
+                mainController.pauseGame();
+            // Aseguramos que el panel de pausa se redibuje
+            pause.repaint();
+        }
+    }
+
+    private boolean puedePausar() {
+        // No permitir pausa en ciertas pantallas
+        return !pantallaActual.equals("MENU") &&
+                !pantallaActual.equals("VIDEO") &&
+                !pantallaActual.equals("PERSONAJES");
     }
 
     public void setMainController(MainController controller) {

@@ -73,6 +73,7 @@ public class MainController implements Runnable {
     // Puede que haya que meterlo en el método Update
 
     // Métodos para que el juego esté "en juego" o "en pausa"
+
     public void pauseGame() {
         state = GameState.PAUSED;
 
