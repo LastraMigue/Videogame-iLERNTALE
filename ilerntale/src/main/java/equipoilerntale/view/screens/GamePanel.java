@@ -48,7 +48,7 @@ public class GamePanel extends JPanel {
 
     private void inicializarPersonajes() {
         // Carga y escalado de imágenes
-        ImageIcon iconoFondo = cargarIcono("/mapa/Pasillo.png", GameSettings.ANCHO_PANTALLA,
+        ImageIcon iconoFondo = cargarIcono("/mapa/pasillo1.jpg", GameSettings.ANCHO_PANTALLA,
                 GameSettings.ALTO_PANTALLA);
         ImageIcon iconoSoraya = cargarIcono("/dialogue/soraya.png", 256, 256);
         ImageIcon iconoJesica = cargarIcono("/dialogue/jesica.png", 256, 256);

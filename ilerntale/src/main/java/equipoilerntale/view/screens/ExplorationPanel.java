@@ -30,7 +30,7 @@ public class ExplorationPanel extends JPanel {
         setPreferredSize(new Dimension(GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA));
         setFocusable(true);
         addKeyListener(manager.getInputHandler());
-        this.background = AssetService.getInstance().loadBackground("/mapa/Pasillo2.png");
+        this.background = AssetService.getInstance().loadBackground("/mapa/pasillo.jpg");
     }
 
     @Override
