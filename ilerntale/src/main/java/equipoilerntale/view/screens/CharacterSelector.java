@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -27,6 +28,9 @@ public class CharacterSelector extends JPanel {
     private MainFrame mainFrame;
     private String selectedCharacter = "";
 
+    /**
+     * CONSTRUCTOR DEL SELECTOR DE PERSONAJES.
+     */
     public CharacterSelector(MainFrame frame) {
         this.mainFrame = frame;
         setLayout(new BorderLayout());
@@ -106,10 +110,15 @@ public class CharacterSelector extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 selectedCharacter = characterName;
                 System.out.println("Personaje seleccionado: " + selectedCharacter);
-                mainFrame.cambiarPantalla("MAPA");
+                mainFrame.setPersonajeSeleccionado(selectedCharacter);
+                mainFrame.cambiarPantalla("EXPLORACION");
             }
         });
 
         return button;
+    }
+
+    public String getSelectedCharacter() {
+        return selectedCharacter;
     }
 }

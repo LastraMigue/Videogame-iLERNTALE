@@ -1,23 +1,16 @@
 package equipoilerntale;
 
-import equipoilerntale.controller.MainController;
 import equipoilerntale.view.MainFrame;
 import javax.swing.SwingUtilities;
-import javax.swing.*;
-import java.awt.*;
 
 public class Main {
+    /**
+     * PUNTO DE ENTRADA PRINCIPAL DE LA APLICACIÓN.
+     * INICIA EL MARCO PRINCIPAL EN EL HILO DE EVENTOS DE SWING.
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // 1. Instanciamos la vista
-            MainFrame mainFrame = new MainFrame();
-
-            // 2. Instanciamos el controlador pasándole la vista
-            MainController mainController = new MainController(mainFrame);
-            mainFrame.setMainController(mainController);
-
-            // 3. Arrancamos el hilo del juego
-            mainController.startGameThread();
+            new MainFrame();
         });
     }
 }

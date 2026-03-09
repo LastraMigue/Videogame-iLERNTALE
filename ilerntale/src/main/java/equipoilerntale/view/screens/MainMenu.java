@@ -25,6 +25,9 @@ public class MainMenu extends JPanel {
     private JButton btnJugar;
     private JButton btnSalir;
 
+    /**
+     * CONSTRUCTOR DEL MENÚ PRINCIPAL.
+     */
     public MainMenu(MainFrame frame) {
         this.mainFrame = frame;
 
