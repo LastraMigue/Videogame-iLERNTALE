@@ -9,11 +9,15 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.swing.Timer;
+import java.util.List;
 
 import equipoilerntale.view.MainFrame;
 import equipoilerntale.model.combat.ArenaModel;
@@ -22,6 +26,9 @@ import equipoilerntale.controller.InputHandler;
 import equipoilerntale.view.renderers.MouseRenderer;
 import equipoilerntale.view.ui.BarraVida;
 import equipoilerntale.view.renderers.BulletRenderer;
+import equipoilerntale.view.renderers.ItemRenderer;
+import equipoilerntale.view.ui.Inventario;
+import equipoilerntale.model.entities.ItemModel;
 
 public class CombatPanel extends JPanel {
     private MainFrame mainFrame;
@@ -34,6 +41,23 @@ public class CombatPanel extends JPanel {
     // Renderers (NUEVO)
     private MouseRenderer mouseRenderer;
     private BulletRenderer bulletRenderer;
+    private ItemRenderer itemRenderer;
+
+    // Inventario
+    private Inventario inventario;
+    private List<ItemModel> currentCombatItems;
+    private boolean isItemMenuOpen = false;
+    private int selectedItemIndex = 0;
+    private int inputCooldown = 0;
+
+    // Minigame & Round state
+    private int currentRound = 1;
+    private long minigameEndTime = 0;
+    private boolean isMinigameActive = false;
+    private Timer combatTimer;
+
+    private String centerTextMessage = "";
+    private Font customFont;
 
     private JButton btnFight;
     private JButton btnAct;
@@ -46,10 +70,12 @@ public class CombatPanel extends JPanel {
         this.arenaModel = new ArenaModel();
         this.inputHandler = new InputHandler();
         this.combatController = new CombatController(arenaModel, inputHandler);
+        this.inventario = new Inventario();
 
         // Instanciamos los pintores
         this.mouseRenderer = new MouseRenderer();
         this.bulletRenderer = new BulletRenderer();
+        this.itemRenderer = new ItemRenderer();
 
         this.addKeyListener(inputHandler);
         this.setFocusable(true);
@@ -59,11 +85,60 @@ public class CombatPanel extends JPanel {
         setOpaque(false);
 
         cargarImagenCombate();
+        cargarFuente();
         inicializarPaneles();
     }
 
     public void updateCombat() {
-        combatController.update();
+        if (inputCooldown > 0) {
+            inputCooldown--;
+        }
+
+        if (isItemMenuOpen) {
+            if (inputCooldown == 0 && currentCombatItems != null && !currentCombatItems.isEmpty()) {
+                if (inputHandler.upPressed) {
+                    selectedItemIndex--;
+                    if (selectedItemIndex < 0) {
+                        selectedItemIndex = currentCombatItems.size() - 1;
+                    }
+                    inputCooldown = 10;
+                    repaint();
+                } else if (inputHandler.downPressed) {
+                    selectedItemIndex++;
+                    if (selectedItemIndex >= currentCombatItems.size()) {
+                        selectedItemIndex = 0;
+                    }
+                    inputCooldown = 10;
+                    repaint();
+                } else if (inputHandler.enterPressed) {
+                    // Consumir objeto
+                    ItemModel selected = currentCombatItems.get(selectedItemIndex);
+                    if (selected != null) {
+                        selected.consumir(); // Disminuye la cantidad
+                        centerTextMessage = "USASTE " + selected.getNombre().toUpperCase();
+                        isItemMenuOpen = false;
+                        repaint();
+
+                        Timer msgTimer = new Timer(1500, new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                centerTextMessage = "";
+                                repaint();
+                                enableAllButtons();
+                            }
+                        });
+                        msgTimer.setRepeats(false);
+                        msgTimer.start();
+                    }
+                    inputCooldown = 15;
+                }
+            }
+        } else {
+            combatController.update();
+            if (isMinigameActive && arenaModel.allBulletsHit()) {
+                endMinigame();
+            }
+        }
     }
 
     @Override
@@ -82,6 +157,43 @@ public class CombatPanel extends JPanel {
         g2d.setStroke(new BasicStroke(3));
         g2d.drawRect(405, 30, 180, 180);
 
+        // Recuadros para RONDA y TIEMPO "a ras" del central (Y=95, Alto=50)
+        // Cuadro central: X=405 a 585
+
+        // Recuadro RONDA (Izquierda: X=245, Ancho=150) -> termina en 395 (a 10px del
+        // central)
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(235, 160, 150, 50);
+        g2d.setColor(Color.WHITE);
+        g2d.drawRect(235, 160, 150, 50);
+
+        // Recuadro TIEMPO (Derecha: X=595, Ancho=150) -> empieza a 10px del central
+        if (isMinigameActive) {
+            g2d.setColor(Color.BLACK);
+            g2d.fillRect(605, 160, 150, 50);
+            g2d.setColor(Color.WHITE);
+            g2d.drawRect(605, 160, 150, 50);
+        }
+
+        // Draw round and timer text inside their new squares
+        if (customFont != null) {
+            g2d.setFont(customFont.deriveFont(24f));
+            g2d.setColor(Color.WHITE);
+            // Centrado aproximado en el recuadro izquierdo (Y=128)
+            g2d.drawString("RONDA: " + currentRound, 255, 192);
+
+            if (isMinigameActive) {
+                long timeLeft = minigameEndTime - System.currentTimeMillis();
+                if (timeLeft < 0)
+                    timeLeft = 0;
+                long seconds = timeLeft / 1000;
+                long millis = timeLeft % 1000;
+                String timeText = String.format("%02d:%03d", seconds, millis);
+                // Centrado aproximado en el recuadro derecho
+                g2d.drawString(timeText, 645, 192);
+            }
+        }
+
         g2d.setColor(Color.BLACK);
         g2d.fillRect(200, 240, 600, 250);
         g2d.setColor(Color.WHITE);
@@ -90,8 +202,30 @@ public class CombatPanel extends JPanel {
 
         // 2. DIBUJAR LOS ELEMENTOS CON LOS RENDERERS
         if (arenaModel != null) {
-            bulletRenderer.render(g2d, arenaModel.getProjectiles());
-            mouseRenderer.render(g2d, arenaModel.getMouse());
+            if (arenaModel.getProjectiles() != null) {
+                bulletRenderer.render(g2d, arenaModel.getProjectiles());
+            }
+            if (arenaModel.getMouse() != null) {
+                mouseRenderer.render(g2d, arenaModel.getMouse());
+            }
+        }
+
+        // 3. MENÚ DE OBJETOS
+        if (isItemMenuOpen) {
+            itemRenderer.renderMenu(g2d, currentCombatItems, selectedItemIndex, customFont);
+        }
+
+        // 3. MENSAJE EN EL CENTRO
+        if (centerTextMessage != null && !centerTextMessage.isEmpty()) {
+            if (customFont != null) {
+                g2d.setFont(customFont);
+            }
+            g2d.setColor(Color.WHITE);
+            FontMetrics fm = g2d.getFontMetrics();
+            int stringWidth = fm.stringWidth(centerTextMessage);
+            int x = 200 + (600 - stringWidth) / 2;
+            int y = 240 + (250 - fm.getHeight()) / 2 + fm.getAscent();
+            g2d.drawString(centerTextMessage, x, y);
         }
     }
 
@@ -156,20 +290,100 @@ public class CombatPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 switch (accion) {
                     case "fight":
+                        isItemMenuOpen = false;
+                        disableAllButtons();
                         arenaModel.startCombat();
                         requestFocusInWindow();
+
+                        isMinigameActive = true;
+                        minigameEndTime = System.currentTimeMillis() + 15000;
+                        if (combatTimer != null)
+                            combatTimer.stop();
+                        combatTimer = new Timer(15000, ev -> endMinigame());
+                        combatTimer.setRepeats(false);
+                        combatTimer.start();
                         break;
                     case "act":
                         break;
                     case "item":
+                        currentCombatItems = inventario.getObjetosCombate();
+                        if (currentCombatItems != null && !currentCombatItems.isEmpty()) {
+                            // Se cambia de true a un toggle y no se bloquean los botones
+                            isItemMenuOpen = !isItemMenuOpen;
+                            selectedItemIndex = 0;
+                            centerTextMessage = ""; // Limpiar cualquier texto de combate
+                            requestFocusInWindow();
+                            repaint();
+                        } else {
+                            // Si no hay objetos usables en combate y con cantidad > 0, ciérralo.
+                            isItemMenuOpen = false;
+                            repaint();
+                        }
                         break;
                     case "mercy":
+                        isItemMenuOpen = false;
+                        disableAllButtons();
+                        double chance = Math.random();
+                        if (chance <= 0.10) {
+                            centerTextMessage = "HAS TENIDO PIEDAD";
+                            repaint();
+                            // Temporizador para cambio de layout en el futuro
+                            Timer transitionTimer = new Timer(2000, new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent ev) {
+                                    // TODO: Cambiar layout aquí
+                                    centerTextMessage = "";
+                                    repaint();
+                                    enableAllButtons();
+                                }
+                            });
+                            transitionTimer.setRepeats(false);
+                            transitionTimer.start();
+                        } else {
+                            centerTextMessage = "QUIERE MORDERTE";
+                            repaint();
+                            // Pausa para leer el texto, luego inicio de combate
+                            Timer minigameTimer = new Timer(1500, new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent ev) {
+                                    centerTextMessage = "";
+                                    arenaModel.startCombat();
+                                    requestFocusInWindow();
+
+                                    isMinigameActive = true;
+                                    minigameEndTime = System.currentTimeMillis() + 15000;
+                                    if (combatTimer != null)
+                                        combatTimer.stop();
+                                    combatTimer = new Timer(15000, ev2 -> endMinigame());
+                                    combatTimer.setRepeats(false);
+                                    combatTimer.start();
+                                    repaint();
+                                }
+                            });
+                            minigameTimer.setRepeats(false);
+                            minigameTimer.start();
+                        }
                         break;
                 }
             }
         });
 
         return button;
+    }
+
+    private void cargarFuente() {
+        try {
+            URL fontUrl = getClass().getResource("/font/deltarune.ttf");
+            if (fontUrl != null) {
+                Font baseFont = Font.createFont(Font.TRUETYPE_FONT, fontUrl.openStream());
+                customFont = baseFont.deriveFont(Font.BOLD, 40f);
+            } else {
+                customFont = new Font("Monospaced", Font.BOLD, 40);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            customFont = new Font("Monospaced", Font.BOLD, 40);
+        }
     }
 
     private void cargarImagenCombate() {
@@ -179,4 +393,30 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    private void disableAllButtons() {
+        btnFight.setEnabled(false);
+        btnAct.setEnabled(false);
+        btnItem.setEnabled(false);
+        btnMercy.setEnabled(false);
+    }
+
+    private void enableAllButtons() {
+        btnFight.setEnabled(true);
+        btnAct.setEnabled(true);
+        btnItem.setEnabled(true);
+        btnMercy.setEnabled(true);
+    }
+
+    private void endMinigame() {
+        if (!isMinigameActive)
+            return;
+        isMinigameActive = false;
+        if (combatTimer != null) {
+            combatTimer.stop();
+        }
+        arenaModel.stopCombat();
+        enableAllButtons();
+        currentRound++;
+        repaint();
+    }
 }

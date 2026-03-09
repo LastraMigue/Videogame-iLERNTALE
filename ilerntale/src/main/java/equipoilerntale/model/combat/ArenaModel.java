@@ -8,6 +8,8 @@ public class ArenaModel {
     private MouseModel mouse;
     private List<ProjectileModel> projectiles;
     private int nextType = 0;
+    private int goodCollisions = 0;
+    private int badCollisions = 0;
 
     public void startCombat() {
         int x = 200, y = 240, width = 600, height = 250;
@@ -16,6 +18,13 @@ public class ArenaModel {
 
         mouse = new MouseModel(mouseStartX, mouseStartY);
         projectiles = new ArrayList<>();
+        goodCollisions = 0;
+        badCollisions = 0;
+    }
+
+    public void stopCombat() {
+        mouse = null;
+        projectiles = null;
     }
 
     public void spawnProjectile() {
@@ -87,5 +96,43 @@ public class ArenaModel {
 
     public List<ProjectileModel> getProjectiles() {
         return projectiles;
+    }
+
+    public void checkCollisions() {
+        if (mouse == null || projectiles == null)
+            return;
+
+        for (ProjectileModel proj : projectiles) {
+            if (!proj.isActive())
+                continue;
+
+            if (mouse.getBounds().intersects(proj.getBounds())) {
+                proj.setActive(false);
+                if (proj.getType() == 1) {
+                    goodCollisions++;
+                } else {
+                    badCollisions++;
+                }
+            }
+        }
+    }
+
+    public int getGoodCollisions() {
+        return goodCollisions;
+    }
+
+    public int getBadCollisions() {
+        return badCollisions;
+    }
+
+    public boolean allBulletsHit() {
+        if (projectiles == null || projectiles.isEmpty())
+            return false;
+        for (ProjectileModel proj : projectiles) {
+            if (proj.isActive()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

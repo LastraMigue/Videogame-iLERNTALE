@@ -35,6 +35,7 @@ public class CombatController {
 
             if (arenaModel.getProjectiles() != null) {
                 arenaModel.actualizarProjectiles();
+                arenaModel.checkCollisions();
 
                 tickCounter++;
                 if (tickCounter >= 30) {

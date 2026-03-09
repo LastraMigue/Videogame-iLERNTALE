@@ -60,7 +60,6 @@ public class MainFrame extends JFrame {
         add(contenedor);
 
         cardLayout.show(contenedor, "COMBATE");
-        cardLayout.show(contenedor, "PAUSE");
 
         pack();
         setLocationRelativeTo(null);

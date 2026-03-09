@@ -29,6 +29,8 @@ public class BulletRenderer {
             return;
 
         for (ProjectileModel bala : balas) {
+            if (!bala.isActive()) continue;
+
             Image img = (bala.getType() == 0) ? imagenMalo : imagenBueno;
 
             if (img != null) {

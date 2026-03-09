@@ -7,6 +7,7 @@ public class ProjectileModel {
     private int size;
     private int dx, dy;
     private int type;
+    private boolean active = true;
 
     public ProjectileModel(int x, int y, int size, int dx, int dy, int type) {
         this.x = x;
@@ -64,5 +65,13 @@ public class ProjectileModel {
 
     public int getType() {
         return type;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
