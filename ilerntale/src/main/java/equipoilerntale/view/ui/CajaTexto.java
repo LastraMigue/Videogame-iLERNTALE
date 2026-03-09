@@ -4,9 +4,14 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * COMPONENTE REUTILIZABLE para pantallas de diálogo y anuncios.
+ * COMPONENTE REUTILIZABLE PARA PANTALLAS DE DIÁLOGO Y ANUNCIOS.
  */
 public class CajaTexto {
+
+    /**
+     * PUNTO DE ENTRADA PRINCIPAL DE LA APLICACIÓN.
+     * INICIA EL MARCO PRINCIPAL EN EL HILO DE EVENTOS DE SWING.
+     */
 
     /**
      * Crea un globo de diálogo estilizado (estilo Undertale/iLERNTALE).

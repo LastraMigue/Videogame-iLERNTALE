@@ -24,6 +24,9 @@ public class CharacterSelector extends JPanel {
     private MainFrame mainFrame;
     private String selectedCharacter = "";
 
+    /**
+     * CONSTRUCTOR DEL SELECTOR DE PERSONAJES.
+     */
     public CharacterSelector(MainFrame frame) {
         this.mainFrame = frame;
         setLayout(new BorderLayout());
@@ -88,7 +91,7 @@ public class CharacterSelector extends JPanel {
                 selectedCharacter = characterName;
                 System.out.println("Personaje seleccionado: " + selectedCharacter);
                 mainFrame.setPersonajeSeleccionado(selectedCharacter);
-                mainFrame.cambiarPantalla("MAPA");
+                mainFrame.cambiarPantalla("EXPLORACION");
             }
         });
 
