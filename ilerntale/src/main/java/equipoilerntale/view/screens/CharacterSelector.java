@@ -24,6 +24,9 @@ public class CharacterSelector extends JPanel {
     private MainFrame mainFrame;
     private String selectedCharacter = "";
 
+    /**
+     * CONSTRUCTOR DEL SELECTOR DE PERSONAJES.
+     */
     public CharacterSelector(MainFrame frame) {
         this.mainFrame = frame;
         setLayout(new BorderLayout());

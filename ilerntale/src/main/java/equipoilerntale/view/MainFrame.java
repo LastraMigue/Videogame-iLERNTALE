@@ -4,20 +4,26 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import java.awt.CardLayout;
+import java.util.logging.Logger;
 import javax.swing.*;
 
-import equipoilerntale.controller.ExplorationController;
+import equipoilerntale.GameSettings;
+import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
-import equipoilerntale.view.screens.ExploredPanel;
+import equipoilerntale.view.screen.ExplorationPanel;
 import equipoilerntale.view.screens.GamePanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
 
+/**
+ * MARCO PRINCIPAL DE LA APLICACIÓN.
+ * GESTIONA EL INTERCAMBIO DE PANTALLAS Y LA INICIALIZACIÓN DE CONTROLADORES.
+ */
 public class MainFrame extends JFrame {
 
-    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(MainFrame.class.getName());
+    private static final Logger LOG = Logger.getLogger(MainFrame.class.getName());
 
     private CardLayout cardLayout;
     private JPanel contenedor;
@@ -26,35 +32,39 @@ public class MainFrame extends JFrame {
     private GamePanel mapa;
     private PausePanel pause;
     private CombatPanel combate;
-    private ExploredPanel exploracion;
+    private ExplorationPanel exploracion;
     private String personajeSeleccionado = "";
 
-    // Controladores
+    // CONTROLADORES ACCESIBLES
     private MainController mainController;
-    private ExplorationController explorationController;
+    private ExplorationManager explorationManager;
 
+    /**
+     * CONSTRUCTOR DEL MARCO PRINCIPAL.
+     * CONFIGURA LA VENTANA, INICIALIZA CONTROLADORES Y PANELES.
+     */
     public MainFrame() {
-        // Configuración básica de la ventana
+        // CONFIGURACIÓN BÁSICA DE LA VENTANA
         cardLayout = new CardLayout();
         contenedor = new JPanel(cardLayout);
         setTitle("iLERNTALE");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
 
-        // Inicializar controladores
+        // INICIALIZAR CONTROLADORES
         inicializarControladores();
 
-        // Inicializar paneles
+        // INICIALIZAR PANELES DE LAS PANTALLAS
         menu = new MainMenu(this);
         mapa = new GamePanel(this);
         personajes = new CharacterSelector(this);
         pause = new PausePanel(this);
         combate = new CombatPanel(this);
 
-        // Crear ExploredPanel con el controller
-        exploracion = new ExploredPanel(this, personajeSeleccionado, explorationController);
+        // CREAR EXPLORATIONPANEL CON EL MANAGER LÓGICO
+        exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
 
-        // Añadir paneles al contenedor
+        // AÑADIR PANELES AL CONTENEDOR DE CARDLAYOUT
         contenedor.add(menu, "MENU");
         contenedor.add(mapa, "MAPA");
         contenedor.add(personajes, "PERSONAJES");
@@ -68,33 +78,32 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
 
-        // Iniciar game loop
+        // INICIAR EL HILO LÓGICO DEL JUEGO (GAME LOOP)
         mainController.startGameThread();
 
-        // Iniciar timer de renderizado
+        // INICIAR BUCLE DE RENDERIZADO (60 FPS)
         iniciarRenderLoop();
 
-        LOG.info("MainFrame inicializado correctamente");
+        LOG.info("MAINFRAME INICIALIZADO CORRECTAMENTE");
     }
 
     private void inicializarControladores() {
-        LOG.info("Inicializando controladores...");
+        LOG.info("INICIALIZANDO CONTROLADORES...");
 
-        // Usar personaje seleccionado o "migue" como default inicial
+        // USAR PERSONAJE SELECCIONADO O "MIGUE" POR DEFECTO
         String personaje = (personajeSeleccionado == null || personajeSeleccionado.isEmpty()) ? "migue"
                 : personajeSeleccionado;
 
-        // Crear MainController con el personaje
+        // CREAR MAINCONTROLLER Y OBTENER EL MANAGER DE EXPLORACIÓN
         mainController = new MainController(this, personaje);
+        explorationManager = mainController.getExplorationManager();
 
-        // Obtener exploration controller del main controller
-        explorationController = mainController.getExplorationController();
-
-        LOG.info("Controladores inicializados");
+        LOG.info("CONTROLADORES INICIALIZADOS");
     }
 
     private void iniciarRenderLoop() {
-        // Timer para repintar el panel activo a 60 FPS
+        // TIMER PARA REPINTAR EL PANEL ACTIVO A 60 FPS
+        // El isShowing() del ExplorationPanel ya filtra renders innecesarios
         javax.swing.Timer renderTimer = new javax.swing.Timer(16, e -> {
             if (exploracion != null) {
                 exploracion.requestRender();
@@ -103,37 +112,48 @@ public class MainFrame extends JFrame {
         renderTimer.start();
     }
 
+    /**
+     * CAMBIA LA PANTALLA VISIBLE ACTUALMENTE.
+     */
     public void cambiarPantalla(String nombre) {
-        LOG.info("Cambiando a pantalla: " + nombre);
+        LOG.info("CAMBIANDO A PANTALLA: " + nombre);
+
+        // Al salir de EXPLORACION: desactivar (pausa) en lugar de destruir assets
+        if (!"EXPLORACION".equals(nombre) && exploracion != null) {
+            exploracion.dispose(); // Llama a manager.deactivate() — no destruye assets
+        }
+
         cardLayout.show(contenedor, nombre);
 
-        // Dar foco automáticamente a la exploración si se entra en ella
+        // Dar foco y activar lógica de juego cuando se muestra EXPLORACION
         if ("EXPLORACION".equals(nombre) && exploracion != null) {
             exploracion.requestFocusInWindow();
+            exploracion.reset(); // Llama a manager.activate() — genera zombies y activa updates
         }
     }
 
+    /**
+     * DEFINE EL PERSONAJE SELECCIONADO Y RECONSTRUYE LOS CONTROLADORES.
+     */
     public void setPersonajeSeleccionado(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
-            LOG.warning("nombrePersonaje no puede ser null o vacío");
+            LOG.warning("EL NOMBRE NO PUEDE SER NULO. USANDO MIGUE.");
             nombre = "migue";
         }
         this.personajeSeleccionado = nombre.trim();
 
-        // Recrear el controller
+        // Limpiar el manager anterior
         if (mainController != null) {
             mainController.dispose();
         }
 
         inicializarControladores();
+        mainController.startGameThread();
 
-        // REINICIAR el thread del juego para el nuevo controlador
-        if (mainController != null) {
-            mainController.startGameThread();
-        }
+        // Recrear el panel de exploración con el nuevo personaje y manager
+        exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
 
-        // Recrear el panel con el nuevo controller
-        exploracion = new ExploredPanel(this, personajeSeleccionado, explorationController);
+        // Refrescar el contenedor de pantallas
         contenedor.removeAll();
         contenedor.add(menu, "MENU");
         contenedor.add(mapa, "MAPA");
@@ -142,30 +162,51 @@ public class MainFrame extends JFrame {
         contenedor.add(combate, "COMBATE");
         contenedor.add(exploracion, "EXPLORACION");
 
-        LOG.info("Personaje seleccionado: " + this.personajeSeleccionado);
+        // CRÍTICO: sin esto el CardLayout no muestra los paneles nuevos
+        contenedor.revalidate();
+        contenedor.repaint();
+
+        LOG.info("PERSONAJE SELECCIONADO: " + this.personajeSeleccionado);
     }
 
+    // ============ GETTERS ============
+
+    /**
+     * OBTIENE EL NOMBRE DEL PERSONAJE SELECCIONADO.
+     */
     public String getPersonajeSeleccionado() {
         return personajeSeleccionado;
     }
 
-    public ExploredPanel getExploracion() {
+    public ExplorationPanel getExploracion() {
         return exploracion;
     }
 
+    /**
+     * OBTIENE EL SELECTOR DE PERSONAJES.
+     */
     public CharacterSelector getPersonajes() {
         return personajes;
     }
 
+    /**
+     * OBTIENE EL PANEL DEL MAPA (INTRODUCCIÓN).
+     */
     public GamePanel getMapa() {
         return mapa;
     }
 
+    /**
+     * OBTIENE EL CONTROLADOR PRINCIPAL DEL JUEGO.
+     */
     public MainController getMainController() {
         return mainController;
     }
 
-    public ExplorationController getExplorationController() {
-        return explorationController;
+    /**
+     * OBTIENE EL GESTOR DE EXPLORACIÓN.
+     */
+    public ExplorationManager getExplorationManager() {
+        return explorationManager;
     }
 }

@@ -8,11 +8,15 @@ public class InputHandler implements KeyListener {
 
     private static final Logger LOG = Logger.getLogger(InputHandler.class.getName());
 
-    public boolean upPressed, downPressed, leftPressed, rightPressed, enterPressed, ePressed;
+    public boolean upPressed, downPressed, leftPressed, rightPressed, enterPressed, ePressed, mPressed;
     public String lastHorizontal = "derecha";
     public String lastVertical = "abajo";
     public boolean preferHorizontal = true;
 
+    /**
+     * ESTABLECE EL ESTADO DE PRESIÓN DE UNA TECLA ESPECÍFICA.
+     * ACTUALIZA LA ÚLTIMA DIRECCIÓN HORIZONTAL O VERTICAL SEGÚN LA TECLA.
+     */
     public void setPressed(int keyCode, boolean pressed) {
         switch (keyCode) {
             case KeyEvent.VK_W:
@@ -52,6 +56,9 @@ public class InputHandler implements KeyListener {
                 break;
             case KeyEvent.VK_E:
                 ePressed = pressed;
+                break;
+            case KeyEvent.VK_M:
+                mPressed = pressed;
                 break;
         }
     }

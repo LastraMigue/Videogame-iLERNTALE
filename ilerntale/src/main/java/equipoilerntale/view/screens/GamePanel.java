@@ -28,12 +28,15 @@ public class GamePanel extends JPanel {
 
     // --- Guion de la Historia ---
     private final String[][] script = {
-            { "Soraya", "¡Hola! Soy Soraya. Bienvenido al mundo de iLERNTALE." },
+            { "Soraya", "¡Hola! ¡Hola!¡Hola!Soy Soraya. Bienvenido al mundo de iLERNTALE." },
             { "Jesica", "¡Y yo soy Jesica! ¡Qué emoción tenerte aquí!" },
             { "Soraya", "En iLERNTALE exploraremos el instituto juntos." },
             { "Jesica", "¡Vamos a explorar juntos! ¡Usa las flechas!" }
     };
 
+    /**
+     * CONSTRUCTOR DEL PANEL DE INTRODUCCIÓN (NARRATIVA).
+     */
     public GamePanel(MainFrame frame) {
         this.mainFrame = frame;
         setPreferredSize(new Dimension(GameSettings.INTRO_WIDTH, GameSettings.INTRO_HEIGHT));
