@@ -217,8 +217,9 @@ public class MainFrame extends JFrame {
         contenedor.removeAll();
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
-        contenedor.add(pause, "PAUSE");
         contenedor.add(combate, "COMBATE");
+        videoScreen.setName("VIDEO");
+        contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
 
         // CRÍTICO: sin esto el CardLayout no muestra los paneles nuevos

@@ -1,4 +1,4 @@
-package equipoilerntale.model.entities;
+package equipoilerntale.model.entity;
 
 import java.awt.Image;
 import java.net.URL;

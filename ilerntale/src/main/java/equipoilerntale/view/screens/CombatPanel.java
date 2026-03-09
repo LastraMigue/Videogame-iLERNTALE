@@ -20,15 +20,15 @@ import javax.swing.Timer;
 import java.util.List;
 
 import equipoilerntale.view.MainFrame;
+import equipoilerntale.view.render.BulletRenderer;
+import equipoilerntale.view.render.ItemRenderer;
+import equipoilerntale.view.render.MouseRenderer;
 import equipoilerntale.model.combat.ArenaModel;
 import equipoilerntale.controller.CombatController;
 import equipoilerntale.controller.InputHandler;
-import equipoilerntale.view.renderers.MouseRenderer;
 import equipoilerntale.view.ui.BarraVida;
-import equipoilerntale.view.renderers.BulletRenderer;
-import equipoilerntale.view.renderers.ItemRenderer;
 import equipoilerntale.view.ui.Inventario;
-import equipoilerntale.model.entities.ItemModel;
+import equipoilerntale.model.entity.ItemModel;
 
 public class CombatPanel extends JPanel {
     private MainFrame mainFrame;
@@ -135,8 +135,11 @@ public class CombatPanel extends JPanel {
             }
         } else {
             combatController.update();
-            if (isMinigameActive && arenaModel.allBulletsHit()) {
-                endMinigame();
+            if (isMinigameActive) {
+                repaint();
+                if (arenaModel.allBulletsHit()) {
+                    endMinigame();
+                }
             }
         }
     }

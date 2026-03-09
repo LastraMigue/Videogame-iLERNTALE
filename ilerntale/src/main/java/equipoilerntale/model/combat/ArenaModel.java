@@ -126,7 +126,7 @@ public class ArenaModel {
     }
 
     public boolean allBulletsHit() {
-        if (projectiles == null || projectiles.isEmpty())
+        if (projectiles == null || projectiles.size() < 12)
             return false;
         for (ProjectileModel proj : projectiles) {
             if (proj.isActive()) {

@@ -1,4 +1,4 @@
-package equipoilerntale.view.renderers;
+package equipoilerntale.view.render;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -6,7 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.util.List;
 
-import equipoilerntale.model.entities.ItemModel;
+import equipoilerntale.model.entity.ItemModel;
 
 public class ItemRenderer {
 

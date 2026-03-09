@@ -2,7 +2,8 @@ package equipoilerntale.view.ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import equipoilerntale.model.entities.ItemModel;
+
+import equipoilerntale.model.entity.ItemModel;
 
 public class Inventario {
 

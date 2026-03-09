@@ -1,4 +1,4 @@
-package equipoilerntale.view.renderers;
+package equipoilerntale.view.render;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -29,7 +29,8 @@ public class BulletRenderer {
             return;
 
         for (ProjectileModel bala : balas) {
-            if (!bala.isActive()) continue;
+            if (!bala.isActive())
+                continue;
 
             Image img = (bala.getType() == 0) ? imagenMalo : imagenBueno;
 
