@@ -12,7 +12,7 @@ import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
-import equipoilerntale.view.screen.ExplorationPanel;
+import equipoilerntale.view.screens.ExplorationPanel;
 import equipoilerntale.view.screens.GamePanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;

@@ -1,8 +1,7 @@
-package equipoilerntale.view.screen;
+package equipoilerntale.view.screens;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.BasicStroke;
 import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.model.entity.Zombie;
@@ -44,7 +43,7 @@ public class ExplorationPanel extends JPanel {
         RenderContext ctx = new RenderContext(g2d, getWidth(), getHeight(), cameraX, cameraY);
         ctx.translateCamera();
         mapRenderer.drawBackground(ctx, background);
-        
+
         // DIBUJA LOS MUROS SI EL MODO DEBUG ESTÁ ACTIVADO
         if (manager.isDebugMurosVisibles()) {
             g2d.setColor(Color.RED);
@@ -56,7 +55,7 @@ public class ExplorationPanel extends JPanel {
             g2d.setColor(Color.GREEN);
             g2d.draw(manager.getDoorArea());
         }
-        
+
         mapRenderer.drawZoneLabel(ctx, manager.getDoorArea(), "Aula 124");
         playerRenderer.drawPlayer(ctx, manager.getPlayerCurrentSprite(), manager.getPlayer());
         for (Zombie z : manager.getActiveZombies())
