@@ -15,6 +15,7 @@ import equipoilerntale.view.screens.GamePanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
 import equipoilerntale.view.screens.VideoScreen;
+import equipoilerntale.controller.MainController;
 
 import java.awt.*;
 
@@ -28,6 +29,7 @@ public class MainFrame extends JFrame {
     private PausePanel pause;
     private CombatPanel combate;
     private VideoScreen videoScreen;
+    private MainController mainController;
 
     public MainFrame() {
         // Configuración básica de la ventana
@@ -58,6 +60,7 @@ public class MainFrame extends JFrame {
         add(contenedor);
 
         cardLayout.show(contenedor, "COMBATE");
+        cardLayout.show(contenedor, "PAUSE");
 
         pack();
         setLocationRelativeTo(null);
@@ -71,6 +74,14 @@ public class MainFrame extends JFrame {
         if (nombre.equals("VIDEO")) {
             videoScreen.playVideo();
         }
+    }
+
+    public void setMainController(MainController controller) {
+        this.mainController = controller;
+    }
+
+    public MainController getMainController() {
+        return mainController;
     }
 
     public GamePanel getMapa() {

@@ -20,6 +20,7 @@ import equipoilerntale.model.combat.ArenaModel;
 import equipoilerntale.controller.CombatController;
 import equipoilerntale.controller.InputHandler;
 import equipoilerntale.view.renderers.MouseRenderer;
+import equipoilerntale.view.ui.BarraVida;
 import equipoilerntale.view.renderers.BulletRenderer;
 
 public class CombatPanel extends JPanel {
@@ -177,4 +178,5 @@ public class CombatPanel extends JPanel {
             imagenFondo = new ImageIcon(url).getImage().getScaledInstance(1000, 600, Image.SCALE_DEFAULT);
         }
     }
+
 }

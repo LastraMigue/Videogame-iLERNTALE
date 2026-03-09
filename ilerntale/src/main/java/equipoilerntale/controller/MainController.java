@@ -2,6 +2,7 @@ package equipoilerntale.controller;
 
 import equipoilerntale.view.MainFrame;
 import equipoilerntale.view.screens.CombatPanel;
+import equipoilerntale.view.screens.PausePanel;
 import javax.swing.JPanel;
 
 public class MainController implements Runnable {
@@ -41,6 +42,15 @@ public class MainController implements Runnable {
         }
     }
 
+    // Enum para los estados Jugando o en Pausa
+    public enum GameState {
+        PLAYING,
+        PAUSED
+    }
+
+    // Estado en pausa
+    private GameState state = GameState.PLAYING;
+
     private void update() {
         // Obtenemos el panel activo desde MainFrame (asegúrate de tener este método en
         // MainFrame)
@@ -49,9 +59,45 @@ public class MainController implements Runnable {
         if (panelActual instanceof CombatPanel) {
             ((CombatPanel) panelActual).updateCombat();
         }
+
+        // Aquí se llamará a los sub-controladores (Exploration, Combat, etc.)
+
+        // Subcontrolador de estado panel/menu (Jugando o en Pausa)
+        if (state == GameState.PAUSED) {
+            return; // Si está en pausa no se actualiza el juego
+        }
+
+    }
+
+    // Sección para controlar EN JUEGO y EN PAUSA
+    // Puede que haya que meterlo en el método Update
+
+    // Métodos para que el juego esté "en juego" o "en pausa"
+    public void pauseGame() {
+        state = GameState.PAUSED;
+
+    }
+
+    public void resumeGame() {
+        state = GameState.PLAYING;
+    }
+
+    // Seleccionar modo "Pausa" si está jugando o "Reanudar" si está pausado
+    public void togglePause() {
+        if (state == GameState.PLAYING) {
+            pauseGame();
+        } else {
+            resumeGame();
+
+        }
+    }
+
+    public GameState getGameState() {
+        return state;
     }
 
     private void draw() {
         mainFrame.repaint();
     }
+
 }

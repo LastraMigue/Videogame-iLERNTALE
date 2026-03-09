@@ -14,6 +14,7 @@ public class Main {
 
             // 2. Instanciamos el controlador pasándole la vista
             MainController mainController = new MainController(mainFrame);
+            mainFrame.setMainController(mainController);
 
             // 3. Arrancamos el hilo del juego
             mainController.startGameThread();
