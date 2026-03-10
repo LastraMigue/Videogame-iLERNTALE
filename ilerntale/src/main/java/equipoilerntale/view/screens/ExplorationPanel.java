@@ -4,11 +4,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
 
 import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.model.entity.Zombie;
+import equipoilerntale.model.entity.Boss;
+import equipoilerntale.model.map.DoorModel;
 import equipoilerntale.service.AssetService;
 import equipoilerntale.view.MainFrame;
 import equipoilerntale.view.render.*;
@@ -41,10 +44,10 @@ public class ExplorationPanel extends JPanel {
     private final MapRenderer mapRenderer = new MapRenderer();
     private final PlayerRenderer playerRenderer = new PlayerRenderer();
     private final ZombieRenderer zombieRenderer = new ZombieRenderer();
+    private final BossRenderer bossRenderer = new BossRenderer();
 
     private Image backgroundIntro;
-    private Image backgroundExploration;
-    private Image background;
+    private Image currentBackground;
 
     private final JLabel labelFondoIntro = new JLabel();
     private final JLabel labelSoraya = new JLabel();
@@ -74,7 +77,8 @@ public class ExplorationPanel extends JPanel {
 
     // ==================== INICIALIZACIÓN ====================
     private void inicializarRecursosIntro() {
-        backgroundIntro = cargarFondo("/mapa/pasillo1.jpg", GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA);
+        backgroundIntro = cargarFondoIntroRecortado("/mapa/pasillo.png", GameSettings.ANCHO_PANTALLA,
+                GameSettings.ALTO_PANTALLA);
         ImageIcon iconoSoraya = cargarImagen("/dialogue/soraya.png", 256, 256);
         ImageIcon iconoJesica = cargarImagen("/dialogue/jesica.png", 256, 256);
 
@@ -106,12 +110,10 @@ public class ExplorationPanel extends JPanel {
     }
 
     private void inicializarRecursosExploracion() {
-        // El archivo real es pasillo.jpg (no .png)
-        backgroundExploration = AssetService.getInstance().loadBackground("/mapa/pasillo.jpg");
-        if (backgroundExploration == null) {
-            LOG.warning("NO SE PUDO CARGAR EL FONDO DE EXPLORACIÓN: /mapa/pasillo.jpg");
-        }
-        background = backgroundExploration;
+        // EL FONDO SE CARGARÁ DINÁMICAMENTE POR HABITACIÓN EN dibujarExploracion(),
+        // AQUÍ NO HACEMOS NADA PERO SE MANTIENE POR SI AÑADES OTROS EFECTOS GLOBALES.
+        Image backgroundExploracion = cargarFondo("/mapa/pasillo.png", GameSettings.ANCHO_PANTALLA,
+                GameSettings.ALTO_PANTALLA);
     }
 
     private void configurarCicloVida() {
@@ -138,6 +140,37 @@ public class ExplorationPanel extends JPanel {
     }
 
     // ==================== CARGA DE RECURSOS ====================
+    private Image cargarFondoIntroRecortado(String ruta, int anchoPantalla, int altoPantalla) {
+        java.net.URL url = getClass().getResource(ruta);
+        if (url == null) {
+            LOG.warning("NO SE ENCONTRÓ EL RECURSO: " + ruta);
+            return null;
+        }
+        try {
+            // 1. Cargamos la imagen original
+            Image originalImg = new ImageIcon(url).getImage();
+
+            // 2. Creamos un buffer con el tamaño exacto al que se escalaría el MAPA
+            // COMPLETO de exploración
+            BufferedImage mapaCompleto = new BufferedImage(GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT,
+                    BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = mapaCompleto.createGraphics();
+            // Lo pintamos ajustándolo a su tamaño de Exploración real
+            g2d.drawImage(originalImg, 0, 0, GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT, null);
+            g2d.dispose();
+
+            // 3. Recortamos el trozo exacto de la pantalla de la esquina superior izquierda
+            // (0,0) u otra si la cámara inicia ahí.
+            // Esto asegura que se vea EXACTAMENTE igual que cuando arranca el juego en x=0,
+            // sin distorsión.
+            return mapaCompleto.getSubimage(0, 0, anchoPantalla, altoPantalla);
+
+        } catch (Exception e) {
+            LOG.warning("Error recortando fondo intro: " + e.getMessage());
+            return null;
+        }
+    }
+
     private Image cargarFondo(String ruta, int w, int h) {
         java.net.URL url = getClass().getResource(ruta);
         if (url == null) {
@@ -194,7 +227,6 @@ public class ExplorationPanel extends JPanel {
         }
 
         modoIntro = false;
-        background = backgroundExploration;
         labelFondoIntro.setVisible(false);
         labelSoraya.setVisible(false);
         labelJesica.setVisible(false);
@@ -208,7 +240,6 @@ public class ExplorationPanel extends JPanel {
 
     public void reiniciarIntro() {
         modoIntro = true;
-        background = backgroundIntro;
         indicePasos = 0;
         labelFondoIntro.setVisible(true);
         labelSoraya.setVisible(false);
@@ -237,31 +268,53 @@ public class ExplorationPanel extends JPanel {
         RenderContext ctx = new RenderContext(g2d, getWidth(), getHeight(), cameraX, cameraY);
         ctx.translateCamera();
 
-        mapRenderer.drawBackground(ctx, background);
+        // CARGAR EL FONDO DINÁMICAMENTE SEGÚN LA HABITACIÓN ACTUAL
+        if (manager.getCurrentRoom() != null) {
+            if (currentBackground == null || !currentBackground
+                    .equals(AssetService.getInstance().loadBackground(manager.getCurrentRoom().getBackgroundPath()))) {
+                currentBackground = AssetService.getInstance()
+                        .loadBackground(manager.getCurrentRoom().getBackgroundPath());
+            }
+            mapRenderer.drawBackground(ctx, currentBackground);
+        }
 
-        mapRenderer.drawZoneLabel(ctx, manager.getDoorArea(), "Aula 124");
+        if (manager.getCurrentRoom() != null) {
+            for (DoorModel door : manager.getCurrentRoom().getDoors()) {
+                mapRenderer.drawZoneLabel(ctx, door.getArea(), door.getTargetRoomName());
+            }
+        }
+
         playerRenderer.drawPlayer(ctx, manager.getPlayerCurrentSprite(), manager.getPlayer());
 
         for (Zombie z : manager.getActiveZombies()) {
             zombieRenderer.drawZombie(ctx, z);
         }
 
-        if (manager.isDebugMurosVisibles()) {
+        for (Boss b : manager.getActiveBosses()) {
+            bossRenderer.drawBoss(ctx, b);
+        }
+
+        if (manager.isDebugMurosVisibles() && manager.getCurrentRoom() != null) {
             g2d.setStroke(new BasicStroke(2));
 
             // Dibujar muros y puerta
             g2d.setColor(Color.RED);
-            for (Rectangle wall : manager.getWalls()) {
+            for (Rectangle wall : manager.getCurrentRoom().getWalls()) {
                 g2d.draw(wall);
             }
             g2d.setColor(Color.GREEN);
-            g2d.draw(manager.getDoorArea());
+            for (DoorModel door : manager.getCurrentRoom().getDoors()) {
+                g2d.draw(door.getArea());
+            }
 
             // Dibujar hitboxes
             g2d.setColor(Color.BLUE);
             g2d.draw(manager.getPlayer().getHitbox(manager.getPlayer().getX(), manager.getPlayer().getY()));
             for (Zombie z : manager.getActiveZombies()) {
                 g2d.draw(z.getHitbox(z.getX(), z.getY()));
+            }
+            for (Boss b : manager.getActiveBosses()) {
+                g2d.draw(b.getHitbox(b.getX(), b.getY()));
             }
         }
 

@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import equipoilerntale.GameSettings;
 import equipoilerntale.model.entity.Zombie;
+import equipoilerntale.model.entity.Boss;
 
 /**
  * SISTEMA QUE GESTIONA TODOS LOS ENEMIGOS ACTIVOS (ZOMBIES).
@@ -16,6 +17,7 @@ public class EnemySystem {
     private static final Logger LOG = Logger.getLogger(EnemySystem.class.getName());
 
     private final List<Zombie> zombies = new ArrayList<>();
+    private final List<Boss> bosses = new ArrayList<>();
     private final Random random = new Random();
     private boolean active = false;
 
@@ -49,6 +51,17 @@ public class EnemySystem {
             if (z != null) {
                 zombies.add(z);
             }
+        }
+        active = true;
+    }
+
+    /**
+     * GENERA LOS JEFES FINALES EN LAS ÁREAS ESPECIFICADAS POR CADA SALA.
+     */
+    public void spawnBoss(Rectangle area) {
+        if (area != null) {
+            Boss boss = new Boss(area.x, area.y, GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT);
+            bosses.add(boss);
         }
         active = true;
     }
@@ -101,13 +114,18 @@ public class EnemySystem {
     }
 
     public boolean collidesWithPlayer(Rectangle playerHitbox) {
-        return zombies.stream().anyMatch(z -> {
+        boolean hitZombie = zombies.stream().anyMatch(z -> {
             if (!z.isAlive())
                 return false;
-
-            Rectangle zHitbox = z.getHitbox(z.getX(), z.getY());
-            return playerHitbox.intersects(zHitbox);
+            return playerHitbox.intersects(z.getHitbox(z.getX(), z.getY()));
         });
+        boolean hitBoss = bosses.stream().anyMatch(b -> {
+            if (!b.isAlive())
+                return false;
+            return playerHitbox.intersects(b.getHitbox(b.getX(), b.getY()));
+        });
+
+        return hitZombie || hitBoss;
     }
 
     /**
@@ -126,10 +144,18 @@ public class EnemySystem {
     }
 
     /**
+     * OBTIENE LA LISTA DE JEFES ACTIVOS.
+     */
+    public List<Boss> getBosses() {
+        return bosses;
+    }
+
+    /**
      * LIMPIA TODOS LOS ZOMBIES Y DESACTIVA EL SISTEMA.
      */
     public void clear() {
         zombies.clear();
+        bosses.clear();
         active = false;
     }
 }
