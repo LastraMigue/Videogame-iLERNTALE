@@ -8,6 +8,10 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.Cursor;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URL;
 
@@ -35,13 +39,12 @@ public class CharacterSelector extends JPanel {
         JLabel titleLabel = new JLabel("SELECCIONA A TU PERSONAJE", SwingConstants.CENTER);
 
         try {
-            URL fontUrl = getClass().getResource("/font/deltarune.ttf");
-            if (fontUrl != null) {
-                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontUrl.openStream()).deriveFont(52f);
+            InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
+            if (fontStream != null) {
+                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(52f);
                 titleLabel.setFont(deltaruneFont);
             } else {
-                titleLabel.setFont(new Font("Monospaced", Font.BOLD, 32));
-                System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
+                throw new IOException("No se encontró el archivo de la fuente.");
             }
         } catch (FontFormatException | IOException e) {
             titleLabel.setFont(new Font("Monospaced", Font.BOLD, 32));
@@ -70,20 +73,37 @@ public class CharacterSelector extends JPanel {
 
     private JButton createCharacterButton(String characterName) {
         JButton button = new JButton();
-        button.setBackground(Color.DARK_GRAY);
+
+        Color colorNormal = Color.DARK_GRAY;
+        Color colorHover = Color.GRAY;
+
+        button.setBackground(colorNormal);
         button.setFocusPainted(false);
         button.setBorder(javax.swing.BorderFactory.createLineBorder(Color.WHITE, 2));
+        button.setOpaque(true);
 
-        String imagePath = "/player/" + characterName + "/abajo1" + characterName + ".png";
-        URL imageUrl = getClass().getResource(imagePath);
-
+        URL imageUrl = getClass().getResource("/player/" + characterName + "/abajo1" + characterName + ".png");
         if (imageUrl != null) {
-            ImageIcon icon = new ImageIcon(imageUrl);
-            Image img = icon.getImage().getScaledInstance(150, 150, Image.SCALE_DEFAULT);
-            button.setIcon(new ImageIcon(img));
+            button.setIcon(new ImageIcon(imageUrl));
         } else {
-            System.err.println("No se encontró la imagen: " + imagePath);
+            System.err.println("Imagen no encontrada para: " + characterName);
+            button.setText(characterName.toUpperCase());
+            button.setForeground(Color.WHITE);
         }
+
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(colorHover);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(colorNormal);
+            }
+        });
 
         button.addActionListener(new ActionListener() {
             @Override

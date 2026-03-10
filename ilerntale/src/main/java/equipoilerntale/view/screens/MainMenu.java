@@ -3,9 +3,13 @@ package equipoilerntale.view.screens;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.awt.Cursor;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
@@ -28,7 +32,7 @@ public class MainMenu extends JPanel {
         this.mainFrame = frame;
 
         setPreferredSize(new Dimension(1000, 600));
-        setLayout(null);
+        setLayout(null); // Diseño absoluto, usamos coordenadas
 
         inicializarComponentes();
         cargarImagenMenu();
@@ -37,6 +41,21 @@ public class MainMenu extends JPanel {
     private void inicializarComponentes() {
         btnJugar = new JButton("NUEVA PARTIDA");
         btnJugar.setFont(new Font("Arial", Font.BOLD, 24));
+        btnJugar = new JButton("JUGAR");
+        // Traer la fuente deltarune.ttf
+        try {
+            InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
+            if (fontStream != null) {
+                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(64f);
+                btnJugar.setFont(deltaruneFont);
+            } else {
+                throw new IOException("No se encontró el archivo de la fuente.");
+            }
+        } catch (FontFormatException | IOException e) {
+            btnJugar.setFont(new Font("Monospaced", Font.BOLD, 32));
+            System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
+        }
+
         btnJugar.setOpaque(false);
         btnJugar.setContentAreaFilled(false);
         btnJugar.setBorderPainted(false);
@@ -46,12 +65,26 @@ public class MainMenu extends JPanel {
         btnJugar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainFrame.cambiarPantalla("PERSONAJES");
+                // Cambiar a la pantalla que muestra el vídeo
+                mainFrame.cambiarPantalla("VIDEO");
             }
         });
 
         btnSalir = new JButton("SALIR");
-        btnSalir.setFont(new Font("Arial", Font.BOLD, 24));
+
+        try {
+            InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
+            if (fontStream != null) {
+                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(64f);
+                btnSalir.setFont(deltaruneFont);
+            } else {
+                throw new IOException("No se encontró el archivo de la fuente.");
+            }
+        } catch (FontFormatException | IOException e) {
+            btnSalir.setFont(new Font("Monospaced", Font.BOLD, 32));
+            System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
+        }
+
         btnSalir.setOpaque(false);
         btnSalir.setContentAreaFilled(false);
         btnSalir.setBorderPainted(false);
@@ -64,6 +97,9 @@ public class MainMenu extends JPanel {
                 System.exit(0);
             }
         });
+
+        btnJugar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnSalir.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         add(btnJugar);
         add(btnSalir);
@@ -95,5 +131,4 @@ public class MainMenu extends JPanel {
             System.err.println("ERROR: No se pudo cargar la imagen de fondo");
         }
     }
-
 }

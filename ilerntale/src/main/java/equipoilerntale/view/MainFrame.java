@@ -6,8 +6,9 @@ import javax.swing.WindowConstants;
 import java.awt.CardLayout;
 import java.util.logging.Logger;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
 
-import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
@@ -15,6 +16,9 @@ import equipoilerntale.view.screens.CombatPanel;
 import equipoilerntale.view.screens.ExplorationPanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
+import equipoilerntale.view.screens.VideoScreen;
+import equipoilerntale.controller.MainController;
+import equipoilerntale.view.ui.BarraVida;
 
 /**
  * MARCO PRINCIPAL DE LA APLICACIÓN.
@@ -25,17 +29,24 @@ public class MainFrame extends JFrame {
     private static final Logger LOG = Logger.getLogger(MainFrame.class.getName());
 
     private CardLayout cardLayout;
+    private JLayeredPane layeredPane;
     private JPanel contenedor;
+    private String pantallaActual = "MENU";
     private MainMenu menu;
     private CharacterSelector personajes;
     private PausePanel pause;
     private CombatPanel combate;
+    private VideoScreen videoScreen;
     private ExplorationPanel exploracion;
     private String personajeSeleccionado = "";
 
     // CONTROLADORES ACCESIBLES
     private MainController mainController;
     private ExplorationManager explorationManager;
+
+    // HUD Y VIDA
+    private BarraVida playerHealthBar;
+    private JPanel hudPanel;
 
     /**
      * CONSTRUCTOR DEL MARCO PRINCIPAL.
@@ -52,11 +63,15 @@ public class MainFrame extends JFrame {
         // INICIALIZAR CONTROLADORES
         inicializarControladores();
 
+        // INICIALIZAR VIDA
+        playerHealthBar = new BarraVida(50, "JUGADOR");
+
         // INICIALIZAR PANELES DE LAS PANTALLAS
         menu = new MainMenu(this);
         personajes = new CharacterSelector(this);
         pause = new PausePanel(this);
         combate = new CombatPanel(this);
+        videoScreen = new VideoScreen(this);
 
         // CREAR EXPLORATIONPANEL CON EL MANAGER LÓGICO
         exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
@@ -64,11 +79,54 @@ public class MainFrame extends JFrame {
         // AÑADIR PANELES AL CONTENEDOR DE CARDLAYOUT
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
-        contenedor.add(pause, "PAUSE");
         contenedor.add(combate, "COMBATE");
+        videoScreen.setName("VIDEO"); // Útil para exclusiones
+        contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
 
-        add(contenedor);
+        // Configuramos el LayeredPane para el overlay
+        layeredPane = new JLayeredPane();
+        layeredPane.setPreferredSize(new Dimension(1000, 600));
+
+        // Capa inferior: El contenedor principal con CardLayout
+        contenedor.setBounds(0, 0, 1000, 600);
+        layeredPane.add(contenedor, JLayeredPane.DEFAULT_LAYER);
+
+        // Capa superior: El panel de pausa (inicialmente invisible)
+        pause.setBounds(0, 0, 1000, 600);
+        pause.setVisible(false);
+        layeredPane.add(pause, JLayeredPane.PALETTE_LAYER);
+
+        // HUD: Vida del jugador
+        hudPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (!pantallaActual.equals("MENU") && !pantallaActual.equals("VIDEO")
+                        && !pantallaActual.equals("PERSONAJES") && !pause.isVisible()) {
+                    // Dibujar arriba a la derecha
+                    playerHealthBar.draw(g, getWidth() - 220, 35);
+                }
+            }
+        };
+        hudPanel.setBounds(0, 0, 1000, 600);
+        hudPanel.setOpaque(false);
+        // Deshabilitar eventos de ratón en el HUD para no bloquear clics debajo
+        hudPanel.setFocusable(false);
+        layeredPane.add(hudPanel, JLayeredPane.POPUP_LAYER);
+
+        add(layeredPane);
+
+        // Registro global de la tecla ESC
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                if (puedePausar()) {
+                    togglePause();
+                    return true; // Consumir el evento
+                }
+            }
+            return false;
+        });
 
         pack();
         setLocationRelativeTo(null);
@@ -104,6 +162,9 @@ public class MainFrame extends JFrame {
             if (exploracion != null) {
                 exploracion.requestRender();
             }
+            if (hudPanel != null) {
+                hudPanel.repaint();
+            }
         });
         renderTimer.start();
     }
@@ -112,7 +173,13 @@ public class MainFrame extends JFrame {
      * CAMBIA LA PANTALLA VISIBLE ACTUALMENTE.
      */
     public void cambiarPantalla(String nombre) {
-        LOG.info("CAMBIANDO A PANTALLA: " + nombre);
+        this.pantallaActual = nombre;
+        cardLayout.show(contenedor, nombre);
+
+        // Si vamos a la pantalla del video, iniciamos el video
+        if (nombre.equals("VIDEO")) {
+            videoScreen.playVideo();
+        }
 
         // Al salir de EXPLORACION: desactivar (pausa) en lugar de destruir assets
         if (!"EXPLORACION".equals(nombre) && exploracion != null) {
@@ -126,6 +193,31 @@ public class MainFrame extends JFrame {
             exploracion.requestFocusInWindow();
             exploracion.reset(); // Llama a manager.activate() — genera zombies y activa updates
         }
+    }
+
+    public void togglePause() {
+        if (pause.isVisible()) {
+            pause.setVisible(false);
+            if (mainController != null)
+                mainController.resumeGame();
+        } else {
+            pause.setVisible(true);
+            if (mainController != null)
+                mainController.pauseGame();
+            // Aseguramos que el panel de pausa se redibuje
+            pause.repaint();
+        }
+    }
+
+    private boolean puedePausar() {
+        // No permitir pausa en ciertas pantallas
+        return !pantallaActual.equals("MENU") &&
+                !pantallaActual.equals("VIDEO") &&
+                !pantallaActual.equals("PERSONAJES");
+    }
+
+    public void setMainController(MainController controller) {
+        this.mainController = controller;
     }
 
     /**
@@ -153,8 +245,9 @@ public class MainFrame extends JFrame {
         contenedor.removeAll();
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
-        contenedor.add(pause, "PAUSE");
         contenedor.add(combate, "COMBATE");
+        videoScreen.setName("VIDEO");
+        contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
 
         // CRÍTICO: sin esto el CardLayout no muestra los paneles nuevos
@@ -162,6 +255,15 @@ public class MainFrame extends JFrame {
         contenedor.repaint();
 
         LOG.info("PERSONAJE SELECCIONADO: " + this.personajeSeleccionado);
+    }
+
+    public JPanel getPanelActual() {
+        for (Component comp : contenedor.getComponents()) {
+            if (comp.isVisible() && comp instanceof JPanel) {
+                return (JPanel) comp;
+            }
+        }
+        return null;
     }
 
     // ============ GETTERS ============
@@ -196,5 +298,9 @@ public class MainFrame extends JFrame {
      */
     public ExplorationManager getExplorationManager() {
         return explorationManager;
+    }
+
+    public BarraVida getPlayerHealthBar() {
+        return playerHealthBar;
     }
 }
