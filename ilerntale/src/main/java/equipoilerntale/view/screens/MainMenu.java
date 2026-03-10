@@ -23,6 +23,9 @@ public class MainMenu extends JPanel {
 
     private MainFrame mainFrame;
     private JButton btnJugar;
+    private JButton btnIntro;
+    private JButton btnTutorial;
+    private JButton btnOpciones;
     private JButton btnSalir;
 
     /**
@@ -38,59 +41,53 @@ public class MainMenu extends JPanel {
         cargarImagenMenu();
     }
 
-    private void inicializarComponentes() {
-        btnJugar = new JButton("NUEVA PARTIDA");
-        btnJugar.setFont(new Font("Arial", Font.BOLD, 24));
-        btnJugar = new JButton("JUGAR");
-        // Traer la fuente deltarune.ttf
+    private JButton crearBoton(String texto, int x, int y) {
+        JButton boton = new JButton(texto);
+
+        // Cargar fuente
         try {
             InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
             if (fontStream != null) {
-                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(64f);
-                btnJugar.setFont(deltaruneFont);
+                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(32f);
+                boton.setFont(deltaruneFont);
             } else {
                 throw new IOException("No se encontró el archivo de la fuente.");
             }
         } catch (FontFormatException | IOException e) {
-            btnJugar.setFont(new Font("Monospaced", Font.BOLD, 32));
-            System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
+            boton.setFont(new Font("Monospaced", Font.BOLD, 32));
+            System.out.println("No se pudo cargar la fuente Deltarune para " + texto + ", usando Monospaced.");
         }
 
-        btnJugar.setOpaque(false);
-        btnJugar.setContentAreaFilled(false);
-        btnJugar.setBorderPainted(false);
-        btnJugar.setFocusPainted(false);
-        btnJugar.setForeground(Color.WHITE);
-        btnJugar.setBounds(350, 400, 300, 60);
+        // Estilo visual
+        boton.setOpaque(false);
+        boton.setContentAreaFilled(false);
+        boton.setBorderPainted(false);
+        boton.setFocusPainted(false);
+        boton.setForeground(Color.WHITE);
+        boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        boton.setBounds(x, y, 300, 60);
+
+        return boton;
+    }
+
+    private void inicializarComponentes() {
+        // Inicializar botones con el helper - Situados en la mitad inferior (Total
+        // alto: 600)
+        // Usamos un intervalo de 55px (altura botón 60px) para compactarlos un poco más
+        btnJugar = crearBoton("JUGAR", 350, 320);
+        btnIntro = crearBoton("INTRO", 350, 375);
+        btnTutorial = crearBoton("TUTORIAL", 350, 430);
+        btnOpciones = crearBoton("OPCIONES", 350, 485);
+        btnSalir = crearBoton("SALIR", 350, 540);
+
+        // Añadir funcionalidades existentes
         btnJugar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Cambiar a la pantalla que muestra el vídeo
                 mainFrame.cambiarPantalla("VIDEO");
             }
         });
 
-        btnSalir = new JButton("SALIR");
-
-        try {
-            InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
-            if (fontStream != null) {
-                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(64f);
-                btnSalir.setFont(deltaruneFont);
-            } else {
-                throw new IOException("No se encontró el archivo de la fuente.");
-            }
-        } catch (FontFormatException | IOException e) {
-            btnSalir.setFont(new Font("Monospaced", Font.BOLD, 32));
-            System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
-        }
-
-        btnSalir.setOpaque(false);
-        btnSalir.setContentAreaFilled(false);
-        btnSalir.setBorderPainted(false);
-        btnSalir.setFocusPainted(false);
-        btnSalir.setForeground(Color.WHITE);
-        btnSalir.setBounds(350, 480, 300, 60);
         btnSalir.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -98,10 +95,11 @@ public class MainMenu extends JPanel {
             }
         });
 
-        btnJugar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnSalir.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
+        // Añadir al panel
         add(btnJugar);
+        add(btnIntro);
+        add(btnTutorial);
+        add(btnOpciones);
         add(btnSalir);
     }
 
