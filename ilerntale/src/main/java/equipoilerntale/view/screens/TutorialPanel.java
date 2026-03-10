@@ -59,7 +59,7 @@ public class TutorialPanel extends JPanel {
             g.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
 
             // Oscurecer el fondo con un overlay negro semi-transparente
-            g.setColor(new Color(0, 0, 0, 230)); // Ajusta el 100 para más o menos oscuridad
+            g.setColor(new Color(0, 0, 0, 240)); // Ajusta el 100 para más o menos oscuridad
             g.fillRect(0, 0, getWidth(), getHeight());
         } else {
             g.setColor(new Color(20, 20, 30));
@@ -75,26 +75,14 @@ public class TutorialPanel extends JPanel {
         lblTitulo.setFont(getFontDeltarune(56f));
         add(lblTitulo);
 
-        // --- Secciones (Rectángulos Negros con Borde Blanco) ---
-        JPanel pnlMov = crearSeccion("MOVIMIENTO", 50, 120, 280, 350);
-        añadirFilaTutorial(pnlMov, "/controls/keyboard_w.png", "ARRIBA", 70);
-        añadirFilaTutorial(pnlMov, "/controls/keyboard_a.png", "IZQUIERDA", 130);
-        añadirFilaTutorial(pnlMov, "/controls/keyboard_s.png", "ABAJO", 190);
-        añadirFilaTutorial(pnlMov, "/controls/keyboard_d.png", "DERECHA", 250);
+        // --- Secciones (Rectángulos con Fondos Personalizados) ---
+        JPanel pnlMov = crearSeccion("", 50, 120, 280, 350, "/title/movimiento.jpg");
         add(pnlMov);
 
-        JPanel pnlCombat = crearSeccion("COMBATE", 360, 120, 280, 350);
-        añadirFilaTutorial(pnlCombat, "/controls/keyboard_w.png", "ARRIBA", 60);
-        añadirFilaTutorial(pnlCombat, "/controls/keyboard_a.png", "IZQUIERDA", 105);
-        añadirFilaTutorial(pnlCombat, "/controls/keyboard_s.png", "ABAJO", 150);
-        añadirFilaTutorial(pnlCombat, "/controls/keyboard_d.png", "DERECHA", 195);
-        añadirFilaTutorial(pnlCombat, "/attack/bueno.png", "ATACAS", 240);
-        añadirFilaTutorial(pnlCombat, "/attack/malo.png", "PILLAS", 285);
+        JPanel pnlCombat = crearSeccion("", 360, 120, 280, 350, "/title/combate.jpg");
         add(pnlCombat);
 
-        JPanel pnlFunc = crearSeccion("FUNCIONES", 670, 120, 280, 350);
-        añadirFilaTutorial(pnlFunc, "E", "ABRIR PUERTA", 70);
-        añadirFilaTutorial(pnlFunc, "/controls/keyboard_escape.png", "PAUSA", 120);
+        JPanel pnlFunc = crearSeccion("", 670, 120, 280, 350, "/title/funciones.jpg");
         add(pnlFunc);
 
         // --- Botón Salir (Imagen) ---
@@ -133,12 +121,33 @@ public class TutorialPanel extends JPanel {
         return button;
     }
 
-    private JPanel crearSeccion(String titulo, int x, int y, int w, int h) {
-        JPanel panel = new JPanel(null);
+    private JPanel crearSeccion(String titulo, int x, int y, int w, int h, String imgPath) {
+        JPanel panel = new JPanel(null) {
+            private Image bgImg;
+            {
+                URL url = getClass().getResource(imgPath);
+                if (url != null)
+                    bgImg = new ImageIcon(url).getImage();
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (bgImg != null) {
+                    g.drawImage(bgImg, 0, 0, getWidth(), getHeight(), this);
+
+                    // Capa oscura para legibilidad
+                    g.setColor(new Color(0, 0, 0, 0));
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                } else {
+                    g.setColor(new Color(0, 0, 0, 0));
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            }
+        };
         panel.setBounds(x, y, w, h);
-        panel.setBackground(new Color(0, 0, 0, 200)); // Negro semi-transparente
         panel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
-        panel.setOpaque(true);
+        panel.setOpaque(false);
 
         JLabel lblSeccion = new JLabel(titulo, SwingConstants.CENTER);
         lblSeccion.setForeground(Color.YELLOW);

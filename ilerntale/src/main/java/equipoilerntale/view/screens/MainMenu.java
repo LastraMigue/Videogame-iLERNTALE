@@ -76,7 +76,10 @@ public class MainMenu extends JPanel {
         btnJugar = crearBoton("JUGAR", 350, 340);
         btnIntro = crearBoton("INTRO", 350, 395);
         btnTutorial = crearBoton("TUTORIAL", 350, 450);
-        btnSalir = crearBoton("SALIR", 350, 505);
+
+        // Botón Salir (Imagen)
+        btnSalir = createImageButton("/title/salir.png", "SALIR");
+        btnSalir.setBounds(400, 505, 200, 60);
 
         // Añadir funcionalidades existentes
         btnJugar.addActionListener(new ActionListener() {
@@ -113,6 +116,34 @@ public class MainMenu extends JPanel {
         add(btnIntro);
         add(btnTutorial);
         add(btnSalir);
+    }
+
+    private JButton createImageButton(String imagePath, String fallbackText) {
+        JButton button = new JButton();
+
+        URL imageUrl = getClass().getResource(imagePath);
+        if (imageUrl != null) {
+            ImageIcon icon = new ImageIcon(imageUrl);
+            Image img = icon.getImage();
+            if (img != null) {
+                Image scaledImg = img.getScaledInstance(200, 60, Image.SCALE_SMOOTH);
+                button.setIcon(new ImageIcon(scaledImg));
+            }
+        }
+
+        if (button.getIcon() == null) {
+            button.setText(fallbackText);
+            button.setFont(new Font("Arial", Font.BOLD, 16));
+            button.setForeground(Color.WHITE);
+        }
+
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setOpaque(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        return button;
     }
 
     private ImageIcon asignarImagenMenu(String ruta) {

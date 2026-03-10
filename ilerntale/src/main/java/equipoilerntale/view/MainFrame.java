@@ -189,7 +189,8 @@ public class MainFrame extends JFrame {
         // No permitir pausa en ciertas pantallas
         return !pantallaActual.equals("MENU") &&
                 !pantallaActual.equals("VIDEO") &&
-                !pantallaActual.equals("PERSONAJES");
+                !pantallaActual.equals("PERSONAJES") &&
+                !pantallaActual.equals("TUTORIAL");
     }
 
     public void setMainController(MainController controller) {
