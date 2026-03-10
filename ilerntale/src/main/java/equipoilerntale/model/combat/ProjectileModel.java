@@ -2,12 +2,12 @@ package equipoilerntale.model.combat;
 
 import java.awt.Rectangle;
 
-public class ProjectileModel {
-    private int x, y;
-    private int size;
-    private int dx, dy;
-    private int type;
-    private boolean active = true;
+public abstract class ProjectileModel {
+    protected int x, y;
+    protected int size;
+    protected int dx, dy;
+    protected int type;
+    protected boolean active = true;
 
     public ProjectileModel(int x, int y, int size, int dx, int dy, int type) {
         this.x = x;
@@ -18,10 +18,7 @@ public class ProjectileModel {
         this.type = type;
     }
 
-    public void mover() {
-        x += dx;
-        y += dy;
-    }
+    public abstract void mover();
 
     public Rectangle getBounds() {
         return new Rectangle(x, y, size, size);

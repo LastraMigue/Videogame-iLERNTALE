@@ -32,10 +32,16 @@ public class BulletRenderer {
             if (!bala.isActive())
                 continue;
 
-            Image img = (bala.getType() == 0) ? imagenMalo : imagenBueno;
+            if (bala.getType() == 99) {
+                // Bala del jugador (blanca circular)
+                g2d.setColor(java.awt.Color.WHITE);
+                g2d.fillOval(bala.getX(), bala.getY(), bala.getSize(), bala.getSize());
+            } else {
+                Image img = (bala.getType() == 0) ? imagenMalo : imagenBueno;
 
-            if (img != null) {
-                g2d.drawImage(img, bala.getX(), bala.getY(), bala.getSize(), bala.getSize(), null);
+                if (img != null) {
+                    g2d.drawImage(img, bala.getX(), bala.getY(), bala.getSize(), bala.getSize(), null);
+                }
             }
         }
     }
