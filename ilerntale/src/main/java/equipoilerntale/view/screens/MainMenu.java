@@ -84,6 +84,14 @@ public class MainMenu extends JPanel {
         btnJugar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // TODO: Implementar lógica de Nueva Partida aquí en el futuro
+            }
+        });
+
+        btnIntro.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Trasladado desde btnJugar: Reproducir vídeo de intro
                 mainFrame.cambiarPantalla("VIDEO");
             }
         });

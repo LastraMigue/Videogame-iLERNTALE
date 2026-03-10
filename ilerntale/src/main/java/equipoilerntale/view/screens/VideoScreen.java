@@ -61,19 +61,19 @@ public class VideoScreen extends JPanel {
 
                 mediaPlayer.play();
 
-                // Cuando termine el video, cambiamos a la pantalla de PERSONAJES
+                // Cuando termine el video, volvemos al panel de MENU (como solicitó el usuario)
                 mediaPlayer.setOnEndOfMedia(() -> {
                     SwingUtilities.invokeLater(() -> {
-                        mainFrame.cambiarPantalla("PERSONAJES");
+                        mainFrame.cambiarPantalla("MENU");
                     });
                 });
 
             } catch (Exception ex) {
                 System.err.println("Error al cargar el video: " + ex.getMessage());
                 ex.printStackTrace();
-                // Si el video falla, saltamos de pantalla para no bloquear el juego
+                // Si el video falla, volvemos al MENU para evitar bloqueos
                 SwingUtilities.invokeLater(() -> {
-                    mainFrame.cambiarPantalla("PERSONAJES");
+                    mainFrame.cambiarPantalla("MENU");
                 });
             }
         });
