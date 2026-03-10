@@ -28,6 +28,7 @@ import equipoilerntale.controller.CombatController;
 import equipoilerntale.controller.InputHandler;
 import equipoilerntale.model.combat.minigames.ClassicDodgeRules;
 import equipoilerntale.model.combat.minigames.MinigameRules;
+import equipoilerntale.model.combat.minigames.ShieldRules;
 import equipoilerntale.model.combat.minigames.ShooterRules;
 import equipoilerntale.model.combat.minigames.TargetDodgeRules;
 import equipoilerntale.model.combat.minigames.ThreeLinesRules;
@@ -325,7 +326,7 @@ public class CombatPanel extends JPanel {
                         isItemMenuOpen = false;
                         disableAllButtons();
 
-                        int randomMinigame = new java.util.Random().nextInt(4);
+                        int randomMinigame = new java.util.Random().nextInt(5);
                         switch (randomMinigame) {
                             case 0:
                                 currentRules = new ClassicDodgeRules();
@@ -338,6 +339,9 @@ public class CombatPanel extends JPanel {
                                 break;
                             case 3:
                                 currentRules = new ShooterRules();
+                                break;
+                            case 4:
+                                currentRules = new ShieldRules();
                                 break;
                         }
 
@@ -395,7 +399,7 @@ public class CombatPanel extends JPanel {
                                 public void actionPerformed(ActionEvent ev) {
                                     centerTextMessage = "";
 
-                                    int randomMinigame = new java.util.Random().nextInt(4);
+                                    int randomMinigame = new java.util.Random().nextInt(5);
                                     switch (randomMinigame) {
                                         case 0:
                                             currentRules = new ClassicDodgeRules();
@@ -408,6 +412,9 @@ public class CombatPanel extends JPanel {
                                             break;
                                         case 3:
                                             currentRules = new ShooterRules();
+                                            break;
+                                        case 4:
+                                            currentRules = new ShieldRules();
                                             break;
                                     }
 
