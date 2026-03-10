@@ -25,7 +25,6 @@ public class MainMenu extends JPanel {
     private JButton btnJugar;
     private JButton btnIntro;
     private JButton btnTutorial;
-    private JButton btnOpciones;
     private JButton btnSalir;
 
     /**
@@ -74,17 +73,23 @@ public class MainMenu extends JPanel {
         // Inicializar botones con el helper - Situados en la mitad inferior (Total
         // alto: 600)
         // Usamos un intervalo de 55px (altura botón 60px) para compactarlos un poco más
-        btnJugar = crearBoton("JUGAR", 350, 320);
-        btnIntro = crearBoton("INTRO", 350, 375);
-        btnTutorial = crearBoton("TUTORIAL", 350, 430);
-        btnOpciones = crearBoton("OPCIONES", 350, 485);
-        btnSalir = crearBoton("SALIR", 350, 540);
+        btnJugar = crearBoton("JUGAR", 350, 340);
+        btnIntro = crearBoton("INTRO", 350, 395);
+        btnTutorial = crearBoton("TUTORIAL", 350, 450);
+        btnSalir = crearBoton("SALIR", 350, 505);
 
         // Añadir funcionalidades existentes
         btnJugar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO: Implementar lógica de Nueva Partida aquí en el futuro
+                mainFrame.cambiarPantalla("PERSONAJES");
+            }
+        });
+
+        btnTutorial.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainFrame.cambiarPantalla("TUTORIAL");
             }
         });
 
@@ -107,7 +112,6 @@ public class MainMenu extends JPanel {
         add(btnJugar);
         add(btnIntro);
         add(btnTutorial);
-        add(btnOpciones);
         add(btnSalir);
     }
 

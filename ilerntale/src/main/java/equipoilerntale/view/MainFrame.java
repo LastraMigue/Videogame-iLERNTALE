@@ -17,6 +17,7 @@ import equipoilerntale.view.screens.CombatPanel;
 import equipoilerntale.view.screens.ExplorationPanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
+import equipoilerntale.view.screens.TutorialPanel;
 import equipoilerntale.view.screens.VideoScreen;
 import equipoilerntale.controller.MainController;
 
@@ -38,6 +39,7 @@ public class MainFrame extends JFrame {
     private CombatPanel combate;
     private VideoScreen videoScreen;
     private ExplorationPanel exploracion;
+    private TutorialPanel tutorial;
     private String personajeSeleccionado = "";
 
     // CONTROLADORES ACCESIBLES
@@ -65,6 +67,7 @@ public class MainFrame extends JFrame {
         pause = new PausePanel(this);
         combate = new CombatPanel(this);
         videoScreen = new VideoScreen(this);
+        tutorial = new TutorialPanel(this);
 
         // CREAR EXPLORATIONPANEL CON EL MANAGER LÓGICO
         exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
@@ -76,6 +79,7 @@ public class MainFrame extends JFrame {
         videoScreen.setName("VIDEO"); // Útil para exclusiones
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
+        contenedor.add(tutorial, "TUTORIAL");
 
         // Configuramos el LayeredPane para el overlay
         layeredPane = new JLayeredPane();
@@ -176,7 +180,7 @@ public class MainFrame extends JFrame {
             pause.setVisible(true);
             if (mainController != null)
                 mainController.pauseGame();
-            // Aseguramos que el panel de pausa se redibuje
+            // Asegurar que el panel de pausa se redibuje
             pause.repaint();
         }
     }
@@ -221,6 +225,7 @@ public class MainFrame extends JFrame {
         videoScreen.setName("VIDEO");
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
+        contenedor.add(tutorial, "TUTORIAL");
 
         // CRÍTICO: sin esto el CardLayout no muestra los paneles nuevos
         contenedor.revalidate();
