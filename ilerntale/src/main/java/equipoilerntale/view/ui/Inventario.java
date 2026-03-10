@@ -16,7 +16,7 @@ public class Inventario {
         this.agregarItem(
                 new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 2, true));
         this.agregarItem(
-                new ItemModel("Pelota Ataque", "GOLPES x2", "/objects/pelotaataque.png", 2, true));
+                new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 2, true));
         this.agregarItem(new ItemModel("Llave", "Abre una puerta\ncerrada.", "/objects/llave.png", 1, false));
     }
 

@@ -9,7 +9,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
-import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
@@ -19,6 +18,7 @@ import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
 import equipoilerntale.view.screens.VideoScreen;
 import equipoilerntale.controller.MainController;
+import equipoilerntale.view.ui.BarraVida;
 
 /**
  * MARCO PRINCIPAL DE LA APLICACIÓN.
@@ -44,6 +44,10 @@ public class MainFrame extends JFrame {
     private MainController mainController;
     private ExplorationManager explorationManager;
 
+    // HUD Y VIDA
+    private BarraVida playerHealthBar;
+    private JPanel hudPanel;
+
     /**
      * CONSTRUCTOR DEL MARCO PRINCIPAL.
      * CONFIGURA LA VENTANA, INICIALIZA CONTROLADORES Y PANELES.
@@ -58,6 +62,9 @@ public class MainFrame extends JFrame {
 
         // INICIALIZAR CONTROLADORES
         inicializarControladores();
+
+        // INICIALIZAR VIDA
+        playerHealthBar = new BarraVida(50, "JUGADOR");
 
         // INICIALIZAR PANELES DE LAS PANTALLAS
         menu = new MainMenu(this);
@@ -89,6 +96,24 @@ public class MainFrame extends JFrame {
         pause.setBounds(0, 0, 1000, 600);
         pause.setVisible(false);
         layeredPane.add(pause, JLayeredPane.PALETTE_LAYER);
+
+        // HUD: Vida del jugador
+        hudPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (!pantallaActual.equals("MENU") && !pantallaActual.equals("VIDEO")
+                        && !pantallaActual.equals("PERSONAJES") && !pause.isVisible()) {
+                    // Dibujar arriba a la derecha
+                    playerHealthBar.draw(g, getWidth() - 220, 35);
+                }
+            }
+        };
+        hudPanel.setBounds(0, 0, 1000, 600);
+        hudPanel.setOpaque(false);
+        // Deshabilitar eventos de ratón en el HUD para no bloquear clics debajo
+        hudPanel.setFocusable(false);
+        layeredPane.add(hudPanel, JLayeredPane.POPUP_LAYER);
 
         add(layeredPane);
 
@@ -136,6 +161,9 @@ public class MainFrame extends JFrame {
         javax.swing.Timer renderTimer = new javax.swing.Timer(16, e -> {
             if (exploracion != null) {
                 exploracion.requestRender();
+            }
+            if (hudPanel != null) {
+                hudPanel.repaint();
             }
         });
         renderTimer.start();
@@ -270,5 +298,9 @@ public class MainFrame extends JFrame {
      */
     public ExplorationManager getExplorationManager() {
         return explorationManager;
+    }
+
+    public BarraVida getPlayerHealthBar() {
+        return playerHealthBar;
     }
 }

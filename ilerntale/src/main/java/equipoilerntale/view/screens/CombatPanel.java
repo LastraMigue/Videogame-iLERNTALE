@@ -26,6 +26,7 @@ import equipoilerntale.view.render.MouseRenderer;
 import equipoilerntale.model.combat.ArenaModel;
 import equipoilerntale.controller.CombatController;
 import equipoilerntale.controller.InputHandler;
+import equipoilerntale.controller.MainController;
 import equipoilerntale.model.combat.minigames.ClassicDodgeRules;
 import equipoilerntale.model.combat.minigames.MinigameRules;
 import equipoilerntale.model.combat.minigames.ShieldRules;
@@ -34,6 +35,7 @@ import equipoilerntale.model.combat.minigames.TargetDodgeRules;
 import equipoilerntale.model.combat.minigames.ThreeLinesRules;
 import equipoilerntale.view.ui.Inventario;
 import equipoilerntale.model.entity.ItemModel;
+import equipoilerntale.view.ui.BarraVida;
 
 public class CombatPanel extends JPanel {
     private MainFrame mainFrame;
@@ -63,6 +65,17 @@ public class CombatPanel extends JPanel {
     private long lastUpdateTime = 0;
     private boolean isMinigameActive = false;
 
+    // Collisions Tracking para daño
+    private int lastGoodCollisions = 0;
+    private int lastBadCollisions = 0;
+
+    // Buffos de Objetos
+    private int escudoPatito = 0;
+    private boolean dobleDañoRonda = false;
+
+    // Vida Enemigo
+    private BarraVida enemyHealthBar;
+
     private String centerTextMessage = "";
     private Font customFont;
 
@@ -83,6 +96,9 @@ public class CombatPanel extends JPanel {
         this.mouseRenderer = new MouseRenderer();
         this.bulletRenderer = new BulletRenderer();
         this.itemRenderer = new ItemRenderer();
+
+        // Inicializamos barra de enemigo
+        this.enemyHealthBar = new BarraVida(25, "ENEMIGO");
 
         this.addKeyListener(inputHandler);
         this.setFocusable(true);
@@ -122,6 +138,16 @@ public class CombatPanel extends JPanel {
                     ItemModel selected = currentCombatItems.get(selectedItemIndex);
                     if (selected != null) {
                         selected.consumir(); // Disminuye la cantidad
+
+                        String itemName = selected.getNombre();
+                        if (itemName.equals("Botella Vida")) {
+                            mainFrame.getPlayerHealthBar().heal(30);
+                        } else if (itemName.equals("Patito Aguante")) {
+                            escudoPatito = 3;
+                        } else if (itemName.equals("Pelota Ataque")) {
+                            dobleDañoRonda = true;
+                        }
+
                         centerTextMessage = "USASTE " + selected.getNombre().toUpperCase();
                         isItemMenuOpen = false;
                         repaint();
@@ -142,6 +168,35 @@ public class CombatPanel extends JPanel {
             }
         } else {
             combatController.update();
+
+            // Damage check
+            if (arenaModel != null) {
+                int currentBad = arenaModel.getBadCollisions();
+                if (currentBad > lastBadCollisions) {
+                    int damageRecibido = currentBad - lastBadCollisions;
+                    lastBadCollisions = currentBad;
+
+                    if (escudoPatito > 0) {
+                        int absorbido = Math.min(escudoPatito, damageRecibido);
+                        escudoPatito -= absorbido;
+                        damageRecibido -= absorbido;
+                    }
+
+                    if (damageRecibido > 0) {
+                        mainFrame.getPlayerHealthBar().takeDamage(damageRecibido);
+                    }
+                }
+
+                int currentGood = arenaModel.getGoodCollisions();
+                if (currentGood > lastGoodCollisions) {
+                    int hits = currentGood - lastGoodCollisions;
+                    lastGoodCollisions = currentGood;
+
+                    int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
+                    enemyHealthBar.takeDamage(damageHecho);
+                }
+            }
+
             if (isMinigameActive && currentRules != null) {
                 long now = System.currentTimeMillis();
 
@@ -187,6 +242,11 @@ public class CombatPanel extends JPanel {
         g2d.setStroke(new BasicStroke(3));
         g2d.drawRect(405, 30, 180, 180);
 
+        // UI Vida Enemigo Arriba a la Izquierda
+        if (enemyHealthBar != null) {
+            enemyHealthBar.draw(g2d, 20, 35);
+        }
+
         // Recuadros para RONDA y TIEMPO "a ras" del central (Y=95, Alto=50)
         // Cuadro central: X=405 a 585
 
@@ -218,7 +278,13 @@ public class CombatPanel extends JPanel {
                     String timeText = String.format("%02d:000", seconds);
                     g2d.drawString(timeText, 645, 192);
                 } else {
-                    long timeLeft = minigameEndTime - System.currentTimeMillis();
+                    long nowForTimer = System.currentTimeMillis();
+                    if (mainFrame.getMainController() != null &&
+                            mainFrame.getMainController().getGameState() == MainController.GameState.PAUSED) {
+                        nowForTimer = lastUpdateTime; // Congela el tiempo visualmente
+                    }
+
+                    long timeLeft = minigameEndTime - nowForTimer;
                     if (timeLeft < 0)
                         timeLeft = 0;
                     long seconds = timeLeft / 1000;
@@ -367,6 +433,8 @@ public class CombatPanel extends JPanel {
                         long startNow = System.currentTimeMillis();
                         minigameEndTime = startNow + duration;
                         lastUpdateTime = startNow;
+                        lastGoodCollisions = 0;
+                        lastBadCollisions = 0;
                         break;
                     case "act":
                         break;
@@ -442,6 +510,8 @@ public class CombatPanel extends JPanel {
                                     long startNow = System.currentTimeMillis();
                                     minigameEndTime = startNow + duration;
                                     lastUpdateTime = startNow;
+                                    lastGoodCollisions = 0;
+                                    lastBadCollisions = 0;
                                     repaint();
                                 }
                             });
@@ -500,6 +570,7 @@ public class CombatPanel extends JPanel {
         currentRules = null;
         enableAllButtons();
         currentRound++;
+        dobleDañoRonda = false;
         repaint();
     }
 }

@@ -1,7 +1,12 @@
 package equipoilerntale.view.ui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Stroke;
 
 public class BarraVida {
 
@@ -14,9 +19,29 @@ public class BarraVida {
     private int width = 200;
     private int height = 20;
 
-    public BarraVida(int maxHealth) {
+    private String name;
+    private Font customFont;
+
+    public BarraVida(int maxHealth, String name) {
         this.maxHealth = maxHealth;
         this.currentHealth = maxHealth;
+        this.name = name;
+        cargarFuente();
+    }
+
+    private void cargarFuente() {
+        try {
+            java.net.URL fontUrl = getClass().getResource("/font/deltarune.ttf");
+            if (fontUrl != null) {
+                Font baseFont = Font.createFont(Font.TRUETYPE_FONT, fontUrl.openStream());
+                customFont = baseFont.deriveFont(Font.BOLD, 18f);
+            } else {
+                customFont = new Font("Monospaced", Font.BOLD, 18);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            customFont = new Font("Monospaced", Font.BOLD, 18);
+        }
     }
 
     public void setHealth(int health) {
@@ -50,17 +75,25 @@ public class BarraVida {
 
     public void draw(Graphics g, int x, int y) {
 
+        // Dibujar el nombre
+        if (name != null && !name.isEmpty()) {
+            g.setColor(Color.WHITE);
+            g.setFont(customFont);
+            g.drawString(name, x, y - 5);
+        }
+
         int healthWidth = (int) ((currentHealth / (double) maxHealth) * width);
 
         // Fondo
         g.setColor(Color.GRAY);
         g.fillRect(x, y, width, height);
 
-        // Color según vida
-        if (currentHealth > 60) {
+        // Color según porcentaje de vida
+        double percent = (double) currentHealth / maxHealth;
+        if (percent > 0.60) {
             g.setColor(Color.GREEN);
-        } else if (currentHealth > 30) {
-            g.setColor(Color.ORANGE);
+        } else if (percent > 0.20) {
+            g.setColor(Color.YELLOW);
         } else {
             g.setColor(Color.RED);
         }
@@ -68,9 +101,25 @@ public class BarraVida {
         // Vida actual
         g.fillRect(x, y, healthWidth, height);
 
-        // Borde
+        // Borde igualando el tamaño de trazo
+        Graphics2D g2d = (Graphics2D) g;
+        Stroke oldStroke = g2d.getStroke();
+        g2d.setStroke(new BasicStroke(3));
+        g2d.setColor(Color.BLACK);
+        g2d.drawRect(x, y, width, height);
+        g2d.setStroke(oldStroke);
+
+        // Texto (e.g. 50/50)
+        String textoVida = currentHealth + " / " + maxHealth;
         g.setColor(Color.BLACK);
-        g.drawRect(x, y, width, height);
+        g.setFont(new Font("Monospaced", Font.BOLD, 14));
+        FontMetrics fm = g.getFontMetrics();
+        int textWidth = fm.stringWidth(textoVida);
+        int textAscent = fm.getAscent();
+
+        int textX = x + (width - textWidth) / 2;
+        int textY = y + (height - fm.getHeight()) / 2 + textAscent;
+        g.drawString(textoVida, textX, textY);
     }
 
 }
