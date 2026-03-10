@@ -107,15 +107,14 @@ public class MainController implements Runnable {
         // MainFrame)
         JPanel panelActual = mainFrame.getPanelActual();
 
-        if (panelActual instanceof CombatPanel) {
-            ((CombatPanel) panelActual).updateCombat();
+        // Si está en pausa no se actualiza lógica de combate (evita que el minijuego
+        // avance)
+        if (state == GameState.PAUSED) {
+            return;
         }
 
-        // Aquí se llamará a los sub-controladores (Exploration, Combat, etc.)
-
-        // Subcontrolador de estado panel/menu (Jugando o en Pausa)
-        if (state == GameState.PAUSED) {
-            return; // Si está en pausa no se actualiza el juego
+        if (panelActual instanceof CombatPanel) {
+            ((CombatPanel) panelActual).updateCombat();
         }
 
         // ExplorationManager filtra internamente si está activo o no

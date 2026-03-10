@@ -21,6 +21,7 @@ public class VideoScreen extends JPanel {
 
     private MainFrame mainFrame;
     private JFXPanel jfxPanel;
+    private MediaPlayer mediaPlayer;
 
     public VideoScreen(MainFrame frame) {
         this.mainFrame = frame;
@@ -32,18 +33,26 @@ public class VideoScreen extends JPanel {
         // Inicializamos el panel puente de JavaFX y lo añadimos al centro
         jfxPanel = new JFXPanel();
         add(jfxPanel, BorderLayout.CENTER);
+
+        // Previene que JavaFX se cierre cuando termina el video
+        Platform.setImplicitExit(false);
     }
 
     // Este método ahora es llamado por el MainFrame
     public void playVideo() {
         Platform.runLater(() -> {
             try {
+                if (mediaPlayer != null) {
+                    mediaPlayer.stop();
+                    mediaPlayer.dispose();
+                }
+
                 // Ruta del video
                 File archivoVideo = new File("ilerntale/src/main/resources/vid/intro.mp4");
                 String uriVideo = archivoVideo.toURI().toString();
 
                 Media media = new Media(uriVideo);
-                MediaPlayer mediaPlayer = new MediaPlayer(media);
+                mediaPlayer = new MediaPlayer(media);
                 MediaView mediaView = new MediaView(mediaPlayer);
 
                 // Creamos la Escena

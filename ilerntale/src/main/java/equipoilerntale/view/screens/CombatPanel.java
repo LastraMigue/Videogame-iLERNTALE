@@ -60,6 +60,7 @@ public class CombatPanel extends JPanel {
     private int currentRound = 1;
     // Timer del combate
     private long minigameEndTime = 0;
+    private long lastUpdateTime = 0;
     private boolean isMinigameActive = false;
 
     private String centerTextMessage = "";
@@ -142,11 +143,22 @@ public class CombatPanel extends JPanel {
         } else {
             combatController.update();
             if (isMinigameActive && currentRules != null) {
+                long now = System.currentTimeMillis();
+
+                // Si la diferencia de tiempo es muy grande, asumimos que hubo una pausa
+                if (lastUpdateTime > 0) {
+                    long delta = now - lastUpdateTime;
+                    if (delta > 50) { // Si pasan más de 50ms (por pausa o lag), congelamos el tiempo
+                        minigameEndTime += delta;
+                    }
+                }
+                lastUpdateTime = now;
+
                 if (currentRules.isIntroActive()) {
                     // Pausa el minijuego empujando el tiempo final hacia adelante
-                    minigameEndTime = System.currentTimeMillis() + (currentRules.getDurationInSeconds() * 1000);
+                    minigameEndTime = now + (currentRules.getDurationInSeconds() * 1000);
                 } else {
-                    if (System.currentTimeMillis() >= minigameEndTime) {
+                    if (now >= minigameEndTime) {
                         endMinigame();
                     }
                 }
@@ -352,7 +364,9 @@ public class CombatPanel extends JPanel {
 
                         isMinigameActive = true;
                         int duration = currentRules.getDurationInSeconds() * 1000;
-                        minigameEndTime = System.currentTimeMillis() + duration;
+                        long startNow = System.currentTimeMillis();
+                        minigameEndTime = startNow + duration;
+                        lastUpdateTime = startNow;
                         break;
                     case "act":
                         break;
@@ -425,7 +439,9 @@ public class CombatPanel extends JPanel {
 
                                     isMinigameActive = true;
                                     int duration = currentRules.getDurationInSeconds() * 1000;
-                                    minigameEndTime = System.currentTimeMillis() + duration;
+                                    long startNow = System.currentTimeMillis();
+                                    minigameEndTime = startNow + duration;
+                                    lastUpdateTime = startNow;
                                     repaint();
                                 }
                             });
