@@ -76,7 +76,7 @@ public class ExplorationPanel extends JPanel {
     private void inicializarRecursosIntro() {
         // Inicializar el fondo del menú principal durante los diálogos de Soraya y
         // Jessica
-        backgroundIntro = cargarFondo("/title/menu1.jpg", GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA);
+        backgroundIntro = cargarFondo("/title/dialogo.jpg", GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA);
         ImageIcon iconoSoraya = cargarImagen("/dialogue/soraya.png", 256, 256);
         ImageIcon iconoJesica = cargarImagen("/dialogue/jesica.png", 256, 256);
 
