@@ -116,6 +116,12 @@ public class MainMenu extends JPanel {
         add(btnIntro);
         add(btnTutorial);
         add(btnSalir);
+
+        // Asegurar que los botones estén en la capa superior, por encima del panel
+        setComponentZOrder(btnJugar, 0);
+        setComponentZOrder(btnIntro, 0);
+        setComponentZOrder(btnTutorial, 0);
+        setComponentZOrder(btnSalir, 0);
     }
 
     private JButton createImageButton(String imagePath, String fallbackText) {
@@ -140,8 +146,7 @@ public class MainMenu extends JPanel {
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
-        button.setOpaque(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         return button;
     }

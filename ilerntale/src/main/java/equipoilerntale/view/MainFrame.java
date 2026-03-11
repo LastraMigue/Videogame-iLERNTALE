@@ -111,6 +111,7 @@ public class MainFrame extends JFrame {
         dialogueContainer = new JPanel(null);
         dialogueContainer.setOpaque(false);
         dialogueContainer.setBounds(0, 0, 1000, 600);
+        dialogueContainer.setVisible(false); // Inicialmente oculto para no bloquear interacción
         layeredPane.add(dialogueContainer, JLayeredPane.MODAL_LAYER);
 
         add(layeredPane);
@@ -250,12 +251,14 @@ public class MainFrame extends JFrame {
         // Posicionamiento dinámico: centrado horizontalmente, Y ajustable
         panel.setLocation(250, y);
         dialogueContainer.add(panel);
+        dialogueContainer.setVisible(true); // Mostrar contenedor al lanzar diálogo
         dialogueContainer.revalidate();
         dialogueContainer.repaint();
     }
 
     public void hideDialogue() {
         dialogueContainer.removeAll();
+        dialogueContainer.setVisible(false); // Ocultar al cerrar diálogo
         dialogueContainer.revalidate();
         dialogueContainer.repaint();
     }
