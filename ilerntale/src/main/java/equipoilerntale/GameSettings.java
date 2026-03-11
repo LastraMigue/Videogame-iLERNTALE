@@ -14,7 +14,7 @@ public class GameSettings {
 
     // --- Parámetros de Exploración ---
     public static final int PLAYER_VELOCIDAD = 5;
-    public static final int PLAYER_TAMANO = 60;
+    public static final int PLAYER_TAMANO = 80;
     public static final int PLAYER_INICIO_X = 30;
     public static final int PLAYER_INICIO_Y = 300;
     public static final long MS_ENTRE_FRAMES = 100;
@@ -34,13 +34,13 @@ public class GameSettings {
     public static final String RUTA_DIALOGO = "/dialogue/";
 
     // --- Parámetros de Zombie ---
-    public static final int ZOMBIE_TAMANO = 50;
+    public static final int ZOMBIE_TAMANO = 70;
     public static final int ZOMBIE_VELOCIDAD = 3; // Reducido: el jugador tiene velocidad 5
     public static final int ZOMBIE_SALUD = 25;
     public static final int ZOMBIE_DANO = 1;
     public static final int ZOMBIE_CANTIDAD_INICIAL = 50;
-    public static final int ZOMBIES_PASILLO = 20;
-    public static final int ZOMBIES_AULA_124 = 20;
-    public static final int ZOMBIES_AULA_123 = 20;
+    public static final int ZOMBIES_PASILLO = 10;
+    public static final int ZOMBIES_AULA_124 = 8;
+    public static final int ZOMBIES_AULA_123 = 8;
     public static final String RUTA_ZOMBIE = "/zombie/";
 }
