@@ -14,6 +14,10 @@ public class Zombie extends Entity {
     private final int type; // 1-8
     private int frameIndex = 1;
     private long lastAnimationTime = 0;
+    
+    private double customSpeed;
+    private double trackingPrecision;
+    private double wobbleOffset;
 
     public static final int SIZE = GameSettings.ZOMBIE_TAMANO;
     public static final int SPEED = GameSettings.ZOMBIE_VELOCIDAD;
@@ -30,6 +34,14 @@ public class Zombie extends Entity {
         this.isAlive = true;
         this.type = (int) (Math.random() * 8) + 1;
         this.direction = Direction.DOWN;
+
+        // ALEATORIEDAD DE ATRIBUTOS
+        // Velocidad: SPEED +/- 1.5
+        this.customSpeed = SPEED + (Math.random() * 3.0 - 1.5);
+        // Seguimiento: 0.7 a 1.0 (cuánto de su vector va al jugador vs inercia/error)
+        this.trackingPrecision = 0.7 + (Math.random() * 0.3);
+        // Oscilación aleatoria para que no todos caminen en línea recta perfecta
+        this.wobbleOffset = Math.random() * Math.PI * 2;
     }
 
     // ============ ESTADO Y ATRIBUTOS ============
@@ -101,14 +113,27 @@ public class Zombie extends Entity {
         double distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
         if (distance > 5) {
-            // --- Dirección base: hacia el jugador ---
-            double dx = (diffX / distance) * SPEED;
-            double dy = (diffY / distance) * SPEED;
+            // --- Dirección base: hacia el jugador con "Wobble" (zig-zag aleatorio) ---
+            long now = System.currentTimeMillis();
+            double wobble = Math.sin((now / 500.0) + wobbleOffset) * 0.3;
+            
+            // Vector al jugador
+            double baseDx = (diffX / distance);
+            double baseDy = (diffY / distance);
+
+            // Aplicar imprecisión (mezclar con wobble)
+            double targetDx = baseDx * trackingPrecision + (Math.random() * 0.4 - 0.2);
+            double targetDy = baseDy * trackingPrecision + (Math.random() * 0.4 - 0.2);
+            
+            // Re-normalizar y aplicar velocidad
+            double finalDist = Math.sqrt(targetDx * targetDx + targetDy * targetDy);
+            double dx = (targetDx / finalDist) * customSpeed;
+            double dy = (targetDy / finalDist) * customSpeed;
 
             // --- Fuerza de separación de vecinos ---
             double sepX = 0, sepY = 0;
             int neighborCount = 0;
-            final double SEPARATION_RADIUS = 120.0;
+            final double SEPARATION_RADIUS = 80.0; // Reducido para grupos más densos
 
             for (Object other : allZombies) {
                 if (other == this)
@@ -129,9 +154,9 @@ public class Zombie extends Entity {
             }
 
             if (neighborCount > 0) {
-                // Combinar: 60% dirección al jugador + 40% separación
-                dx = dx * 0.6 + sepX * SPEED * 0.4;
-                dy = dy * 0.6 + sepY * SPEED * 0.4;
+                // Combinar: 70% dirección al jugador + 30% separación
+                dx = dx * 0.7 + sepX * customSpeed * 0.3;
+                dy = dy * 0.7 + sepY * customSpeed * 0.3;
             }
 
             // Dirección del sprite según vector resultante

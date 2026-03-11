@@ -148,8 +148,11 @@ public class ExplorationManager {
 
             // COMPROBAR COLISIONES CON LOS MUROS DE LA SALA ACTUAL
             List<Rectangle> roomWalls = currentRoom.getWalls();
-            player.moveIfNoCollision(dx, 0, roomWalls);
-            player.moveIfNoCollision(0, dy, roomWalls);
+            boolean movedX = player.moveIfNoCollision(dx, 0, roomWalls);
+            boolean movedY = player.moveIfNoCollision(0, dy, roomWalls);
+            
+            if (!movedX && dx != 0) LOG.info("Colisión horizontal en x=" + player.getX() + ", y=" + player.getY());
+            if (!movedY && dy != 0) LOG.info("Colisión vertical en x=" + player.getX() + ", y=" + player.getY());
         }
     }
 

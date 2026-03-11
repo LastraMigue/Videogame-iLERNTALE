@@ -234,7 +234,8 @@ public class ExplorationPanel extends JPanel {
         if (manager != null) {
             manager.activate();
         }
-
+        
+        requestFocusInWindow();
         LOG.info("INTRO FINALIZADA - EXPLORACIÓN INICIADA");
     }
 
@@ -244,6 +245,7 @@ public class ExplorationPanel extends JPanel {
         labelFondoIntro.setVisible(true);
         labelSoraya.setVisible(false);
         labelJesica.setVisible(false);
+        requestFocusInWindow();
         LOG.info("INTRO REINICIADA");
     }
 
@@ -278,7 +280,7 @@ public class ExplorationPanel extends JPanel {
             mapRenderer.drawBackground(ctx, currentBackground);
         }
 
-        if (manager.getCurrentRoom() != null) {
+        if (manager.isDebugMurosVisibles() && manager.getCurrentRoom() != null) {
             for (DoorModel door : manager.getCurrentRoom().getDoors()) {
                 mapRenderer.drawZoneLabel(ctx, door.getArea(), door.getTargetRoomName());
             }

@@ -15,31 +15,34 @@ public class Room1 extends AbstractRoom {
         this.name = "Aula 124";
 
         // CUIDADO: EXTENSIÓN JPG EN EL PASILLO
-        this.backgroundPath = "/mapa/room.jpg";
+        this.backgroundPath = "/mapa/h1.jpg";
 
         // CONFIGURACIÓN DE ZOMBIES
-        this.zombiesToSpawn = GameSettings.ZOMBIE_CANTIDAD_INICIAL;
+        this.zombiesToSpawn = GameSettings.ZOMBIES_AULA_124;
 
-        // EL ÁREA DE GENERACIÓN DE ZOMBIES (CASI TODO EL MAPA MENOS LA ESQUINA INICIAL
-        // SUPERIOR IZQ)
-        this.zombieSpawnArea = new Rectangle(500, 150, GameSettings.MAP_WIDTH - 500, GameSettings.MAP_HEIGHT - 300);
+        // EL ÁREA DE GENERACIÓN DE ZOMBIES (Ajustada para estar debajo del muro
+        // superior)
+        this.zombieSpawnArea = new Rectangle(400, 300, GameSettings.MAP_WIDTH - 500, GameSettings.MAP_HEIGHT - 350);
 
         // BOSS AL FINAL DEL AULA
         this.bossSpawnArea = new Rectangle(GameSettings.MAP_WIDTH - 200, GameSettings.MAP_HEIGHT - 200, 100, 100);
 
-        // CONFIGURACIÓN DE LOS LÍMITES/MUROS DEL MAPA PASILLO
-        // MURO SUPERIOR E INFERIOR
-        this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 330));
-        this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 5, GameSettings.MAP_WIDTH, 5));
+        // CONFIGURACIÓN DE LOS LÍMITES/MUROS
+        // MURO SUPERIOR E INFERIOR (Ajustado a la línea del suelo del aula)
+        this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
+        this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
+
+        // MURO SUPERIOR DERECHO (Esquina superior derecha bloqueada)
+        this.walls.add(new Rectangle(1550, 0, 600, 350));
+
         // LÍMITES LATERALES
         this.walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
         this.walls.add(new Rectangle(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT));
 
-        // CONFIGURACIÓN DEL ÁREA DE TRANSICIÓN (LA PUERTA PARA VOLVER AL PASILLO)
-        // La colocamos a la izquierda de la pantalla
+        // CONFIGURACIÓN DE LA SALIDA (VOLVER AL PASILLO)
         this.doors.add(new DoorModel(
-                2150, 200, 180, 220, // Coordenadas de la puerta interactuable
-                "Pasillo Principal", GameSettings.MAP_WIDTH - 780, 250 // Coordenadas objetivo en RoomPasillo
+                600, 180, 130, 80,
+                "Pasillo Principal", 1750, 320 // Aparece frente a la puerta 1B
         ));
     }
 }

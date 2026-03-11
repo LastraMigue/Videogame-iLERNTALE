@@ -31,7 +31,7 @@ public class MainFrame extends JFrame {
     private CardLayout cardLayout;
     private JLayeredPane layeredPane;
     private JPanel contenedor;
-    private String pantallaActual = "MENU";
+    private String pantallaActual = "EXPLORACION";
     private MainMenu menu;
     private CharacterSelector personajes;
     private PausePanel pause;
@@ -131,6 +131,9 @@ public class MainFrame extends JFrame {
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
+
+        // Cambiar a la pantalla inicial de EXPLORACION
+        cambiarPantalla("EXPLORACION");
 
         // INICIAR EL HILO LÓGICO DEL JUEGO (GAME LOOP)
         mainController.startGameThread();

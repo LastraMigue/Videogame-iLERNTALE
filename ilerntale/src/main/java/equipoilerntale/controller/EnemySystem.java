@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
-
 import equipoilerntale.GameSettings;
 import equipoilerntale.model.entity.Zombie;
 import equipoilerntale.model.entity.Boss;
@@ -25,8 +24,8 @@ public class EnemySystem {
     private int playerY;
     private List<Rectangle> walls = new ArrayList<>();
 
-    private static final int MIN_SPAWN_FROM_PLAYER = 900; // ~18 segundos de camino a vel.2
-    private static final int MIN_SPAWN_BETWEEN_ZOMBIES = 300; // Separa grupos en el spawn
+    private static final int MIN_SPAWN_FROM_PLAYER = 300; // Antes 900
+    private static final int MIN_SPAWN_BETWEEN_ZOMBIES = 60; // Antes 300 (ZOMBIE_SIZE es 50)
 
     /**
      * CONSTRUCTOR DEL SISTEMA DE ENEMIGOS.
@@ -67,7 +66,7 @@ public class EnemySystem {
     }
 
     private Zombie findSafeSpawn(Rectangle area) {
-        int maxAttempts = 50;
+        int maxAttempts = 200;
 
         for (int i = 0; i < maxAttempts; i++) {
             int rx = area.x + random.nextInt(Math.max(1, area.width - Zombie.SIZE));

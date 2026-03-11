@@ -15,33 +15,38 @@ public class RoomPasillo extends AbstractRoom {
         this.name = "Pasillo Principal";
 
         // CUIDADO: EXTENSIÓN JPG EN EL PASILLO
-        this.backgroundPath = "/mapa/pasillo.png";
+        this.backgroundPath = "/mapa/pasillo.jpg";
 
         // CONFIGURACIÓN DE PUERTAS Y ZOMBIES
-        this.zombiesToSpawn = GameSettings.ZOMBIE_CANTIDAD_INICIAL;
+        this.zombiesToSpawn = GameSettings.ZOMBIES_PASILLO;
 
-        // EL ÁREA DE GENERACIÓN DE ZOMBIES (CASI TODO EL MAPA MENOS LA ESQUINA INICIAL
-        // SUPERIOR IZQ)
-        this.zombieSpawnArea = new Rectangle(500, 150, GameSettings.MAP_WIDTH - 500, GameSettings.MAP_HEIGHT - 300);
+        // EL ÁREA DE GENERACIÓN DE ZOMBIES (Ajustada para estar debajo del muro
+        // superior)
+        this.zombieSpawnArea = new Rectangle(500, 320, GameSettings.MAP_WIDTH - 600, GameSettings.MAP_HEIGHT - 350);
 
         // CONFIGURACIÓN DE LOS LÍMITES/MUROS DEL MAPA PASILLO
         // MURO SUPERIOR E INFERIOR
-        this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 300));
-        this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
+        this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
+        this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 5, GameSettings.MAP_WIDTH, 5));
+
+        // MURO SUPERIOR DERECHO (Esquina superior derecha bloqueada)
+        this.walls.add(new Rectangle(1550, 0, 600, 350));
+
         // LÍMITES LATERALES
         this.walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
         this.walls.add(new Rectangle(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT));
 
         // CONFIGURACIÓN DEL ÁREA DE TRANSICIÓN (PUERTAS)
-        // La puerta final del pasillo (Aula 124)
+        // Puerta Metálica al final (Aula 124)
         this.doors.add(new DoorModel(
-                GameSettings.MAP_WIDTH - 780, 250, 100, 120,
-                "Aula 124", 200, 500 // Coordenadas objetivo en Room1
+                1750, 150, 220, 250,
+                "Aula 124", 600, 320 // Aparece en el aula fuera del muro (Y=320)
         ));
 
-        // La puerta penúltima del pasillo
+        // Puerta 3A (Aula 123)
         this.doors.add(new DoorModel(
-                GameSettings.MAP_WIDTH - 1430, 250, 100, 120,
-                "Aula 123", 200, 500));
+                840, 200, 130, 80, // Aumentada altura para facilitar detección
+                "Aula 123", 600, 320 // Aparece en el aula fuera del muro (Y=320)
+        ));
     }
 }
