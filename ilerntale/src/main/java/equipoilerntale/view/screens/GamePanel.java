@@ -7,23 +7,14 @@ import java.awt.event.MouseEvent;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.JButton;
 import javax.swing.Timer;
 
-import equipoilerntale.controller.MainController;
-// Importar el InputHandler para detectar el controlador de cambiar al menú de Pausa
-import equipoilerntale.controller.InputHandler;
 import equipoilerntale.view.MainFrame;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 
-public class GamePanel extends JPanel implements KeyListener {
+public class GamePanel extends JPanel {
     private MainFrame mainFrame;
-    private MainController controller;
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
 
@@ -52,50 +43,6 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
 
-    // Implementar métodos de la interfaz para el manejo de las teclas
-
-    public boolean upPressed, downPressed, leftPressed, rightPressed, enterPressed, escapePressed;
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        int code = e.getKeyCode();
-        if (code == KeyEvent.VK_W || code == KeyEvent.VK_UP)
-            upPressed = true;
-        if (code == KeyEvent.VK_S || code == KeyEvent.VK_DOWN)
-            downPressed = true;
-        if (code == KeyEvent.VK_A || code == KeyEvent.VK_LEFT)
-            leftPressed = true;
-        if (code == KeyEvent.VK_D || code == KeyEvent.VK_RIGHT)
-            rightPressed = true;
-        if (code == KeyEvent.VK_ENTER)
-            enterPressed = true;
-        if (code == KeyEvent.VK_ESCAPE)
-            escapePressed = true;
-        mostrarMenuPausa();
-
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        int code = e.getKeyCode();
-        if (code == KeyEvent.VK_W || code == KeyEvent.VK_UP)
-            upPressed = false;
-        if (code == KeyEvent.VK_S || code == KeyEvent.VK_DOWN)
-            downPressed = false;
-        if (code == KeyEvent.VK_A || code == KeyEvent.VK_LEFT)
-            leftPressed = false;
-        if (code == KeyEvent.VK_D || code == KeyEvent.VK_RIGHT)
-            rightPressed = false;
-        if (code == KeyEvent.VK_ENTER)
-            enterPressed = false;
-        if (code == KeyEvent.VK_ESCAPE)
-            escapePressed = false;
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-    } // No se usa, pero debe estar por la interfaz
-
     private PasoDialogo[] secuenciaDialogos = {
             new PasoDialogo("Soraya", "¡Hola! Soy Soraya."),
             new PasoDialogo("Jesica", "¡Hola! Soy Jessica."),
@@ -107,7 +54,6 @@ public class GamePanel extends JPanel implements KeyListener {
 
     public GamePanel(MainFrame frame) {
         this.mainFrame = frame;
-        this.controller = frame.getMainController();
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setDoubleBuffered(true);
         setFocusable(true);
@@ -160,7 +106,7 @@ public class GamePanel extends JPanel implements KeyListener {
     }
 
     private void cargarFondo() {
-        ImageIcon iconoFondo = cargarImagen("/title/menu1.jpg");
+        ImageIcon iconoFondo = cargarImagen("/title/dialogo.jpg");
         if (iconoFondo != null) {
             Image imagenEscalada = iconoFondo.getImage().getScaledInstance(1000, 600, Image.SCALE_DEFAULT);
             labelFondo = new JLabel(new ImageIcon(imagenEscalada));
@@ -240,6 +186,8 @@ public class GamePanel extends JPanel implements KeyListener {
             return;
         }
 
+        indicePasos = 0; // Reset index each time panel is shown
+
         // Timer de 3 segundos para el primer diálogo
         timerSiguienteDialogo = new Timer(3000, e -> lanzarSiguienteDialogo());
         timerSiguienteDialogo.setRepeats(false);
@@ -271,7 +219,8 @@ public class GamePanel extends JPanel implements KeyListener {
                     timerPausaEntreDialogos.setRepeats(false);
                     timerPausaEntreDialogos.start();
                 } else {
-                    System.out.println("Fin de la secuencia narrativa.");
+                    System.out.println("Fin de la secuencia narrativa. Cambiando a EXPLORACION.");
+                    mainFrame.cambiarPantalla("EXPLORACION");
                 }
             });
             timerCierre.setRepeats(false);
@@ -279,7 +228,7 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
 
-    public void detenerDialogoBucle() {
+    public void pausarDialogoBucle() {
         if (timerSiguienteDialogo != null) {
             timerSiguienteDialogo.stop();
         }
@@ -289,19 +238,21 @@ public class GamePanel extends JPanel implements KeyListener {
         if (timerPausaEntreDialogos != null) {
             timerPausaEntreDialogos.stop();
         }
+        System.out.println("Sistema de secuencia narrativa pausado");
+    }
+
+    public void detenerDialogoBucle() {
+        pausarDialogoBucle();
         mainFrame.hideDialogue();
         gestionarVisibilidad(false, "Soraya");
         gestionarVisibilidad(false, "Jesica");
-        System.out.println("Sistema de turnos detenido");
+        System.out.println("Sistema de secuencia narrativa detenido");
     }
 
-    // Método para el Menú Pausa
-    // Aquí se cambia de panel para mostrar el PausePanel
-    public void mostrarMenuPausa() {
-        if (escapePressed) {
-            mainFrame.getMainController().pauseGame();
-            mainFrame.cambiarPantalla("PAUSE");
-            escapePressed = false;
+    public void reanudarDialogoBucle() {
+        if (indicePasos < secuenciaDialogos.length) {
+            System.out.println("Reanudando secuencia narrativa desde paso: " + indicePasos);
+            lanzarSiguienteDialogo();
         }
     }
 
