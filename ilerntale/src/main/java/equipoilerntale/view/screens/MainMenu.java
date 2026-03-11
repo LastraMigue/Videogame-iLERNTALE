@@ -23,6 +23,8 @@ public class MainMenu extends JPanel {
 
     private MainFrame mainFrame;
     private JButton btnJugar;
+    private JButton btnIntro;
+    private JButton btnTutorial;
     private JButton btnSalir;
 
     /**
@@ -38,59 +40,76 @@ public class MainMenu extends JPanel {
         cargarImagenMenu();
     }
 
-    private void inicializarComponentes() {
-        btnJugar = new JButton("NUEVA PARTIDA");
-        btnJugar.setFont(new Font("Arial", Font.BOLD, 24));
-        btnJugar = new JButton("JUGAR");
-        // Traer la fuente deltarune.ttf
+    private JButton crearBoton(String texto, int x, int y) {
+        JButton boton = new JButton(texto);
+
+        // Cargar fuente
         try {
             InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
             if (fontStream != null) {
-                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(64f);
-                btnJugar.setFont(deltaruneFont);
+                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(32f);
+                boton.setFont(deltaruneFont);
             } else {
                 throw new IOException("No se encontró el archivo de la fuente.");
             }
         } catch (FontFormatException | IOException e) {
-            btnJugar.setFont(new Font("Monospaced", Font.BOLD, 32));
-            System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
+            boton.setFont(new Font("Monospaced", Font.BOLD, 32));
+            System.out.println("No se pudo cargar la fuente Deltarune para " + texto + ", usando Monospaced.");
         }
 
-        btnJugar.setOpaque(false);
-        btnJugar.setContentAreaFilled(false);
-        btnJugar.setBorderPainted(false);
-        btnJugar.setFocusPainted(false);
-        btnJugar.setForeground(Color.WHITE);
-        btnJugar.setBounds(350, 400, 300, 60);
+        // Estilo visual
+        boton.setOpaque(false);
+        boton.setContentAreaFilled(false);
+        boton.setBorderPainted(false);
+        boton.setFocusPainted(false);
+        boton.setForeground(Color.WHITE);
+        boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        boton.setBounds(x, y, 300, 60);
+
+        return boton;
+    }
+
+    private void inicializarComponentes() {
+        // Inicializar botones con el helper - Situados en la mitad inferior (Total
+        // alto: 600)
+        // Usamos un intervalo de 55px (altura botón 60px) para compactarlos un poco más
+
+        // Botones con Imagen para cada funcionalidad (JUGAR, INTRO, TUTORIAL Y SALIR)
+        btnJugar = createImageButton("/title/jugar.png", "JUGAR");
+        btnJugar.setBounds(400, 300, 200, 60);
+
+        btnIntro = createImageButton("/title/intro.png", "INTRO");
+        btnIntro.setBounds(400, 370, 200, 60);
+
+        btnTutorial = createImageButton("/title/tutorial.png", "TUTORIAL");
+        btnTutorial.setBounds(400, 440, 200, 60);
+
+        btnSalir = createImageButton("/title/salir.png", "SALIR");
+        btnSalir.setBounds(400, 510, 200, 60);
+
+        // Añadir funcionalidades existentes
         btnJugar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Cambiar a la pantalla que muestra el vídeo
+                mainFrame.cambiarPantalla("PERSONAJES");
+            }
+        });
+
+        btnTutorial.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainFrame.cambiarPantalla("TUTORIAL");
+            }
+        });
+
+        btnIntro.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Trasladado desde btnJugar: Reproducir vídeo de intro
                 mainFrame.cambiarPantalla("VIDEO");
             }
         });
 
-        btnSalir = new JButton("SALIR");
-
-        try {
-            InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
-            if (fontStream != null) {
-                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(64f);
-                btnSalir.setFont(deltaruneFont);
-            } else {
-                throw new IOException("No se encontró el archivo de la fuente.");
-            }
-        } catch (FontFormatException | IOException e) {
-            btnSalir.setFont(new Font("Monospaced", Font.BOLD, 32));
-            System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
-        }
-
-        btnSalir.setOpaque(false);
-        btnSalir.setContentAreaFilled(false);
-        btnSalir.setBorderPainted(false);
-        btnSalir.setFocusPainted(false);
-        btnSalir.setForeground(Color.WHITE);
-        btnSalir.setBounds(350, 480, 300, 60);
         btnSalir.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -98,11 +117,44 @@ public class MainMenu extends JPanel {
             }
         });
 
-        btnJugar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnSalir.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
+        // Añadir al panel
         add(btnJugar);
+        add(btnIntro);
+        add(btnTutorial);
         add(btnSalir);
+
+        // Asegurar que los botones estén en la capa superior, por encima del panel
+        setComponentZOrder(btnJugar, 0);
+        setComponentZOrder(btnIntro, 0);
+        setComponentZOrder(btnTutorial, 0);
+        setComponentZOrder(btnSalir, 0);
+    }
+
+    private JButton createImageButton(String imagePath, String fallbackText) {
+        JButton button = new JButton();
+
+        URL imageUrl = getClass().getResource(imagePath);
+        if (imageUrl != null) {
+            ImageIcon icon = new ImageIcon(imageUrl);
+            Image img = icon.getImage();
+            if (img != null) {
+                Image scaledImg = img.getScaledInstance(200, 60, Image.SCALE_SMOOTH);
+                button.setIcon(new ImageIcon(scaledImg));
+            }
+        }
+
+        if (button.getIcon() == null) {
+            button.setText(fallbackText);
+            button.setFont(new Font("Arial", Font.BOLD, 16));
+            button.setForeground(Color.WHITE);
+        }
+
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        return button;
     }
 
     private ImageIcon asignarImagenMenu(String ruta) {

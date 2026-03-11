@@ -8,12 +8,10 @@ import java.net.URL;
 
 import javax.swing.*;
 
-import equipoilerntale.controller.MainController;
 import equipoilerntale.view.MainFrame;
 
 public class PausePanel extends JPanel {
     private MainFrame mainFrame;
-    private MainController controller;
     private JButton btnReanudar;
     private JButton btnSalir;
 
@@ -40,7 +38,6 @@ public class PausePanel extends JPanel {
 
     public PausePanel(MainFrame frame) {
         this.mainFrame = frame;
-        this.controller = frame.getMainController();
 
         setLayout(new BorderLayout());
         setOpaque(false); // Importante para ver lo que hay debajo
@@ -123,8 +120,7 @@ public class PausePanel extends JPanel {
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
-        button.setOpaque(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         return button;
     }

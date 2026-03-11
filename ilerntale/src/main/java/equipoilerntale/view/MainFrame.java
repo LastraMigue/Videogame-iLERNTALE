@@ -13,10 +13,14 @@ import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
+import equipoilerntale.view.screens.DerrotaScreen;
 import equipoilerntale.view.screens.ExplorationPanel;
+import equipoilerntale.view.screens.GamePanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
+import equipoilerntale.view.screens.TutorialPanel;
 import equipoilerntale.view.screens.VideoScreen;
+import equipoilerntale.view.ui.CajaTexto;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.ui.BarraVida;
 
@@ -36,8 +40,12 @@ public class MainFrame extends JFrame {
     private CharacterSelector personajes;
     private PausePanel pause;
     private CombatPanel combate;
+    private DerrotaScreen derrota;
     private VideoScreen videoScreen;
     private ExplorationPanel exploracion;
+    private GamePanel gamePanel;
+    private TutorialPanel tutorial;
+    private JPanel dialogueContainer;
     private String personajeSeleccionado = "";
 
     // CONTROLADORES ACCESIBLES
@@ -59,6 +67,13 @@ public class MainFrame extends JFrame {
         setTitle("iLERNTALE");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
+        // ESTABLECER ICONO DEL JFRAME
+        java.net.URL iconURL = getClass().getResource("/title/titozeio.png");
+        if (iconURL != null) {
+            setIconImage(new ImageIcon(iconURL).getImage());
+        } else {
+            LOG.warning("No se pudo encontrar el icono de la ventana: /title/titozeio.png");
+        }
 
         // INICIALIZAR CONTROLADORES
         inicializarControladores();
@@ -71,7 +86,10 @@ public class MainFrame extends JFrame {
         personajes = new CharacterSelector(this);
         pause = new PausePanel(this);
         combate = new CombatPanel(this);
+        derrota = new DerrotaScreen(this);
         videoScreen = new VideoScreen(this);
+        tutorial = new TutorialPanel(this);
+        gamePanel = new GamePanel(this);
 
         // CREAR EXPLORATIONPANEL CON EL MANAGER LÓGICO
         exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
@@ -80,9 +98,12 @@ public class MainFrame extends JFrame {
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(combate, "COMBATE");
+        contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO"); // Útil para exclusiones
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
+        contenedor.add(gamePanel, "GAME");
+        contenedor.add(tutorial, "TUTORIAL");
 
         // Configuramos el LayeredPane para el overlay
         layeredPane = new JLayeredPane();
@@ -92,18 +113,20 @@ public class MainFrame extends JFrame {
         contenedor.setBounds(0, 0, 1000, 600);
         layeredPane.add(contenedor, JLayeredPane.DEFAULT_LAYER);
 
-        // Capa superior: El panel de pausa (inicialmente invisible)
-        pause.setBounds(0, 0, 1000, 600);
-        pause.setVisible(false);
-        layeredPane.add(pause, JLayeredPane.PALETTE_LAYER);
+        // Capa para diálogos
+        dialogueContainer = new JPanel(null);
+        dialogueContainer.setBounds(0, 0, 1000, 600);
+        dialogueContainer.setOpaque(false);
+        dialogueContainer.setVisible(false);
+        dialogueContainer.setFocusable(false); // No bloquear clics
+        layeredPane.add(dialogueContainer, JLayeredPane.POPUP_LAYER);
 
         // HUD: Vida del jugador
         hudPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                if (!pantallaActual.equals("MENU") && !pantallaActual.equals("VIDEO")
-                        && !pantallaActual.equals("PERSONAJES") && !pause.isVisible()) {
+                if ((pantallaActual.equals("EXPLORACION") || pantallaActual.equals("COMBATE")) && !dialogueContainer.isVisible()) {
                     // Dibujar arriba a la derecha
                     playerHealthBar.draw(g, getWidth() - 220, 35);
                 }
@@ -111,9 +134,13 @@ public class MainFrame extends JFrame {
         };
         hudPanel.setBounds(0, 0, 1000, 600);
         hudPanel.setOpaque(false);
-        // Deshabilitar eventos de ratón en el HUD para no bloquear clics debajo
         hudPanel.setFocusable(false);
         layeredPane.add(hudPanel, JLayeredPane.POPUP_LAYER);
+
+        // Capa para el panel de pausa (encima de todo)
+        pause.setBounds(0, 0, 1000, 600);
+        pause.setVisible(false);
+        layeredPane.add(pause, JLayeredPane.DRAG_LAYER);
 
         add(layeredPane);
 
@@ -176,6 +203,9 @@ public class MainFrame extends JFrame {
      * CAMBIA LA PANTALLA VISIBLE ACTUALMENTE.
      */
     public void cambiarPantalla(String nombre) {
+        // DETENER DIÁLOGOS ANTES DE CAMBIAR (HARD STOP)
+        detenerDialogosExistentes();
+
         this.pantallaActual = nombre;
         cardLayout.show(contenedor, nombre);
 
@@ -203,19 +233,83 @@ public class MainFrame extends JFrame {
             pause.setVisible(false);
             if (mainController != null)
                 mainController.resumeGame();
+            
+            // REANUDAR DIÁLOGOS SI ES NECESARIO
+            reanudarDialogosExistentes();
+            
+            Component comp = getPanelActual();
+            if (comp != null) comp.requestFocusInWindow();
+            
         } else {
+            // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
+            pausarDialogosExistentes();
+
             pause.setVisible(true);
             if (mainController != null)
                 mainController.pauseGame();
-            // Aseguramos que el panel de pausa se redibuje
+            // Asegurar que el panel de pausa se redibuje
             pause.repaint();
         }
+    }
+
+    /**
+     * PAUSA LOS DIÁLOGOS EN CUALQUIER PANEL QUE ESTÉ ACTIVO SIN OCULTARLOS.
+     */
+    private void pausarDialogosExistentes() {
+        JPanel actual = getPanelActual();
+        if (actual instanceof GamePanel) {
+            ((GamePanel) actual).pausarDialogoBucle();
+        }
+    }
+
+    /**
+     * DETIENE Y OCULTA LOS DIÁLOGOS COMPLETAMENTE (al cambiar de pantalla).
+     */
+    private void detenerDialogosExistentes() {
+        hideDialogue();
+        JPanel actual = getPanelActual();
+        if (actual instanceof GamePanel) {
+            ((GamePanel) actual).detenerDialogoBucle();
+        }
+    }
+
+    /**
+     * REANUDA LOS DIÁLOGOS SI EL PANEL LO SOPORTA.
+     */
+    private void reanudarDialogosExistentes() {
+        JPanel actual = getPanelActual();
+        if (actual instanceof GamePanel) {
+            ((GamePanel) actual).reanudarDialogoBucle();
+        }
+    }
+
+    public void showDialogue(String text) {
+        showDialogue(text, 450);
+    }
+
+    public void showDialogue(String text, int y) {
+        dialogueContainer.removeAll();
+        JPanel panel = CajaTexto.crearPanel(text);
+        // Posicionamiento dinámico: centrado horizontalmente, Y ajustable
+        panel.setLocation(250, y);
+        dialogueContainer.add(panel);
+        dialogueContainer.setVisible(true); // Mostrar contenedor al lanzar diálogo
+        dialogueContainer.revalidate();
+        dialogueContainer.repaint();
+    }
+
+    public void hideDialogue() {
+        dialogueContainer.removeAll();
+        dialogueContainer.setVisible(false); // Ocultar al cerrar diálogo
+        dialogueContainer.revalidate();
+        dialogueContainer.repaint();
     }
 
     private boolean puedePausar() {
         // No permitir pausa en ciertas pantallas
         return !pantallaActual.equals("MENU") &&
                 !pantallaActual.equals("VIDEO") &&
+                !pantallaActual.equals("TUTORIAL") &&
                 !pantallaActual.equals("PERSONAJES");
     }
 
@@ -241,17 +335,20 @@ public class MainFrame extends JFrame {
         inicializarControladores();
         mainController.startGameThread();
 
-        // Recrear el panel de exploración con el nuevo personaje y manager
         exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
+        gamePanel = new GamePanel(this);
 
         // Refrescar el contenedor de pantallas
         contenedor.removeAll();
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(combate, "COMBATE");
+        contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO");
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
+        contenedor.add(gamePanel, "GAME");
+        contenedor.add(tutorial, "TUTORIAL");
 
         // CRÍTICO: sin esto el CardLayout no muestra los paneles nuevos
         contenedor.revalidate();
@@ -307,3 +404,6 @@ public class MainFrame extends JFrame {
         return playerHealthBar;
     }
 }
+    
+
+    

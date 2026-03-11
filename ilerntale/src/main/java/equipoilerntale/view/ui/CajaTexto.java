@@ -16,22 +16,15 @@ public class CajaTexto {
     /**
      * Crea un globo de diálogo estilizado (estilo Undertale/iLERNTALE).
      * 
-     * @param padre JFrame principal que contiene los diálogos.
      * @param texto El texto que debe mostrar el globo.
-     * @param x     Posición X en pantalla.
-     * @param y     Posición Y en pantalla.
-     * @return El cuadro de diálogo flotante configurado.
+     * @return El panel de diálogo configurado.
      */
-    public static JDialog crearDialogo(JFrame padre, String texto, int x, int y) {
-        JDialog dialogo = new JDialog(padre);
-        dialogo.setUndecorated(true);
-        dialogo.setSize(500, 120);
-        dialogo.setLocation(x, y);
-
-        // Contenido con fondo negro y borde blanco
+    public static JPanel crearPanel(String texto) {
+        // Panel principal del diálogo (negro con borde blanco fino)
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.BLACK);
         panel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+        panel.setSize(500, 120);
 
         // Área de texto estilizada
         JTextArea area = new JTextArea(texto);
@@ -44,8 +37,7 @@ public class CajaTexto {
         area.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
 
         panel.add(area);
-        dialogo.setContentPane(panel);
 
-        return dialogo;
+        return panel;
     }
 }
