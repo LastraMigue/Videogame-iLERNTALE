@@ -13,6 +13,7 @@ import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
+import equipoilerntale.view.screens.DerrotaScreen;
 import equipoilerntale.view.screens.ExplorationPanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
@@ -36,6 +37,7 @@ public class MainFrame extends JFrame {
     private CharacterSelector personajes;
     private PausePanel pause;
     private CombatPanel combate;
+    private DerrotaScreen derrota;
     private VideoScreen videoScreen;
     private ExplorationPanel exploracion;
     private String personajeSeleccionado = "";
@@ -71,6 +73,7 @@ public class MainFrame extends JFrame {
         personajes = new CharacterSelector(this);
         pause = new PausePanel(this);
         combate = new CombatPanel(this);
+        derrota = new DerrotaScreen(this);
         videoScreen = new VideoScreen(this);
 
         // CREAR EXPLORATIONPANEL CON EL MANAGER LÓGICO
@@ -80,6 +83,7 @@ public class MainFrame extends JFrame {
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(combate, "COMBATE");
+        contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO"); // Útil para exclusiones
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
@@ -103,7 +107,8 @@ public class MainFrame extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if (!pantallaActual.equals("MENU") && !pantallaActual.equals("VIDEO")
-                        && !pantallaActual.equals("PERSONAJES") && !pause.isVisible()) {
+                        && !pantallaActual.equals("PERSONAJES") && !pantallaActual.equals("DERROTA")
+                        && !pause.isVisible()) {
                     // Dibujar arriba a la derecha
                     playerHealthBar.draw(g, getWidth() - 220, 35);
                 }
@@ -213,7 +218,8 @@ public class MainFrame extends JFrame {
         // No permitir pausa en ciertas pantallas
         return !pantallaActual.equals("MENU") &&
                 !pantallaActual.equals("VIDEO") &&
-                !pantallaActual.equals("PERSONAJES");
+                !pantallaActual.equals("PERSONAJES") &&
+                !pantallaActual.equals("DERROTA");
     }
 
     public void setMainController(MainController controller) {
@@ -246,6 +252,7 @@ public class MainFrame extends JFrame {
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(combate, "COMBATE");
+        contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO");
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");

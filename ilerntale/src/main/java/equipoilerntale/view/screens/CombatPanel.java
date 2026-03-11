@@ -184,6 +184,10 @@ public class CombatPanel extends JPanel {
 
                     if (damageRecibido > 0) {
                         mainFrame.getPlayerHealthBar().takeDamage(damageRecibido);
+                        if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
+                            endMinigame();
+                            mainFrame.cambiarPantalla("DERROTA");
+                        }
                     }
                 }
 
