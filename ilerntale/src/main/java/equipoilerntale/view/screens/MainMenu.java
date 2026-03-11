@@ -73,13 +73,19 @@ public class MainMenu extends JPanel {
         // Inicializar botones con el helper - Situados en la mitad inferior (Total
         // alto: 600)
         // Usamos un intervalo de 55px (altura botón 60px) para compactarlos un poco más
-        btnJugar = crearBoton("JUGAR", 350, 340);
-        btnIntro = crearBoton("INTRO", 350, 395);
-        btnTutorial = crearBoton("TUTORIAL", 350, 450);
 
-        // Botón Salir (Imagen)
+        // Botones con Imagen para cada funcionalidad (JUGAR, INTRO, TUTORIAL Y SALIR)
+        btnJugar = createImageButton("/title/jugar.png", "JUGAR");
+        btnJugar.setBounds(400, 300, 200, 60);
+
+        btnIntro = createImageButton("/title/intro.png", "INTRO");
+        btnIntro.setBounds(400, 370, 200, 60);
+
+        btnTutorial = createImageButton("/title/tutorial.png", "TUTORIAL");
+        btnTutorial.setBounds(400, 440, 200, 60);
+
         btnSalir = createImageButton("/title/salir.png", "SALIR");
-        btnSalir.setBounds(400, 505, 200, 60);
+        btnSalir.setBounds(400, 510, 200, 60);
 
         // Añadir funcionalidades existentes
         btnJugar.addActionListener(new ActionListener() {
