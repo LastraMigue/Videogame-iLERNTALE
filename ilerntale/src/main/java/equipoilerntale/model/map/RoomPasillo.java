@@ -40,13 +40,19 @@ public class RoomPasillo extends AbstractRoom {
         // Puerta Metálica al final (Aula 124)
         this.doors.add(new DoorModel(
                 1750, 150, 220, 250,
-                "Aula 124", 600, 320 // Aparece en el aula fuera del muro (Y=320)
+                "Aula 124", 1750, 320 // Aparece en el aula frente a la puerta metálica
         ));
 
         // Puerta 3A (Aula 123)
         this.doors.add(new DoorModel(
                 840, 200, 130, 80, // Aumentada altura para facilitar detección
                 "Aula 123", 600, 320 // Aparece en el aula fuera del muro (Y=320)
+        ));
+
+        // NUEVA: Puerta de Madera (Aula 125)
+        this.doors.add(new DoorModel(
+                1200, 200, 130, 80, // Posición central en el pasillo
+                "Aula 125", 600, 320 // Aparece en el aula fuera del muro (Y=320)
         ));
     }
 }

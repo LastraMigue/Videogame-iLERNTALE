@@ -1,38 +1,34 @@
 package equipoilerntale.model.map;
 
 import java.awt.Rectangle;
-
 import equipoilerntale.GameSettings;
 
 /**
- * IMPLEMENTACIÓN CONCRETA DE LA PRIMERA SALA: UN AULA DEL INSTITUTO.
- * ES LA SALA .
+ * IMPLEMENTACIÓN CONCRETA DE LA TERCERA SALA: AULA 125.
  */
-public class Room2 extends AbstractRoom {
+public class Room3 extends AbstractRoom {
 
     @Override
     protected void initializeRoom() {
-        this.name = "Aula 123";
+        this.name = "Aula 125";
 
-        // CUIDADO: EXTENSIÓN JPG EN EL PASILLO
-        this.backgroundPath = "/mapa/h1.jpg";
+        // Usamos el fondo de aula (h1.jpg)
+        this.backgroundPath = "/mapa/h2.jpg";
 
         // CONFIGURACIÓN DE ZOMBIES
-        this.zombiesToSpawn = GameSettings.ZOMBIES_AULA_123;
+        this.zombiesToSpawn = GameSettings.ZOMBIES_AULA_125;
 
-        // EL ÁREA DE GENERACIÓN DE ZOMBIES (Ajustada para estar debajo del muro
-        // superior)
+        // EL ÁREA DE GENERACIÓN DE ZOMBIES
         this.zombieSpawnArea = new Rectangle(400, 300, GameSettings.MAP_WIDTH - 500, GameSettings.MAP_HEIGHT - 350);
 
         // BOSS AL FINAL DEL AULA
         this.bossSpawnArea = new Rectangle(GameSettings.MAP_WIDTH - 200, GameSettings.MAP_HEIGHT - 200, 100, 100);
 
         // CONFIGURACIÓN DE LOS LÍMITES/MUROS
-        // MURO SUPERIOR E INFERIOR (Ajustado a la línea del suelo del aula)
-        this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 250));
+        this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
         this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
 
-        // MURO SUPERIOR DERECHO (Esquina superior derecha bloqueada)
+        // MURO SUPERIOR DERECHO
         this.walls.add(new Rectangle(1550, 0, 600, 350));
 
         // LÍMITES LATERALES
@@ -42,7 +38,7 @@ public class Room2 extends AbstractRoom {
         // CONFIGURACIÓN DE LA SALIDA (VOLVER AL PASILLO)
         this.doors.add(new DoorModel(
                 600, 180, 130, 80,
-                "Pasillo Principal", 905, 320 // Aparece frente a la puerta 3A
+                "Pasillo Principal", 1200, 320 // Aparece frente a la nueva puerta de madera
         ));
     }
 }

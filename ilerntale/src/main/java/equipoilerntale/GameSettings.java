@@ -42,5 +42,6 @@ public class GameSettings {
     public static final int ZOMBIES_PASILLO = 10;
     public static final int ZOMBIES_AULA_124 = 8;
     public static final int ZOMBIES_AULA_123 = 8;
+    public static final int ZOMBIES_AULA_125 = 8;
     public static final String RUTA_ZOMBIE = "/zombie/";
 }

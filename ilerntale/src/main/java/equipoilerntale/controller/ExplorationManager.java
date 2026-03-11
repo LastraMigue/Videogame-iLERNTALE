@@ -14,6 +14,7 @@ import equipoilerntale.model.map.AbstractRoom;
 import equipoilerntale.model.map.DoorModel;
 import equipoilerntale.model.map.Room1;
 import equipoilerntale.model.map.Room2;
+import equipoilerntale.model.map.Room3;
 import equipoilerntale.model.map.RoomPasillo;
 import equipoilerntale.service.AssetService;
 
@@ -189,6 +190,8 @@ public class ExplorationManager {
                         loadRoom(new RoomPasillo(), door.getTargetPlayerX(), door.getTargetPlayerY());
                     } else if (door.getTargetRoomName().equals("Aula 123")) {
                         loadRoom(new Room2(), door.getTargetPlayerX(), door.getTargetPlayerY());
+                    } else if (door.getTargetRoomName().equals("Aula 125")) {
+                        loadRoom(new Room3(), door.getTargetPlayerX(), door.getTargetPlayerY());
                     }
                     inputHandler.ePressed = false; // Evitar salto doble por mantener pulsado
                     break;

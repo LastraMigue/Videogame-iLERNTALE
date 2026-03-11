@@ -15,7 +15,7 @@ public class Room1 extends AbstractRoom {
         this.name = "Aula 124";
 
         // CUIDADO: EXTENSIÓN JPG EN EL PASILLO
-        this.backgroundPath = "/mapa/h1.jpg";
+        this.backgroundPath = "/mapa/hfinal.jpg";
 
         // CONFIGURACIÓN DE ZOMBIES
         this.zombiesToSpawn = GameSettings.ZOMBIES_AULA_124;
@@ -32,8 +32,8 @@ public class Room1 extends AbstractRoom {
         this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
         this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
 
-        // MURO SUPERIOR DERECHO (Esquina superior derecha bloqueada)
-        this.walls.add(new Rectangle(1550, 0, 600, 350));
+        // MURO SUPERIOR DERECHO (Ajustado para no bloquear la nueva puerta metálica)
+        this.walls.add(new Rectangle(1550, 0, 200, 350));
 
         // LÍMITES LATERALES
         this.walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
@@ -41,7 +41,7 @@ public class Room1 extends AbstractRoom {
 
         // CONFIGURACIÓN DE LA SALIDA (VOLVER AL PASILLO)
         this.doors.add(new DoorModel(
-                600, 180, 130, 80,
+                1750, 150, 220, 250,
                 "Pasillo Principal", 1750, 320 // Aparece frente a la puerta 1B
         ));
     }
