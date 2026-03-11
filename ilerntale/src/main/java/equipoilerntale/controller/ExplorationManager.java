@@ -2,7 +2,6 @@ package equipoilerntale.controller;
 
 import java.awt.Image;
 import java.awt.Rectangle;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -10,6 +9,12 @@ import equipoilerntale.GameSettings;
 import equipoilerntale.model.entity.Direction;
 import equipoilerntale.model.entity.Player;
 import equipoilerntale.model.entity.Zombie;
+import equipoilerntale.model.entity.Boss;
+import equipoilerntale.model.map.AbstractRoom;
+import equipoilerntale.model.map.DoorModel;
+import equipoilerntale.model.map.Room1;
+import equipoilerntale.model.map.Room2;
+import equipoilerntale.model.map.RoomPasillo;
 import equipoilerntale.service.AssetService;
 
 /**
@@ -26,8 +31,7 @@ public class ExplorationManager {
     private final String characterName;
     private final Object mainFrame;
 
-    private final List<Rectangle> walls = new ArrayList<>();
-    private Rectangle doorArea;
+    private AbstractRoom currentRoom;
 
     private int animationFrameIndex = 0;
     private long lastAnimationTime = 0;
@@ -52,21 +56,29 @@ public class ExplorationManager {
         this.player = new Player(GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT);
         this.enemySystem = new EnemySystem();
 
-        initializeWorld();
+        // CARGAMOS LA SALA INICIAL POR DEFECTO AL CREAR EL MANAGER
+        loadRoom(new RoomPasillo(), Player.START_X, Player.START_Y);
     }
 
     /**
-     * INICIALIZA EL MUNDO DE EXPLORACIÓN.
-     * CREA LOS MUROS PERIMETRALES Y EL ÁREA DE LA PUERTA.
+     * CARGA UNA NUEVA HABITACIÓN EN EL GESTOR Y EL MOTOR DEL JUEGO.
+     * DETIENE ENEMIGOS PREVIOS Y ESTABLECE LOS NUEVOS DATOS DEL MAPA.
      */
-    private void initializeWorld() {
-        walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
-        walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
-        walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
-        walls.add(new Rectangle(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT));
-        doorArea = new Rectangle(GameSettings.MAP_WIDTH - 250, 230, 100, 120);
-        // Los zombies se generan en activate(), NO aquí, para evitar que corran antes
-        // de la pantalla
+    public void loadRoom(AbstractRoom room, int playerStartX, int playerStartY) {
+        LOG.info("CARGANDO HABITACIÓN: " + room.getName());
+        enemySystem.clear(); // Limpiar zombies
+
+        this.currentRoom = room;
+
+        // POSICIONAMOS AL JUGADOR EN LA ENTRADA
+        this.player.setX(playerStartX);
+        this.player.setY(playerStartY);
+
+        // Si la pantalla ya estaba activa, generar los nuevos zombies.
+        // Si no (estamos en intro o pausa), se generarán al hacer activate().
+        if (active) {
+            spawnZombies();
+        }
     }
 
     /**
@@ -91,8 +103,17 @@ public class ExplorationManager {
     }
 
     public void spawnZombies() {
-        Rectangle spawnArea = new Rectangle(500, 150, GameSettings.MAP_WIDTH - 500, GameSettings.MAP_HEIGHT - 300);
-        enemySystem.spawnZombies(GameSettings.ZOMBIE_CANTIDAD_INICIAL, spawnArea, player.getX(), player.getY(), walls);
+        if (currentRoom != null && currentRoom.getZombiesToSpawn() > 0) {
+            enemySystem.spawnZombies(
+                    currentRoom.getZombiesToSpawn(),
+                    currentRoom.getZombieSpawnArea(),
+                    player.getX(),
+                    player.getY(),
+                    currentRoom.getWalls());
+        }
+        if (currentRoom != null && currentRoom.getBossSpawnArea() != null) {
+            enemySystem.spawnBoss(currentRoom.getBossSpawnArea());
+        }
     }
 
     public void update() {
@@ -125,8 +146,10 @@ public class ExplorationManager {
             else if (dy != 0)
                 player.setDirection((dy < 0) ? Direction.UP : Direction.DOWN);
 
-            player.moveIfNoCollision(dx, 0, walls);
-            player.moveIfNoCollision(0, dy, walls);
+            // COMPROBAR COLISIONES CON LOS MUROS DE LA SALA ACTUAL
+            List<Rectangle> roomWalls = currentRoom.getWalls();
+            player.moveIfNoCollision(dx, 0, roomWalls);
+            player.moveIfNoCollision(0, dy, roomWalls);
         }
     }
 
@@ -153,9 +176,24 @@ public class ExplorationManager {
             inputHandler.mPressed = false; // PREVENIR MULTIPLES CAMBIOS
         }
 
-        if (inputHandler.ePressed && player.intersects(doorArea)) {
-            triggerScreenChange("COMBATE");
+        // COMPROBAR COLISIÓN CON PUERTAS
+        if (inputHandler.ePressed && currentRoom != null) {
+            for (DoorModel door : currentRoom.getDoors()) {
+                if (player.intersects(door.getArea())) {
+                    if (door.getTargetRoomName().equals("Aula 124")) {
+                        loadRoom(new Room1(), door.getTargetPlayerX(), door.getTargetPlayerY());
+                    } else if (door.getTargetRoomName().equals("Pasillo Principal")) {
+                        loadRoom(new RoomPasillo(), door.getTargetPlayerX(), door.getTargetPlayerY());
+                    } else if (door.getTargetRoomName().equals("Aula 123")) {
+                        loadRoom(new Room2(), door.getTargetPlayerX(), door.getTargetPlayerY());
+                    }
+                    inputHandler.ePressed = false; // Evitar salto doble por mantener pulsado
+                    break;
+                }
+            }
         }
+
+        // COMPROBAR COMBATE CON ENEMIGOS
         if (enemySystem.collidesWithPlayer(player.getHitbox(player.getX(), player.getY()))) {
             triggerScreenChange("COMBATE");
         }
@@ -179,6 +217,13 @@ public class ExplorationManager {
     }
 
     /**
+     * OBTIENE LA LISTA DE JEFES ACTIVOS ACTUALMENTE.
+     */
+    public List<Boss> getActiveBosses() {
+        return enemySystem.getBosses();
+    }
+
+    /**
      * OBTIENE EL JUGADOR ACTUAL.
      */
     public Player getPlayer() {
@@ -186,17 +231,10 @@ public class ExplorationManager {
     }
 
     /**
-     * OBTIENE LA LISTA DE MUROS DEL MAPA.
+     * OBTIENE LA HABITACIÓN O SALA ACTUAL.
      */
-    public List<Rectangle> getWalls() {
-        return walls;
-    }
-
-    /**
-     * OBTIENE EL ÁREA DE LA PUERTA DE COMBATE.
-     */
-    public Rectangle getDoorArea() {
-        return doorArea;
+    public AbstractRoom getCurrentRoom() {
+        return currentRoom;
     }
 
     /**

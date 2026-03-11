@@ -26,9 +26,16 @@ import equipoilerntale.view.render.MouseRenderer;
 import equipoilerntale.model.combat.ArenaModel;
 import equipoilerntale.controller.CombatController;
 import equipoilerntale.controller.InputHandler;
-import equipoilerntale.view.ui.BarraVida;
+import equipoilerntale.controller.MainController;
+import equipoilerntale.model.combat.minigames.ClassicDodgeRules;
+import equipoilerntale.model.combat.minigames.MinigameRules;
+import equipoilerntale.model.combat.minigames.ShieldRules;
+import equipoilerntale.model.combat.minigames.ShooterRules;
+import equipoilerntale.model.combat.minigames.TargetDodgeRules;
+import equipoilerntale.model.combat.minigames.ThreeLinesRules;
 import equipoilerntale.view.ui.Inventario;
 import equipoilerntale.model.entity.ItemModel;
+import equipoilerntale.view.ui.BarraVida;
 
 public class CombatPanel extends JPanel {
     private MainFrame mainFrame;
@@ -37,6 +44,7 @@ public class CombatPanel extends JPanel {
     private ArenaModel arenaModel;
     private InputHandler inputHandler;
     private CombatController combatController;
+    private MinigameRules currentRules;
 
     // Renderers (NUEVO)
     private MouseRenderer mouseRenderer;
@@ -52,9 +60,21 @@ public class CombatPanel extends JPanel {
 
     // Minigame & Round state
     private int currentRound = 1;
+    // Timer del combate
     private long minigameEndTime = 0;
+    private long lastUpdateTime = 0;
     private boolean isMinigameActive = false;
-    private Timer combatTimer;
+
+    // Collisions Tracking para daño
+    private int lastGoodCollisions = 0;
+    private int lastBadCollisions = 0;
+
+    // Buffos de Objetos
+    private int escudoPatito = 0;
+    private boolean dobleDañoRonda = false;
+
+    // Vida Enemigo
+    private BarraVida enemyHealthBar;
 
     private String centerTextMessage = "";
     private Font customFont;
@@ -76,6 +96,9 @@ public class CombatPanel extends JPanel {
         this.mouseRenderer = new MouseRenderer();
         this.bulletRenderer = new BulletRenderer();
         this.itemRenderer = new ItemRenderer();
+
+        // Inicializamos barra de enemigo
+        this.enemyHealthBar = new BarraVida(25, "ENEMIGO");
 
         this.addKeyListener(inputHandler);
         this.setFocusable(true);
@@ -115,6 +138,16 @@ public class CombatPanel extends JPanel {
                     ItemModel selected = currentCombatItems.get(selectedItemIndex);
                     if (selected != null) {
                         selected.consumir(); // Disminuye la cantidad
+
+                        String itemName = selected.getNombre();
+                        if (itemName.equals("Botella Vida")) {
+                            mainFrame.getPlayerHealthBar().heal(30);
+                        } else if (itemName.equals("Patito Aguante")) {
+                            escudoPatito = 3;
+                        } else if (itemName.equals("Pelota Ataque")) {
+                            dobleDañoRonda = true;
+                        }
+
                         centerTextMessage = "USASTE " + selected.getNombre().toUpperCase();
                         isItemMenuOpen = false;
                         repaint();
@@ -135,9 +168,62 @@ public class CombatPanel extends JPanel {
             }
         } else {
             combatController.update();
-            if (isMinigameActive) {
+
+            // Damage check
+            if (arenaModel != null) {
+                int currentBad = arenaModel.getBadCollisions();
+                if (currentBad > lastBadCollisions) {
+                    int damageRecibido = currentBad - lastBadCollisions;
+                    lastBadCollisions = currentBad;
+
+                    if (escudoPatito > 0) {
+                        int absorbido = Math.min(escudoPatito, damageRecibido);
+                        escudoPatito -= absorbido;
+                        damageRecibido -= absorbido;
+                    }
+
+                    if (damageRecibido > 0) {
+                        mainFrame.getPlayerHealthBar().takeDamage(damageRecibido);
+                        if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
+                            endMinigame();
+                            mainFrame.cambiarPantalla("DERROTA");
+                        }
+                    }
+                }
+
+                int currentGood = arenaModel.getGoodCollisions();
+                if (currentGood > lastGoodCollisions) {
+                    int hits = currentGood - lastGoodCollisions;
+                    lastGoodCollisions = currentGood;
+
+                    int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
+                    enemyHealthBar.takeDamage(damageHecho);
+                }
+            }
+
+            if (isMinigameActive && currentRules != null) {
+                long now = System.currentTimeMillis();
+
+                // Si la diferencia de tiempo es muy grande, asumimos que hubo una pausa
+                if (lastUpdateTime > 0) {
+                    long delta = now - lastUpdateTime;
+                    if (delta > 50) { // Si pasan más de 50ms (por pausa o lag), congelamos el tiempo
+                        minigameEndTime += delta;
+                    }
+                }
+                lastUpdateTime = now;
+
+                if (currentRules.isIntroActive()) {
+                    // Pausa el minijuego empujando el tiempo final hacia adelante
+                    minigameEndTime = now + (currentRules.getDurationInSeconds() * 1000);
+                } else {
+                    if (now >= minigameEndTime) {
+                        endMinigame();
+                    }
+                }
+
                 repaint();
-                if (arenaModel.allBulletsHit()) {
+                if (combatController.isMinigameFinished()) {
                     endMinigame();
                 }
             }
@@ -159,6 +245,11 @@ public class CombatPanel extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.setStroke(new BasicStroke(3));
         g2d.drawRect(405, 30, 180, 180);
+
+        // UI Vida Enemigo Arriba a la Izquierda
+        if (enemyHealthBar != null) {
+            enemyHealthBar.draw(g2d, 20, 35);
+        }
 
         // Recuadros para RONDA y TIEMPO "a ras" del central (Y=95, Alto=50)
         // Cuadro central: X=405 a 585
@@ -186,14 +277,25 @@ public class CombatPanel extends JPanel {
             g2d.drawString("RONDA: " + currentRound, 255, 192);
 
             if (isMinigameActive) {
-                long timeLeft = minigameEndTime - System.currentTimeMillis();
-                if (timeLeft < 0)
-                    timeLeft = 0;
-                long seconds = timeLeft / 1000;
-                long millis = timeLeft % 1000;
-                String timeText = String.format("%02d:%03d", seconds, millis);
-                // Centrado aproximado en el recuadro derecho
-                g2d.drawString(timeText, 645, 192);
+                if (currentRules != null && currentRules.isIntroActive()) {
+                    long seconds = currentRules.getDurationInSeconds();
+                    String timeText = String.format("%02d:000", seconds);
+                    g2d.drawString(timeText, 645, 192);
+                } else {
+                    long nowForTimer = System.currentTimeMillis();
+                    if (mainFrame.getMainController() != null &&
+                            mainFrame.getMainController().getGameState() == MainController.GameState.PAUSED) {
+                        nowForTimer = lastUpdateTime; // Congela el tiempo visualmente
+                    }
+
+                    long timeLeft = minigameEndTime - nowForTimer;
+                    if (timeLeft < 0)
+                        timeLeft = 0;
+                    long seconds = timeLeft / 1000;
+                    long millis = timeLeft % 1000;
+                    String timeText = String.format("%02d:%03d", seconds, millis);
+                    g2d.drawString(timeText, 645, 192);
+                }
             }
         }
 
@@ -204,13 +306,23 @@ public class CombatPanel extends JPanel {
         g2d.drawRect(200, 240, 600, 250);
 
         // 2. DIBUJAR LOS ELEMENTOS CON LOS RENDERERS
-        if (arenaModel != null) {
+        boolean drawEntities = true;
+        if (isMinigameActive && currentRules != null && currentRules.isIntroActive()) {
+            drawEntities = false;
+        }
+
+        if (arenaModel != null && drawEntities) {
             if (arenaModel.getProjectiles() != null) {
                 bulletRenderer.render(g2d, arenaModel.getProjectiles());
             }
             if (arenaModel.getMouse() != null) {
                 mouseRenderer.render(g2d, arenaModel.getMouse());
             }
+        }
+
+        // Extras of current minigame
+        if (isMinigameActive && currentRules != null) {
+            currentRules.render(g2d, arenaModel);
         }
 
         // 3. MENÚ DE OBJETOS
@@ -295,16 +407,38 @@ public class CombatPanel extends JPanel {
                     case "fight":
                         isItemMenuOpen = false;
                         disableAllButtons();
-                        arenaModel.startCombat();
+
+                        int randomMinigame = new java.util.Random().nextInt(5);
+                        switch (randomMinigame) {
+                            case 0:
+                                currentRules = new ClassicDodgeRules();
+                                break;
+                            case 1:
+                                currentRules = new TargetDodgeRules();
+                                break;
+                            case 2:
+                                currentRules = new ThreeLinesRules();
+                                break;
+                            case 3:
+                                currentRules = new ShooterRules();
+                                break;
+                            case 4:
+                                currentRules = new ShieldRules();
+                                break;
+                        }
+
+                        combatController.setRules(currentRules);
+                        combatController.startMinigame();
+
                         requestFocusInWindow();
 
                         isMinigameActive = true;
-                        minigameEndTime = System.currentTimeMillis() + 15000;
-                        if (combatTimer != null)
-                            combatTimer.stop();
-                        combatTimer = new Timer(15000, ev -> endMinigame());
-                        combatTimer.setRepeats(false);
-                        combatTimer.start();
+                        int duration = currentRules.getDurationInSeconds() * 1000;
+                        long startNow = System.currentTimeMillis();
+                        minigameEndTime = startNow + duration;
+                        lastUpdateTime = startNow;
+                        lastGoodCollisions = 0;
+                        lastBadCollisions = 0;
                         break;
                     case "act":
                         break;
@@ -350,16 +484,38 @@ public class CombatPanel extends JPanel {
                                 @Override
                                 public void actionPerformed(ActionEvent ev) {
                                     centerTextMessage = "";
-                                    arenaModel.startCombat();
+
+                                    int randomMinigame = new java.util.Random().nextInt(5);
+                                    switch (randomMinigame) {
+                                        case 0:
+                                            currentRules = new ClassicDodgeRules();
+                                            break;
+                                        case 1:
+                                            currentRules = new TargetDodgeRules();
+                                            break;
+                                        case 2:
+                                            currentRules = new ThreeLinesRules();
+                                            break;
+                                        case 3:
+                                            currentRules = new ShooterRules();
+                                            break;
+                                        case 4:
+                                            currentRules = new ShieldRules();
+                                            break;
+                                    }
+
+                                    combatController.setRules(currentRules);
+                                    combatController.startMinigame();
+
                                     requestFocusInWindow();
 
                                     isMinigameActive = true;
-                                    minigameEndTime = System.currentTimeMillis() + 15000;
-                                    if (combatTimer != null)
-                                        combatTimer.stop();
-                                    combatTimer = new Timer(15000, ev2 -> endMinigame());
-                                    combatTimer.setRepeats(false);
-                                    combatTimer.start();
+                                    int duration = currentRules.getDurationInSeconds() * 1000;
+                                    long startNow = System.currentTimeMillis();
+                                    minigameEndTime = startNow + duration;
+                                    lastUpdateTime = startNow;
+                                    lastGoodCollisions = 0;
+                                    lastBadCollisions = 0;
                                     repaint();
                                 }
                             });
@@ -414,12 +570,11 @@ public class CombatPanel extends JPanel {
         if (!isMinigameActive)
             return;
         isMinigameActive = false;
-        if (combatTimer != null) {
-            combatTimer.stop();
-        }
         arenaModel.stopCombat();
+        currentRules = null;
         enableAllButtons();
         currentRound++;
+        dobleDañoRonda = false;
         repaint();
     }
 }

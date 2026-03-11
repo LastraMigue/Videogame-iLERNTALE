@@ -4,35 +4,25 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
 
 import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.model.entity.Zombie;
+import equipoilerntale.model.entity.Boss;
+import equipoilerntale.model.map.DoorModel;
 import equipoilerntale.service.AssetService;
 import equipoilerntale.view.MainFrame;
 import equipoilerntale.view.render.*;
 
 /**
  * PANEL PRINCIPAL DEL JUEGO.
- * CONTIENE:
- * - INTRO: Diálogos narrativos de Soraya y Jesica
- * - EXPLORACIÓN: Juego con jugador, zombies y mapa
+ * CONTIENE EXPLORACIÓN: Juego con jugador, zombies y mapa
  */
 public class ExplorationPanel extends JPanel {
 
     private static final Logger LOG = Logger.getLogger(ExplorationPanel.class.getName());
-
-    // ==================== CONSTANTES ====================
-    private static final String[][] SCRIPT_INTRO = {
-            { "Soraya", "¡Hola!¡Hola!¡Hola! Soy Soraya. Bienvenido al mundo de iLERNTALE." },
-            { "Jesica", "¡Y yo soy Jessica! ¡Qué emoción tenerte aquí!" },
-            { "Soraya", "En iLERNTALE exploraremos el instituto juntos." },
-            { "Jesica", "¡Vamos a explorar juntos! ¡Usa las flechas para moverte!" }
-    };
-
-    private static final int RETRASO_DIALOGO = 3000;
-    private static final int DURACION_DIALOGO = 4000;
 
     // ==================== ATRIBUTOS ====================
     private final MainFrame mainFrame;
@@ -40,20 +30,11 @@ public class ExplorationPanel extends JPanel {
     private final MapRenderer mapRenderer = new MapRenderer();
     private final PlayerRenderer playerRenderer = new PlayerRenderer();
     private final ZombieRenderer zombieRenderer = new ZombieRenderer();
+    private final BossRenderer bossRenderer = new BossRenderer();
 
-    private Image backgroundIntro;
-    private Image backgroundExploration;
-    private Image background;
-
-    private final JLabel labelFondoIntro = new JLabel();
-    private final JLabel labelSoraya = new JLabel();
-    private final JLabel labelJesica = new JLabel();
+    private Image currentBackground;
 
     private int cameraX, cameraY;
-    private boolean modoIntro = true;
-    private int indicePasos = 0;
-    private Timer timerHistoria;
-    private Timer timerCierre;
 
     // ==================== CONSTRUCTOR ====================
     public ExplorationPanel(MainFrame mainFrame, String characterName, ExplorationManager manager) {
@@ -65,7 +46,6 @@ public class ExplorationPanel extends JPanel {
         setFocusable(true);
         addKeyListener(manager.getInputHandler());
 
-        inicializarRecursosIntro();
         inicializarRecursosExploracion();
         configurarCicloVida();
 
@@ -73,59 +53,19 @@ public class ExplorationPanel extends JPanel {
     }
 
     // ==================== INICIALIZACIÓN ====================
-    private void inicializarRecursosIntro() {
-        // Inicializar el fondo del menú principal durante los diálogos de Soraya y
-        // Jessica
-        backgroundIntro = cargarFondo("/title/dialogo.jpg", GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA);
-        ImageIcon iconoSoraya = cargarImagen("/dialogue/soraya.png", 256, 256);
-        ImageIcon iconoJesica = cargarImagen("/dialogue/jesica.png", 256, 256);
-
-        if (backgroundIntro != null) {
-            labelFondoIntro.setIcon(new ImageIcon(backgroundIntro));
-        }
-        labelFondoIntro.setBounds(0, 0, GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA);
-
-        if (iconoSoraya != null) {
-            labelSoraya.setIcon(iconoSoraya);
-        }
-        labelSoraya.setBounds(0, 344, 256, 256);
-        labelSoraya.setVisible(false);
-
-        if (iconoJesica != null) {
-            labelJesica.setIcon(iconoJesica);
-        }
-        labelJesica.setBounds(750, 344, 256, 256);
-        labelJesica.setVisible(false);
-
-        add(labelFondoIntro);
-        add(labelSoraya);
-        add(labelJesica);
-
-        // Asegurar que los personajes queden ENCIMA del fondo (Z-order 0 = frente)
-        setComponentZOrder(labelJesica, 0);
-        setComponentZOrder(labelSoraya, 1);
-        setComponentZOrder(labelFondoIntro, 2);
-    }
 
     private void inicializarRecursosExploracion() {
-        // El archivo real es pasillo.jpg (no .png)
-        backgroundExploration = AssetService.getInstance().loadBackground("/mapa/pasillo.jpg");
-        if (backgroundExploration == null) {
-            LOG.warning("NO SE PUDO CARGAR EL FONDO DE EXPLORACIÓN: /mapa/pasillo.jpg");
-        }
-        background = backgroundExploration;
+        // EL FONDO SE CARGARÁ DINÁMICAMENTE POR HABITACIÓN EN dibujarExploracion(),
+        // AQUÍ NO HACEMOS NADA PERO SE MANTIENE POR SI AÑADES OTROS EFECTOS GLOBALES.
+        Image backgroundExploracion = cargarFondo("/mapa/pasillo.png", GameSettings.ANCHO_PANTALLA,
+                GameSettings.ALTO_PANTALLA);
     }
 
     private void configurarCicloVida() {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
-                if (modoIntro) {
-                    indicePasos = 0;
-                    timerHistoria = new Timer(RETRASO_DIALOGO, evt -> avanzarHistoria());
-                    timerHistoria.setRepeats(false);
-                    timerHistoria.start();
-                } else if (manager != null) {
+                if (manager != null) {
                     manager.activate();
                 }
             }
@@ -138,6 +78,7 @@ public class ExplorationPanel extends JPanel {
     }
 
     // ==================== CARGA DE RECURSOS ====================
+
     private Image cargarFondo(String ruta, int w, int h) {
         java.net.URL url = getClass().getResource(ruta);
         if (url == null) {
@@ -156,111 +97,12 @@ public class ExplorationPanel extends JPanel {
         return new ImageIcon(new ImageIcon(url).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
     }
 
-    // ==================== SISTEMA DE DIÁLOGO ====================
-    private void avanzarHistoria() {
-        if (indicePasos >= SCRIPT_INTRO.length) {
-            finalizarIntro();
-            return;
-        }
-
-        String personaje = SCRIPT_INTRO[indicePasos][0];
-        String texto = SCRIPT_INTRO[indicePasos][1];
-
-        labelSoraya.setVisible(personaje.equals("Soraya"));
-        labelJesica.setVisible(personaje.equals("Jesica"));
-
-        mainFrame.showDialogue(texto, 300);
-        LOG.info("MOSTRANDO DIÁLOGO: [" + personaje + "] " + texto);
-
-        // Cancelar cualquier timer previo antes de crear uno nuevo
-        if (timerCierre != null) {
-            timerCierre.stop();
-        }
-
-        timerCierre = new Timer(DURACION_DIALOGO, e -> {
-            mainFrame.hideDialogue();
-            indicePasos++;
-            avanzarHistoria();
-        });
-        timerCierre.setRepeats(false);
-        timerCierre.start();
-    }
-
-    /**
-     * PAUSA LA SECUENCIA DE DIÁLOGOS (OCULTA EL DIÁLOGO PERO NO RESETEA EL ÍNDICE).
-     */
-    public void pausarDialogo() {
-        if (timerHistoria != null) {
-            timerHistoria.stop();
-        }
-        if (timerCierre != null) {
-            timerCierre.stop();
-        }
-        mainFrame.hideDialogue();
-        labelSoraya.setVisible(false);
-        labelJesica.setVisible(false);
-        LOG.info("SECUENCIA DE DIÁLOGOS PAUSADA");
-    }
-
-    /**
-     * REANUDA LA SECUENCIA DE DIÁLOGOS DESDE EL PASO ACTUAL.
-     */
-    public void reanudarDialogo() {
-        if (modoIntro) {
-            LOG.info("REANUDANDO SECUENCIA DE DIÁLOGOS DESDE PASO: " + indicePasos);
-            avanzarHistoria();
-        }
-    }
-
-    /**
-     * DETIENE COMPLETAMENTE EL DIÁLOGO (USAR AL CAMBIAR DE PANTALLA).
-     */
-    public void detenerDialogoDefinitivo() {
-        pausarDialogo();
-        // Aquí podrías resetear indicePasos si fuera necesario volver a empezar la
-        // intro
-    }
-
-    private void finalizarIntro() {
-        if (timerHistoria != null && timerHistoria.isRunning()) {
-            timerHistoria.stop();
-        }
-
-        mainFrame.hideDialogue();
-
-        modoIntro = false;
-        background = backgroundExploration;
-        labelFondoIntro.setVisible(false);
-        labelSoraya.setVisible(false);
-        labelJesica.setVisible(false);
-
-        if (manager != null) {
-            manager.activate();
-        }
-
-        LOG.info("INTRO FINALIZADA - EXPLORACIÓN INICIADA");
-    }
-
-    public void reiniciarIntro() {
-        modoIntro = true;
-        background = backgroundIntro;
-        indicePasos = 0;
-        labelFondoIntro.setVisible(true);
-        labelSoraya.setVisible(false);
-        labelJesica.setVisible(false);
-        LOG.info("INTRO REINICIADA");
-    }
-
     // ==================== RENDERIZADO ====================
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (modoIntro) {
-            // Los componentes JLabel ya se dibujan automáticamente
-        } else {
-            dibujarExploracion(g);
-        }
+        dibujarExploracion(g);
     }
 
     private void dibujarExploracion(Graphics g) {
@@ -272,31 +114,53 @@ public class ExplorationPanel extends JPanel {
         RenderContext ctx = new RenderContext(g2d, getWidth(), getHeight(), cameraX, cameraY);
         ctx.translateCamera();
 
-        mapRenderer.drawBackground(ctx, background);
+        // CARGAR EL FONDO DINÁMICAMENTE SEGÚN LA HABITACIÓN ACTUAL
+        if (manager.getCurrentRoom() != null) {
+            if (currentBackground == null || !currentBackground
+                    .equals(AssetService.getInstance().loadBackground(manager.getCurrentRoom().getBackgroundPath()))) {
+                currentBackground = AssetService.getInstance()
+                        .loadBackground(manager.getCurrentRoom().getBackgroundPath());
+            }
+            mapRenderer.drawBackground(ctx, currentBackground);
+        }
 
-        mapRenderer.drawZoneLabel(ctx, manager.getDoorArea(), "Aula 124");
+        if (manager.getCurrentRoom() != null) {
+            for (DoorModel door : manager.getCurrentRoom().getDoors()) {
+                mapRenderer.drawZoneLabel(ctx, door.getArea(), door.getTargetRoomName());
+            }
+        }
+
         playerRenderer.drawPlayer(ctx, manager.getPlayerCurrentSprite(), manager.getPlayer());
 
         for (Zombie z : manager.getActiveZombies()) {
             zombieRenderer.drawZombie(ctx, z);
         }
 
-        if (manager.isDebugMurosVisibles()) {
+        for (Boss b : manager.getActiveBosses()) {
+            bossRenderer.drawBoss(ctx, b);
+        }
+
+        if (manager.isDebugMurosVisibles() && manager.getCurrentRoom() != null) {
             g2d.setStroke(new BasicStroke(2));
 
             // Dibujar muros y puerta
             g2d.setColor(Color.RED);
-            for (Rectangle wall : manager.getWalls()) {
+            for (Rectangle wall : manager.getCurrentRoom().getWalls()) {
                 g2d.draw(wall);
             }
             g2d.setColor(Color.GREEN);
-            g2d.draw(manager.getDoorArea());
+            for (DoorModel door : manager.getCurrentRoom().getDoors()) {
+                g2d.draw(door.getArea());
+            }
 
             // Dibujar hitboxes
             g2d.setColor(Color.BLUE);
             g2d.draw(manager.getPlayer().getHitbox(manager.getPlayer().getX(), manager.getPlayer().getY()));
             for (Zombie z : manager.getActiveZombies()) {
                 g2d.draw(z.getHitbox(z.getX(), z.getY()));
+            }
+            for (Boss b : manager.getActiveBosses()) {
+                g2d.draw(b.getHitbox(b.getX(), b.getY()));
             }
         }
 
@@ -322,18 +186,12 @@ public class ExplorationPanel extends JPanel {
     public void dispose() {
         if (manager != null)
             manager.deactivate();
-        pausarDialogo();
     }
 
     public void reset() {
-        if (modoIntro) {
-            reiniciarIntro();
-        } else if (manager != null) {
+        if (manager != null) {
             manager.activate();
         }
     }
 
-    public boolean isModoIntro() {
-        return modoIntro;
-    }
 }

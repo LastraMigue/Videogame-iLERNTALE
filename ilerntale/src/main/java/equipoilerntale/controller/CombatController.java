@@ -1,48 +1,39 @@
 package equipoilerntale.controller;
 
 import equipoilerntale.model.combat.ArenaModel;
+import equipoilerntale.model.combat.minigames.MinigameRules;
 
 public class CombatController {
 
     private ArenaModel arenaModel;
     private InputHandler inputHandler;
-    private int tickCounter = 0;
+    private MinigameRules currentRules;
 
     public CombatController(ArenaModel arenaModel, InputHandler inputHandler) {
         this.arenaModel = arenaModel;
         this.inputHandler = inputHandler;
     }
 
-    public void update() {
-        if (arenaModel != null) {
+    public void setRules(MinigameRules rules) {
+        this.currentRules = rules;
+    }
 
-            if (arenaModel.getMouse() != null) {
-                int dx = 0;
-                int dy = 0;
-                if (inputHandler.upPressed)
-                    dy = -1;
-                if (inputHandler.downPressed)
-                    dy = 1;
-                if (inputHandler.leftPressed)
-                    dx = -1;
-                if (inputHandler.rightPressed)
-                    dx = 1;
-
-                if (dx != 0 || dy != 0) {
-                    arenaModel.intentarMoverMouse(dx, dy);
-                }
-            }
-
-            if (arenaModel.getProjectiles() != null) {
-                arenaModel.actualizarProjectiles();
-                arenaModel.checkCollisions();
-
-                tickCounter++;
-                if (tickCounter >= 30) {
-                    arenaModel.spawnProjectile();
-                    tickCounter = 0;
-                }
-            }
+    public void startMinigame() {
+        if (currentRules != null && arenaModel != null) {
+            currentRules.start(arenaModel);
         }
+    }
+
+    public void update() {
+        if (arenaModel != null && currentRules != null) {
+            currentRules.update(arenaModel, inputHandler);
+        }
+    }
+
+    public boolean isMinigameFinished() {
+        if (currentRules != null && arenaModel != null) {
+            return currentRules.isFinished(arenaModel);
+        }
+        return false;
     }
 }

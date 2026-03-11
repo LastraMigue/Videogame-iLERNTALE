@@ -9,11 +9,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
-import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
+import equipoilerntale.view.screens.DerrotaScreen;
 import equipoilerntale.view.screens.ExplorationPanel;
 import equipoilerntale.view.screens.GamePanel;
 import equipoilerntale.view.screens.MainMenu;
@@ -22,6 +22,7 @@ import equipoilerntale.view.screens.TutorialPanel;
 import equipoilerntale.view.screens.VideoScreen;
 import equipoilerntale.view.ui.CajaTexto;
 import equipoilerntale.controller.MainController;
+import equipoilerntale.view.ui.BarraVida;
 
 /**
  * MARCO PRINCIPAL DE LA APLICACIÓN.
@@ -39,6 +40,7 @@ public class MainFrame extends JFrame {
     private CharacterSelector personajes;
     private PausePanel pause;
     private CombatPanel combate;
+    private DerrotaScreen derrota;
     private VideoScreen videoScreen;
     private ExplorationPanel exploracion;
     private GamePanel gamePanel;
@@ -49,6 +51,10 @@ public class MainFrame extends JFrame {
     // CONTROLADORES ACCESIBLES
     private MainController mainController;
     private ExplorationManager explorationManager;
+
+    // HUD Y VIDA
+    private BarraVida playerHealthBar;
+    private JPanel hudPanel;
 
     /**
      * CONSTRUCTOR DEL MARCO PRINCIPAL.
@@ -72,11 +78,15 @@ public class MainFrame extends JFrame {
         // INICIALIZAR CONTROLADORES
         inicializarControladores();
 
+        // INICIALIZAR VIDA
+        playerHealthBar = new BarraVida(50, "JUGADOR");
+
         // INICIALIZAR PANELES DE LAS PANTALLAS
         menu = new MainMenu(this);
         personajes = new CharacterSelector(this);
         pause = new PausePanel(this);
         combate = new CombatPanel(this);
+        derrota = new DerrotaScreen(this);
         videoScreen = new VideoScreen(this);
         tutorial = new TutorialPanel(this);
         gamePanel = new GamePanel(this);
@@ -88,6 +98,7 @@ public class MainFrame extends JFrame {
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(combate, "COMBATE");
+        contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO"); // Útil para exclusiones
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
@@ -102,17 +113,34 @@ public class MainFrame extends JFrame {
         contenedor.setBounds(0, 0, 1000, 600);
         layeredPane.add(contenedor, JLayeredPane.DEFAULT_LAYER);
 
-        // Capa superior: El panel de pausa (inicialmente invisible)
+        // Capa para diálogos
+        dialogueContainer = new JPanel(null);
+        dialogueContainer.setBounds(0, 0, 1000, 600);
+        dialogueContainer.setOpaque(false);
+        dialogueContainer.setVisible(false);
+        dialogueContainer.setFocusable(false); // No bloquear clics
+        layeredPane.add(dialogueContainer, JLayeredPane.POPUP_LAYER);
+
+        // HUD: Vida del jugador
+        hudPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if ((pantallaActual.equals("EXPLORACION") || pantallaActual.equals("COMBATE")) && !dialogueContainer.isVisible()) {
+                    // Dibujar arriba a la derecha
+                    playerHealthBar.draw(g, getWidth() - 220, 35);
+                }
+            }
+        };
+        hudPanel.setBounds(0, 0, 1000, 600);
+        hudPanel.setOpaque(false);
+        hudPanel.setFocusable(false);
+        layeredPane.add(hudPanel, JLayeredPane.POPUP_LAYER);
+
+        // Capa para el panel de pausa (encima de todo)
         pause.setBounds(0, 0, 1000, 600);
         pause.setVisible(false);
-        layeredPane.add(pause, JLayeredPane.PALETTE_LAYER);
-
-        // Capa de diálogos (entre el juego y la pausa/palette)
-        dialogueContainer = new JPanel(null);
-        dialogueContainer.setOpaque(false);
-        dialogueContainer.setBounds(0, 0, 1000, 600);
-        dialogueContainer.setVisible(false); // Inicialmente oculto para no bloquear interacción
-        layeredPane.add(dialogueContainer, JLayeredPane.MODAL_LAYER);
+        layeredPane.add(pause, JLayeredPane.DRAG_LAYER);
 
         add(layeredPane);
 
@@ -161,6 +189,9 @@ public class MainFrame extends JFrame {
             if (exploracion != null) {
                 exploracion.requestRender();
             }
+            if (hudPanel != null) {
+                hudPanel.repaint();
+            }
         });
         renderTimer.start();
     }
@@ -207,8 +238,8 @@ public class MainFrame extends JFrame {
             if (comp != null) comp.requestFocusInWindow();
             
         } else {
-            // DETENER DIÁLOGOS AL PAUSAR
-            detenerDialogosExistentes();
+            // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
+            pausarDialogosExistentes();
 
             pause.setVisible(true);
             if (mainController != null)
@@ -219,14 +250,22 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * PAUSA LOS DIÁLOGOS EN CUALQUIER PANEL QUE ESTÉ ACTIVO.
+     * PAUSA LOS DIÁLOGOS EN CUALQUIER PANEL QUE ESTÉ ACTIVO SIN OCULTARLOS.
+     */
+    private void pausarDialogosExistentes() {
+        JPanel actual = getPanelActual();
+        if (actual instanceof GamePanel) {
+            ((GamePanel) actual).pausarDialogoBucle();
+        }
+    }
+
+    /**
+     * DETIENE Y OCULTA LOS DIÁLOGOS COMPLETAMENTE (al cambiar de pantalla).
      */
     private void detenerDialogosExistentes() {
         hideDialogue();
         JPanel actual = getPanelActual();
-        if (actual instanceof ExplorationPanel) {
-            ((ExplorationPanel) actual).pausarDialogo();
-        } else if (actual instanceof GamePanel) {
+        if (actual instanceof GamePanel) {
             ((GamePanel) actual).detenerDialogoBucle();
         }
     }
@@ -236,8 +275,8 @@ public class MainFrame extends JFrame {
      */
     private void reanudarDialogosExistentes() {
         JPanel actual = getPanelActual();
-        if (actual instanceof ExplorationPanel) {
-            ((ExplorationPanel) actual).reanudarDialogo();
+        if (actual instanceof GamePanel) {
+            ((GamePanel) actual).reanudarDialogoBucle();
         }
     }
 
@@ -267,8 +306,8 @@ public class MainFrame extends JFrame {
         // No permitir pausa en ciertas pantallas
         return !pantallaActual.equals("MENU") &&
                 !pantallaActual.equals("VIDEO") &&
-                !pantallaActual.equals("PERSONAJES") &&
-                !pantallaActual.equals("TUTORIAL");
+                !pantallaActual.equals("TUTORIAL") &&
+                !pantallaActual.equals("PERSONAJES");
     }
 
     public void setMainController(MainController controller) {
@@ -301,6 +340,7 @@ public class MainFrame extends JFrame {
         contenedor.add(menu, "MENU");
         contenedor.add(personajes, "PERSONAJES");
         contenedor.add(combate, "COMBATE");
+        contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO");
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
@@ -357,7 +397,10 @@ public class MainFrame extends JFrame {
         return explorationManager;
     }
 
-    public GamePanel getGamePanel() {
-        return gamePanel;
+    public BarraVida getPlayerHealthBar() {
+        return playerHealthBar;
     }
 }
+    
+
+    

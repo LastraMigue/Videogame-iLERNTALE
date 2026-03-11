@@ -166,6 +166,29 @@ public class AssetService {
     }
 
     /**
+     * CARGADOR ESPECÍFICO PARA SPRITES DE JEFES FINALES.
+     */
+    public Image getBossSprite(String bossName) {
+        String cacheKey = "boss_" + bossName;
+        if (imageCache.containsKey(cacheKey)) {
+            return imageCache.get(cacheKey);
+        }
+
+        // FORMATO: /boss/sergio/sergionormal.png
+        String path = String.format("/boss/%s/%snormal.png", bossName.toLowerCase(), bossName.toLowerCase());
+        Image img = loadImage(path);
+
+        if (img != null) {
+            Image scaled = scaleImage(img, 120, 120); // Tamaño estático para el boss (SIZE=120)
+            imageCache.put(cacheKey, scaled);
+            return scaled;
+        }
+
+        LOG.warning("NO SE PUDO CARGAR EL SPRITE DEL BOSS: " + path);
+        return null;
+    }
+
+    /**
      * CARGA UNA IMAGEN DESDE LA RUTA ESPECIFICADA.
      * UTILIZA CACHÉ PARA EVITAR CARGAR LA MISMA IMAGEN VARIAS VECES.
      */

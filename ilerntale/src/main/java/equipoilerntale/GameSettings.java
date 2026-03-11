@@ -38,6 +38,6 @@ public class GameSettings {
     public static final int ZOMBIE_VELOCIDAD = 3; // Reducido: el jugador tiene velocidad 5
     public static final int ZOMBIE_SALUD = 100;
     public static final int ZOMBIE_DANO = 10;
-    public static final int ZOMBIE_CANTIDAD_INICIAL = 10; // Menos zombies para no colapsar al jugador
+    public static final int ZOMBIE_CANTIDAD_INICIAL = 1; // Menos zombies para no colapsar al jugador
     public static final String RUTA_ZOMBIE = "/zombie/";
 }

@@ -70,6 +70,13 @@ public abstract class Entity {
     }
 
     /**
+     * OBTIENE EL NOMBRE DE LA ENTIDAD.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * OBTIENE LA DIRECCIÓN ACTUAL DE LA ENTIDAD.
      */
     public Direction getDirection() {
