@@ -39,6 +39,8 @@ public class GamePanel extends JPanel implements KeyListener {
     private ImageIcon iconoSoraya;
     private ImageIcon iconoJesica;
     private Timer timerSiguienteDialogo;
+    private Timer timerCierre;
+    private Timer timerPausaEntreDialogos;
 
     private static class PasoDialogo {
         String personaje;
@@ -158,7 +160,7 @@ public class GamePanel extends JPanel implements KeyListener {
     }
 
     private void cargarFondo() {
-        ImageIcon iconoFondo = cargarImagen("/mapa/Pasillo.png");
+        ImageIcon iconoFondo = cargarImagen("/title/menu1.jpg");
         if (iconoFondo != null) {
             Image imagenEscalada = iconoFondo.getImage().getScaledInstance(1000, 600, Image.SCALE_DEFAULT);
             labelFondo = new JLabel(new ImageIcon(imagenEscalada));
@@ -255,90 +257,42 @@ public class GamePanel extends JPanel implements KeyListener {
 
         if (iconoActual != null) {
             gestionarVisibilidad(true, paso.personaje);
-            mostrarDialogo(paso.personaje, iconoActual, paso.texto);
-            indicePasos++;
+            mainFrame.showDialogue(paso.texto, 350);
+
+            // Timer para cerrar este diálogo y preparar el siguiente (4 segundos)
+            timerCierre = new Timer(4000, e -> {
+                mainFrame.hideDialogue();
+                gestionarVisibilidad(false, paso.personaje);
+                indicePasos++;
+
+                if (indicePasos < secuenciaDialogos.length) {
+                    // Pausa de 1.5 segundos entre frases
+                    timerPausaEntreDialogos = new Timer(1500, evt -> lanzarSiguienteDialogo());
+                    timerPausaEntreDialogos.setRepeats(false);
+                    timerPausaEntreDialogos.start();
+                } else {
+                    System.out.println("Fin de la secuencia narrativa.");
+                }
+            });
+            timerCierre.setRepeats(false);
+            timerCierre.start();
         }
     }
 
     public void detenerDialogoBucle() {
         if (timerSiguienteDialogo != null) {
             timerSiguienteDialogo.stop();
-            System.out.println("Sistema de turnos detenido");
         }
-    }
-
-    private void mostrarDialogo(String nombre, ImageIcon imagen, String texto) {
-        // Dimensiones del diálogo tipo "videojuego"
-        int anchoDialogo = 500;
-        int altoDialogo = 120;
-
-        JDialog dialogo = new JDialog(mainFrame);
-        dialogo.setUndecorated(true); // Sin bordes ni barra de título
-        dialogo.setSize(anchoDialogo, altoDialogo);
-        dialogo.setModal(false);
-
-        // Panel principal del diálogo (negro con borde blanco fino)
-        JPanel panelContenido = new JPanel();
-        panelContenido.setBackground(java.awt.Color.BLACK);
-        panelContenido.setLayout(null);
-        panelContenido.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.WHITE, 2));
-        dialogo.setContentPane(panelContenido);
-
-        // Área de texto estilizada
-        JTextArea textoArea = new JTextArea(texto);
-        textoArea.setBounds(110, 20, 360, 80);
-        textoArea.setEditable(false);
-        textoArea.setLineWrap(true);
-        textoArea.setWrapStyleWord(true);
-        textoArea.setBackground(java.awt.Color.BLACK);
-        textoArea.setForeground(java.awt.Color.WHITE);
-        textoArea.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.BOLD, 16));
-        panelContenido.add(textoArea);
-
-        // Boton Invisible/Invisible para permitir interactividad (o simplemente omitir
-        // si es auto)
-        JButton botonInvisible = new JButton();
-        botonInvisible.setBounds(0, 0, anchoDialogo, altoDialogo);
-        botonInvisible.setOpaque(false);
-        botonInvisible.setContentAreaFilled(false);
-        botonInvisible.setBorderPainted(false);
-        botonInvisible.addActionListener(e -> dialogo.dispose());
-        panelContenido.add(botonInvisible);
-
-        // CÁLCULO DE POSICIÓN
-        // Intentamos centrarlo entre Soraya (izq) y Jesica (der)
-        int xCentro = this.getWidth() / 2;
-        int yBase = this.getHeight() - altoDialogo - 20; // 20px de margen inferior
-
-        // Convertir coordenadas locales a coordenadas de pantalla para el JDialog
-        java.awt.Point ubicacionPanel = this.getLocationOnScreen();
-        dialogo.setLocation(ubicacionPanel.x + (xCentro - anchoDialogo / 2), ubicacionPanel.y + yBase);
-
-        // TIMER PARA CIERRE AUTOMÁTICO (4 segundos)
-        Timer timerAutoCierre = new Timer(4000, e -> {
-            if (dialogo.isShowing()) {
-                dialogo.dispose();
-            }
-        });
-        timerAutoCierre.setRepeats(false);
-        timerAutoCierre.start();
-
-        // Al cerrar el diálogo, programamos el siguiente paso de la secuencia
-        dialogo.addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosed(java.awt.event.WindowEvent e) {
-                gestionarVisibilidad(false, nombre);
-                if (indicePasos < secuenciaDialogos.length) {
-                    Timer pausa = new Timer(1500, evt -> lanzarSiguienteDialogo());
-                    pausa.setRepeats(false);
-                    pausa.start();
-                } else {
-                    System.out.println("Fin de la secuencia narrativa.");
-                }
-            }
-        });
-
-        dialogo.setVisible(true);
+        if (timerCierre != null) {
+            timerCierre.stop();
+        }
+        if (timerPausaEntreDialogos != null) {
+            timerPausaEntreDialogos.stop();
+        }
+        mainFrame.hideDialogue();
+        gestionarVisibilidad(false, "Soraya");
+        gestionarVisibilidad(false, "Jesica");
+        System.out.println("Sistema de turnos detenido");
     }
 
     // Método para el Menú Pausa

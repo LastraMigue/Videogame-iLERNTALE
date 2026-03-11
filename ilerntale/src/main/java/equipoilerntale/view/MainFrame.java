@@ -15,10 +15,12 @@ import equipoilerntale.controller.MainController;
 import equipoilerntale.view.screens.CharacterSelector;
 import equipoilerntale.view.screens.CombatPanel;
 import equipoilerntale.view.screens.ExplorationPanel;
+import equipoilerntale.view.screens.GamePanel;
 import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
 import equipoilerntale.view.screens.TutorialPanel;
 import equipoilerntale.view.screens.VideoScreen;
+import equipoilerntale.view.ui.CajaTexto;
 import equipoilerntale.controller.MainController;
 
 /**
@@ -39,7 +41,9 @@ public class MainFrame extends JFrame {
     private CombatPanel combate;
     private VideoScreen videoScreen;
     private ExplorationPanel exploracion;
+    private GamePanel gamePanel;
     private TutorialPanel tutorial;
+    private JPanel dialogueContainer;
     private String personajeSeleccionado = "";
 
     // CONTROLADORES ACCESIBLES
@@ -57,6 +61,13 @@ public class MainFrame extends JFrame {
         setTitle("iLERNTALE");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
+        // ESTABLECER ICONO DEL JFRAME
+        java.net.URL iconURL = getClass().getResource("/title/titozeio.png");
+        if (iconURL != null) {
+            setIconImage(new ImageIcon(iconURL).getImage());
+        } else {
+            LOG.warning("No se pudo encontrar el icono de la ventana: /title/titozeio.png");
+        }
 
         // INICIALIZAR CONTROLADORES
         inicializarControladores();
@@ -68,6 +79,7 @@ public class MainFrame extends JFrame {
         combate = new CombatPanel(this);
         videoScreen = new VideoScreen(this);
         tutorial = new TutorialPanel(this);
+        gamePanel = new GamePanel(this);
 
         // CREAR EXPLORATIONPANEL CON EL MANAGER LÓGICO
         exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
@@ -79,6 +91,7 @@ public class MainFrame extends JFrame {
         videoScreen.setName("VIDEO"); // Útil para exclusiones
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
+        contenedor.add(gamePanel, "GAME");
         contenedor.add(tutorial, "TUTORIAL");
 
         // Configuramos el LayeredPane para el overlay
@@ -93,6 +106,12 @@ public class MainFrame extends JFrame {
         pause.setBounds(0, 0, 1000, 600);
         pause.setVisible(false);
         layeredPane.add(pause, JLayeredPane.PALETTE_LAYER);
+
+        // Capa de diálogos (entre el juego y la pausa/palette)
+        dialogueContainer = new JPanel(null);
+        dialogueContainer.setOpaque(false);
+        dialogueContainer.setBounds(0, 0, 1000, 600);
+        layeredPane.add(dialogueContainer, JLayeredPane.MODAL_LAYER);
 
         add(layeredPane);
 
@@ -149,6 +168,9 @@ public class MainFrame extends JFrame {
      * CAMBIA LA PANTALLA VISIBLE ACTUALMENTE.
      */
     public void cambiarPantalla(String nombre) {
+        // DETENER DIÁLOGOS ANTES DE CAMBIAR (HARD STOP)
+        detenerDialogosExistentes();
+
         this.pantallaActual = nombre;
         cardLayout.show(contenedor, nombre);
 
@@ -176,13 +198,66 @@ public class MainFrame extends JFrame {
             pause.setVisible(false);
             if (mainController != null)
                 mainController.resumeGame();
+            
+            // REANUDAR DIÁLOGOS SI ES NECESARIO
+            reanudarDialogosExistentes();
+            
+            Component comp = getPanelActual();
+            if (comp != null) comp.requestFocusInWindow();
+            
         } else {
+            // DETENER DIÁLOGOS AL PAUSAR
+            detenerDialogosExistentes();
+
             pause.setVisible(true);
             if (mainController != null)
                 mainController.pauseGame();
             // Asegurar que el panel de pausa se redibuje
             pause.repaint();
         }
+    }
+
+    /**
+     * PAUSA LOS DIÁLOGOS EN CUALQUIER PANEL QUE ESTÉ ACTIVO.
+     */
+    private void detenerDialogosExistentes() {
+        hideDialogue();
+        JPanel actual = getPanelActual();
+        if (actual instanceof ExplorationPanel) {
+            ((ExplorationPanel) actual).pausarDialogo();
+        } else if (actual instanceof GamePanel) {
+            ((GamePanel) actual).detenerDialogoBucle();
+        }
+    }
+
+    /**
+     * REANUDA LOS DIÁLOGOS SI EL PANEL LO SOPORTA.
+     */
+    private void reanudarDialogosExistentes() {
+        JPanel actual = getPanelActual();
+        if (actual instanceof ExplorationPanel) {
+            ((ExplorationPanel) actual).reanudarDialogo();
+        }
+    }
+
+    public void showDialogue(String text) {
+        showDialogue(text, 450);
+    }
+
+    public void showDialogue(String text, int y) {
+        dialogueContainer.removeAll();
+        JPanel panel = CajaTexto.crearPanel(text);
+        // Posicionamiento dinámico: centrado horizontalmente, Y ajustable
+        panel.setLocation(250, y);
+        dialogueContainer.add(panel);
+        dialogueContainer.revalidate();
+        dialogueContainer.repaint();
+    }
+
+    public void hideDialogue() {
+        dialogueContainer.removeAll();
+        dialogueContainer.revalidate();
+        dialogueContainer.repaint();
     }
 
     private boolean puedePausar() {
@@ -215,8 +290,8 @@ public class MainFrame extends JFrame {
         inicializarControladores();
         mainController.startGameThread();
 
-        // Recrear el panel de exploración con el nuevo personaje y manager
         exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
+        gamePanel = new GamePanel(this);
 
         // Refrescar el contenedor de pantallas
         contenedor.removeAll();
@@ -226,6 +301,7 @@ public class MainFrame extends JFrame {
         videoScreen.setName("VIDEO");
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
+        contenedor.add(gamePanel, "GAME");
         contenedor.add(tutorial, "TUTORIAL");
 
         // CRÍTICO: sin esto el CardLayout no muestra los paneles nuevos
@@ -276,5 +352,9 @@ public class MainFrame extends JFrame {
      */
     public ExplorationManager getExplorationManager() {
         return explorationManager;
+    }
+
+    public GamePanel getGamePanel() {
+        return gamePanel;
     }
 }

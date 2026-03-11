@@ -12,7 +12,6 @@ import equipoilerntale.model.entity.Zombie;
 import equipoilerntale.service.AssetService;
 import equipoilerntale.view.MainFrame;
 import equipoilerntale.view.render.*;
-import equipoilerntale.view.ui.CajaTexto;
 
 /**
  * PANEL PRINCIPAL DEL JUEGO.
@@ -26,10 +25,10 @@ public class ExplorationPanel extends JPanel {
 
     // ==================== CONSTANTES ====================
     private static final String[][] SCRIPT_INTRO = {
-            { "Soraya", "¡Hola! ¡Hola!¡Hola!Soy Soraya. Bienvenido al mundo de iLERNTALE." },
-            { "Jesica", "¡Y yo soy Jesica! ¡Qué emoción tenerte aquí!" },
+            { "Soraya", "¡Hola!¡Hola!¡Hola! Soy Soraya. Bienvenido al mundo de iLERNTALE." },
+            { "Jesica", "¡Y yo soy Jessica! ¡Qué emoción tenerte aquí!" },
             { "Soraya", "En iLERNTALE exploraremos el instituto juntos." },
-            { "Jesica", "¡Vamos a explorar juntos! ¡Usa las flechas!" }
+            { "Jesica", "¡Vamos a explorar juntos! ¡Usa las flechas para moverte!" }
     };
 
     private static final int RETRASO_DIALOGO = 3000;
@@ -54,6 +53,7 @@ public class ExplorationPanel extends JPanel {
     private boolean modoIntro = true;
     private int indicePasos = 0;
     private Timer timerHistoria;
+    private Timer timerCierre;
 
     // ==================== CONSTRUCTOR ====================
     public ExplorationPanel(MainFrame mainFrame, String characterName, ExplorationManager manager) {
@@ -74,7 +74,9 @@ public class ExplorationPanel extends JPanel {
 
     // ==================== INICIALIZACIÓN ====================
     private void inicializarRecursosIntro() {
-        backgroundIntro = cargarFondo("/mapa/pasillo1.jpg", GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA);
+        // Inicializar el fondo del menú principal durante los diálogos de Soraya y
+        // Jessica
+        backgroundIntro = cargarFondo("/title/menu1.jpg", GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA);
         ImageIcon iconoSoraya = cargarImagen("/dialogue/soraya.png", 256, 256);
         ImageIcon iconoJesica = cargarImagen("/dialogue/jesica.png", 256, 256);
 
@@ -130,9 +132,7 @@ public class ExplorationPanel extends JPanel {
 
             @Override
             public void componentHidden(ComponentEvent e) {
-                if (timerHistoria != null && timerHistoria.isRunning()) {
-                    timerHistoria.stop();
-                }
+                dispose();
             }
         });
     }
@@ -169,17 +169,56 @@ public class ExplorationPanel extends JPanel {
         labelSoraya.setVisible(personaje.equals("Soraya"));
         labelJesica.setVisible(personaje.equals("Jesica"));
 
-        Point p = (isShowing()) ? getLocationOnScreen() : new Point(0, 0);
-        JDialog caja = CajaTexto.crearDialogo(mainFrame, texto, p.x + 250, p.y + 450);
+        mainFrame.showDialogue(texto, 300);
+        LOG.info("MOSTRANDO DIÁLOGO: [" + personaje + "] " + texto);
 
-        Timer timerCierre = new Timer(DURACION_DIALOGO, e -> {
-            caja.dispose();
+        // Cancelar cualquier timer previo antes de crear uno nuevo
+        if (timerCierre != null) {
+            timerCierre.stop();
+        }
+
+        timerCierre = new Timer(DURACION_DIALOGO, e -> {
+            mainFrame.hideDialogue();
             indicePasos++;
             avanzarHistoria();
         });
         timerCierre.setRepeats(false);
         timerCierre.start();
-        caja.setVisible(true);
+    }
+
+    /**
+     * PAUSA LA SECUENCIA DE DIÁLOGOS (OCULTA EL DIÁLOGO PERO NO RESETEA EL ÍNDICE).
+     */
+    public void pausarDialogo() {
+        if (timerHistoria != null) {
+            timerHistoria.stop();
+        }
+        if (timerCierre != null) {
+            timerCierre.stop();
+        }
+        mainFrame.hideDialogue();
+        labelSoraya.setVisible(false);
+        labelJesica.setVisible(false);
+        LOG.info("SECUENCIA DE DIÁLOGOS PAUSADA");
+    }
+
+    /**
+     * REANUDA LA SECUENCIA DE DIÁLOGOS DESDE EL PASO ACTUAL.
+     */
+    public void reanudarDialogo() {
+        if (modoIntro) {
+            LOG.info("REANUDANDO SECUENCIA DE DIÁLOGOS DESDE PASO: " + indicePasos);
+            avanzarHistoria();
+        }
+    }
+
+    /**
+     * DETIENE COMPLETAMENTE EL DIÁLOGO (USAR AL CAMBIAR DE PANTALLA).
+     */
+    public void detenerDialogoDefinitivo() {
+        pausarDialogo();
+        // Aquí podrías resetear indicePasos si fuera necesario volver a empezar la
+        // intro
     }
 
     private void finalizarIntro() {
@@ -187,11 +226,7 @@ public class ExplorationPanel extends JPanel {
             timerHistoria.stop();
         }
 
-        for (java.awt.Window w : java.awt.Window.getWindows()) {
-            if (w instanceof JDialog) {
-                w.dispose();
-            }
-        }
+        mainFrame.hideDialogue();
 
         modoIntro = false;
         background = backgroundExploration;
@@ -287,8 +322,7 @@ public class ExplorationPanel extends JPanel {
     public void dispose() {
         if (manager != null)
             manager.deactivate();
-        if (timerHistoria != null && timerHistoria.isRunning())
-            timerHistoria.stop();
+        pausarDialogo();
     }
 
     public void reset() {
