@@ -35,7 +35,7 @@ public class MainFrame extends JFrame {
     private CardLayout cardLayout;
     private JLayeredPane layeredPane;
     private JPanel contenedor;
-    private String pantallaActual = "EXPLORACION";
+    private String pantallaActual = "MENU";
     private MainMenu menu;
     private CharacterSelector personajes;
     private PausePanel pause;
@@ -126,7 +126,8 @@ public class MainFrame extends JFrame {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                if ((pantallaActual.equals("EXPLORACION") || pantallaActual.equals("COMBATE")) && !dialogueContainer.isVisible()) {
+                if ((pantallaActual.equals("EXPLORACION") || pantallaActual.equals("COMBATE"))
+                        && !dialogueContainer.isVisible()) {
                     // Dibujar arriba a la derecha
                     playerHealthBar.draw(g, getWidth() - 220, 35);
                 }
@@ -159,8 +160,8 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
 
-        // Cambiar a la pantalla inicial de EXPLORACION
-        cambiarPantalla("EXPLORACION");
+        // Cambiar a la pantalla inicial del MENU
+        cambiarPantalla("MENU");
 
         // INICIAR EL HILO LÓGICO DEL JUEGO (GAME LOOP)
         mainController.startGameThread();
@@ -233,22 +234,23 @@ public class MainFrame extends JFrame {
             pause.setVisible(false);
             if (mainController != null)
                 mainController.resumeGame();
-            
+
             // REANUDAR DIÁLOGOS SI ES NECESARIO
             reanudarDialogosExistentes();
-            
-            Component comp = getPanelActual();
-            if (comp != null) comp.requestFocusInWindow();
-            
-        } else {
-            // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
-            pausarDialogosExistentes();
 
-            pause.setVisible(true);
-            if (mainController != null)
-                mainController.pauseGame();
-            // Asegurar que el panel de pausa se redibuje
-            pause.repaint();
+            Component comp = getPanelActual();
+            if (comp != null)
+                comp.requestFocusInWindow();
+
+            } else {
+                // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
+                pausarDialogosExistentes();
+
+                pause.setVisible(true);
+                if (mainController != null)
+                    mainController.pauseGame();
+                // Asegurar que el panel de pausa se redibuje
+                pause.repaint();
         }
     }
 
@@ -404,6 +406,3 @@ public class MainFrame extends JFrame {
         return playerHealthBar;
     }
 }
-    
-
-    
