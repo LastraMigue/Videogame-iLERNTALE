@@ -36,7 +36,7 @@ public class GameSettings {
     // --- Parámetros de Zombie ---
     public static final int ZOMBIE_TAMANO = 70;
     public static final int ZOMBIE_VELOCIDAD = 3; // Reducido: el jugador tiene velocidad 5
-    public static final int ZOMBIE_SALUD = 25;
+    public static final int ZOMBIE_SALUD = 100;
     public static final int ZOMBIE_DANO = 1;
     public static final int ZOMBIE_CANTIDAD_INICIAL = 50;
     public static final int ZOMBIES_PASILLO = 10;

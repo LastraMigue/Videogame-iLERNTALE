@@ -10,6 +10,7 @@ import equipoilerntale.GameSettings;
 public class Zombie extends Entity {
 
     private int health;
+    private int maxHealth;
     private boolean isAlive;
     private final int type; // 1-8
     private int frameIndex = 1;
@@ -32,7 +33,9 @@ public class Zombie extends Entity {
      */
     public Zombie(int x, int y, int mapWidth, int mapHeight) {
         super(x, y, SIZE, "Zombie", mapWidth, mapHeight);
-        this.health = MAX_HEALTH;
+        // Salud aleatoria entre 25 y 75 para cada Zombie
+        this.health = 25 + (int) (Math.random() * 51);
+        this.maxHealth = this.health;
         this.isAlive = true;
         this.type = (int) (Math.random() * 8) + 1;
         this.direction = Direction.DOWN;
@@ -55,6 +58,13 @@ public class Zombie extends Entity {
      */
     public int getHealth() {
         return health;
+    }
+
+    /**
+     * OBTIENE LA SALUD MÁXIMA ESPECÍFICA DE ESTE ZOMBIE.
+     */
+    public int getMaxHealth() {
+        return maxHealth;
     }
 
     /**
