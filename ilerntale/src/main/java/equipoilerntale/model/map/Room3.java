@@ -2,6 +2,8 @@ package equipoilerntale.model.map;
 
 import java.awt.Rectangle;
 import equipoilerntale.GameSettings;
+import equipoilerntale.model.entity.ItemModel;
+import equipoilerntale.model.entity.WorldItem;
 
 /**
  * IMPLEMENTACIÓN CONCRETA DE LA TERCERA SALA: AULA 125.
@@ -39,6 +41,12 @@ public class Room3 extends AbstractRoom {
         this.doors.add(new DoorModel(
                 600, 180, 130, 80,
                 "Pasillo Principal", 1200, 320 // Aparece frente a la nueva puerta de madera
+        ));
+
+        // OBJETOS DEL AULA 125
+        this.items.add(new WorldItem(
+                new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 1, true),
+                800, 450
         ));
     }
 }

@@ -16,6 +16,8 @@ import equipoilerntale.model.map.Room1;
 import equipoilerntale.model.map.Room2;
 import equipoilerntale.model.map.Room3;
 import equipoilerntale.model.map.RoomPasillo;
+import equipoilerntale.model.entity.WorldItem;
+import equipoilerntale.view.ui.Inventario;
 import equipoilerntale.service.AssetService;
 
 /**
@@ -222,6 +224,17 @@ public class ExplorationManager {
         if (enemy != null) {
             if (mainFrame instanceof equipoilerntale.view.MainFrame) {
                 ((equipoilerntale.view.MainFrame) mainFrame).entrarCombate(enemy);
+            }
+        }
+
+        // COMPROBAR COLISIÓN CON OBJETOS DEL MAPA
+        if (currentRoom != null) {
+            for (WorldItem item : currentRoom.getItems()) {
+                if (!item.isCollected() && player.getHitbox(player.getX(), player.getY()).intersects(item.getHitbox())) {
+                    item.setCollected(true);
+                    Inventario.getInstance().agregarItem(item.getItem());
+                    LOG.info("OBJETO RECOGIDO: " + item.getItem().getNombre());
+                }
             }
         }
     }

@@ -93,7 +93,7 @@ public class CombatPanel extends JPanel {
         this.arenaModel = new ArenaModel();
         this.inputHandler = new InputHandler();
         this.combatController = new CombatController(arenaModel, inputHandler);
-        this.inventario = new Inventario();
+        this.inventario = Inventario.getInstance();
 
         // Instanciamos los pintores
         this.mouseRenderer = new MouseRenderer();

@@ -3,6 +3,8 @@ package equipoilerntale.model.map;
 import java.awt.Rectangle;
 
 import equipoilerntale.GameSettings;
+import equipoilerntale.model.entity.ItemModel;
+import equipoilerntale.model.entity.WorldItem;
 
 /**
  * IMPLEMENTACIÓN CONCRETA DE LA PRIMERA SALA: UN AULA DEL INSTITUTO.
@@ -43,6 +45,12 @@ public class Room2 extends AbstractRoom {
         this.doors.add(new DoorModel(
                 600, 180, 130, 80,
                 "Pasillo Principal", 905, 320 // Aparece frente a la puerta 3A
+        ));
+
+        // OBJETOS DEL AULA 123
+        this.items.add(new WorldItem(
+                new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 1, true),
+                1200, 450
         ));
     }
 }

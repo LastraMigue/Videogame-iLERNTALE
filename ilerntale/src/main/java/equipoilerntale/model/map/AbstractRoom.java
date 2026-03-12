@@ -4,6 +4,8 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
+import equipoilerntale.model.entity.WorldItem;
+
 /**
  * CLASE BASE ABSTRACTA PARA TODAS LAS HABITACIONES DEL JUEGO.
  * CONTIENE LOS DATOS ESTRUCTURALES Y RECURSOS VISUALES COMUNES PARA EL
@@ -21,6 +23,7 @@ public abstract class AbstractRoom {
     protected Rectangle zombieSpawnArea;
     // ÁREA DONDE APARECERÁ EL BOSS EN CASO DE HABER UNO
     protected Rectangle bossSpawnArea;
+    protected List<WorldItem> items;
 
     /**
      * CONSTRUCTOR BASE.
@@ -29,6 +32,7 @@ public abstract class AbstractRoom {
     public AbstractRoom() {
         this.walls = new ArrayList<>();
         this.doors = new ArrayList<>();
+        this.items = new ArrayList<>();
         initializeRoom();
     }
 
@@ -87,5 +91,9 @@ public abstract class AbstractRoom {
      */
     public Rectangle getBossSpawnArea() {
         return bossSpawnArea;
+    }
+
+    public List<WorldItem> getItems() {
+        return items;
     }
 }

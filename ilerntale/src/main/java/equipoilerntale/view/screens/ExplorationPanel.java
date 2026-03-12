@@ -11,6 +11,7 @@ import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.model.entity.Zombie;
 import equipoilerntale.model.entity.Boss;
+import equipoilerntale.model.entity.WorldItem;
 import equipoilerntale.model.map.DoorModel;
 import equipoilerntale.service.AssetService;
 import equipoilerntale.view.MainFrame;
@@ -132,6 +133,17 @@ public class ExplorationPanel extends JPanel {
             bossRenderer.drawBoss(ctx, b);
         }
 
+        // DIBUJAR OBJETOS DEL MAPA
+        if (manager.getCurrentRoom() != null) {
+            for (WorldItem item : manager.getCurrentRoom().getItems()) {
+                if (!item.isCollected() && item.getItem().getSprite() != null) {
+                    ctx.getGraphics().drawImage(item.getItem().getSprite(), 
+                        item.getX(), item.getY(), 
+                        item.getSize(), item.getSize(), null);
+                }
+            }
+        }
+
         if (manager.isDebugMurosVisibles() && manager.getCurrentRoom() != null) {
             g2d.setStroke(new BasicStroke(2));
 
@@ -153,6 +165,14 @@ public class ExplorationPanel extends JPanel {
             }
             for (Boss b : manager.getActiveBosses()) {
                 g2d.draw(b.getHitbox(b.getX(), b.getY()));
+            }
+
+            // Hitboxes de objetos
+            g2d.setColor(Color.YELLOW);
+            for (WorldItem item : manager.getCurrentRoom().getItems()) {
+                if (!item.isCollected()) {
+                    g2d.draw(item.getHitbox());
+                }
             }
         }
 

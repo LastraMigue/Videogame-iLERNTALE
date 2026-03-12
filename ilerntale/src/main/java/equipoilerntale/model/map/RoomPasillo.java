@@ -3,6 +3,8 @@ package equipoilerntale.model.map;
 import java.awt.Rectangle;
 
 import equipoilerntale.GameSettings;
+import equipoilerntale.model.entity.ItemModel;
+import equipoilerntale.model.entity.WorldItem;
 
 /**
  * IMPLEMENTACIÓN CONCRETA DE LA PRIMERA SALA: EL PASILLO DEL INSTITUTO.
@@ -53,6 +55,12 @@ public class RoomPasillo extends AbstractRoom {
         this.doors.add(new DoorModel(
                 1200, 200, 130, 80, // Posición central en el pasillo
                 "Aula 125", 600, 320 // Aparece en el aula fuera del muro (Y=320)
+        ));
+
+        // OBJETOS DEL PASILLO
+        this.items.add(new WorldItem(
+                new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 1, true),
+                1000, 400
         ));
     }
 }
