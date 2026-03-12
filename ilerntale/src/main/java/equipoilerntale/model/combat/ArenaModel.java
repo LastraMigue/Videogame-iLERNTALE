@@ -1,7 +1,7 @@
 package equipoilerntale.model.combat;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ArenaModel {
     private MouseModel mouse;
@@ -11,7 +11,7 @@ public class ArenaModel {
 
     public void startCombat() {
         initMouseCenter();
-        projectiles = new ArrayList<>();
+        projectiles = new CopyOnWriteArrayList<>();
         goodCollisions = 0;
         badCollisions = 0;
     }

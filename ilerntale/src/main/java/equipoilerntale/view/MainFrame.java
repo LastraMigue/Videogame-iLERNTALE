@@ -224,9 +224,37 @@ public class MainFrame extends JFrame {
 
         // Dar foco y activar lógica de juego cuando se muestra EXPLORACION
         if ("EXPLORACION".equals(nombre) && exploracion != null) {
+            exploracion.reset(); // Llama a manager.activate()
             exploracion.requestFocusInWindow();
-            exploracion.reset(); // Llama a manager.activate() — genera zombies y activa updates
+        } else if ("COMBATE".equals(nombre) && combate != null) {
+            combate.requestFocusInWindow();
+        } else {
+            JPanel actual = getPanelActual();
+            if (actual != null) {
+                actual.requestFocusInWindow();
+            }
         }
+    }
+
+    /**
+     * INICIA EL COMBATE CON UN ENEMIGO ESPECÍFICO.
+     */
+    public void entrarCombate(Object enemy) {
+        if (combate != null) {
+            combate.prepararCombate(enemy);
+            cambiarPantalla("COMBATE");
+        }
+    }
+
+    /**
+     * FINALIZA EL COMBATE Y VUELVE A LA EXPLORACIÓN.
+     * @param victoria Indica si el jugador ganó (elimina al enemigo) o no.
+     */
+    public void finalizarCombate(boolean victoria, Object enemy) {
+        if (victoria && explorationManager != null) {
+            explorationManager.removeEnemy(enemy);
+        }
+        cambiarPantalla("EXPLORACION");
     }
 
     public void togglePause() {

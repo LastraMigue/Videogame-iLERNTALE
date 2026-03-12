@@ -8,7 +8,13 @@ public class InputHandler implements KeyListener {
 
     private static final Logger LOG = Logger.getLogger(InputHandler.class.getName());
 
-    public boolean upPressed, downPressed, leftPressed, rightPressed, enterPressed, ePressed, mPressed;
+    public boolean upPressed;
+    public boolean downPressed;
+    public boolean leftPressed;
+    public boolean rightPressed;
+    public boolean enterPressed;
+    public boolean ePressed;
+    public boolean mPressed;
     public String lastHorizontal = "derecha";
     public String lastVertical = "abajo";
     public boolean preferHorizontal = true;
@@ -63,17 +69,28 @@ public class InputHandler implements KeyListener {
         }
     }
 
+    /**
+     * REINICIA TODOS LOS ESTADOS DE LAS TECLAS A FALSE.
+     */
+    public void reset() {
+        upPressed = false;
+        downPressed = false;
+        leftPressed = false;
+        rightPressed = false;
+        enterPressed = false;
+        ePressed = false;
+        mPressed = false;
+    }
+
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
-        LOG.info(">>> Tecla presionada: " + KeyEvent.getKeyText(code) + " (code=" + code + ")");
         setPressed(code, true);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         int code = e.getKeyCode();
-        LOG.info("<<< Tecla liberada: " + KeyEvent.getKeyText(code) + " (code=" + code + ")");
         setPressed(code, false);
     }
 

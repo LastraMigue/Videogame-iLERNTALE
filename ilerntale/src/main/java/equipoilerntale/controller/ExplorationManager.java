@@ -33,6 +33,7 @@ public class ExplorationManager {
     private final Object mainFrame;
 
     private AbstractRoom currentRoom;
+    private String lastRoomName = "";
 
     private int animationFrameIndex = 0;
     private long lastAnimationTime = 0;
@@ -68,8 +69,9 @@ public class ExplorationManager {
     public void loadRoom(AbstractRoom room, int playerStartX, int playerStartY) {
         LOG.info("CARGANDO HABITACIÓN: " + room.getName());
         enemySystem.clear(); // Limpiar zombies
-
+        
         this.currentRoom = room;
+        this.lastRoomName = room.getName(); // Registrar sala cargada
 
         // POSICIONAMOS AL JUGADOR EN LA ENTRADA
         this.player.setX(playerStartX);
@@ -89,8 +91,24 @@ public class ExplorationManager {
     public void activate() {
         if (!active) {
             active = true;
-            enemySystem.clear(); // Limpiar zombies anteriores
-            spawnZombies();
+            // Solo regeneramos si hemos cambiado de sala o si no hay enemigos
+            if (currentRoom != null && !currentRoom.getName().equals(lastRoomName)) {
+                enemySystem.clear();
+                spawnZombies();
+                lastRoomName = currentRoom.getName();
+            } else if (enemySystem.getZombies().isEmpty() && enemySystem.getBosses().isEmpty()) {
+                // Si la sala es la misma pero está vacía (ej: reload), spawnear
+                spawnZombies();
+                lastRoomName = (currentRoom != null) ? currentRoom.getName() : "";
+            } else {
+                // Si la sala es la misma y hay enemigos (volvemos de un combate)
+                // Dispersamos a los enemigos cercanos para dar un respiro al jugador
+                enemySystem.disperseEnemiesFrom(player.getX(), player.getY(), 450);
+                // Aseguramos que el input esté limpio al volver
+                if (inputHandler != null) {
+                    inputHandler.reset();
+                }
+            }
             LOG.info("ExplorationManager activado.");
         }
     }
@@ -200,8 +218,22 @@ public class ExplorationManager {
         }
 
         // COMPROBAR COMBATE CON ENEMIGOS
-        if (enemySystem.collidesWithPlayer(player.getHitbox(player.getX(), player.getY()))) {
-            triggerScreenChange("COMBATE");
+        Object enemy = enemySystem.getEnemyAt(player.getHitbox(player.getX(), player.getY()));
+        if (enemy != null) {
+            if (mainFrame instanceof equipoilerntale.view.MainFrame) {
+                ((equipoilerntale.view.MainFrame) mainFrame).entrarCombate(enemy);
+            }
+        }
+    }
+
+    /**
+     * ELIMINA UN ENEMIGO DEL SISTEMA TRAS EL COMBATE.
+     */
+    public void removeEnemy(Object enemy) {
+        if (enemy instanceof Zombie) {
+            enemySystem.getZombies().remove(enemy);
+        } else if (enemy instanceof Boss) {
+            enemySystem.getBosses().remove(enemy);
         }
     }
 

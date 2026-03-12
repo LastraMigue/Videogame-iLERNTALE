@@ -48,6 +48,14 @@ public class BarraVida {
         this.currentHealth = Math.max(0, Math.min(health, maxHealth));
     }
 
+    public void setMaxHealth(int maxHealth) {
+        this.maxHealth = maxHealth;
+        // Opcionalmente ajustamos la vida actual a la nueva vida máxima si es menor
+        if (this.currentHealth > maxHealth) {
+            this.currentHealth = maxHealth;
+        }
+    }
+
     // Métodos para recibir daño y posible curación
     public void takeDamage(int damage) {
         currentHealth -= damage;

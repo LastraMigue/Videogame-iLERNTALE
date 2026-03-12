@@ -45,6 +45,9 @@ public class CombatPanel extends JPanel {
     private InputHandler inputHandler;
     private CombatController combatController;
     private MinigameRules currentRules;
+    private Object enemyTarget;
+    private JPanel enemyIconPanel;
+    private Image enemyImage;
 
     // Renderers (NUEVO)
     private MouseRenderer mouseRenderer;
@@ -112,6 +115,44 @@ public class CombatPanel extends JPanel {
         inicializarPaneles();
     }
 
+    /**
+     * PREPARA EL COMBATE CON UN ENEMIGO ESPECÍFICO.
+     */
+    public void prepararCombate(Object enemy) {
+        this.enemyTarget = enemy;
+        this.isMinigameActive = false;
+        this.isItemMenuOpen = false;
+        this.centerTextMessage = "";
+        this.currentRound = 1;
+        this.lastGoodCollisions = 0;
+        this.lastBadCollisions = 0;
+        this.inputCooldown = 0;
+        this.escudoPatito = 0;
+        this.dobleDañoRonda = false;
+        
+        if (inputHandler != null) {
+            inputHandler.reset();
+        }
+        
+        // Cargar imagen del enemigo
+        equipoilerntale.service.AssetService assetService = equipoilerntale.service.AssetService.getInstance();
+        if (enemy instanceof equipoilerntale.model.entity.Zombie) {
+            equipoilerntale.model.entity.Zombie z = (equipoilerntale.model.entity.Zombie) enemy;
+            this.enemyImage = assetService.getZombieSprite(z.getType(), equipoilerntale.model.entity.Direction.DOWN, 1);
+            this.enemyHealthBar.setMaxHealth(equipoilerntale.model.entity.Zombie.MAX_HEALTH);
+            this.enemyHealthBar.setHealth(z.getHealth());
+        } else if (enemy instanceof equipoilerntale.model.entity.Boss) {
+            equipoilerntale.model.entity.Boss b = (equipoilerntale.model.entity.Boss) enemy;
+            this.enemyImage = assetService.getBossSprite("sergio");
+            this.enemyHealthBar.setMaxHealth(equipoilerntale.model.entity.Boss.MAX_HEALTH);
+            this.enemyHealthBar.setHealth(b.getHealth());
+        }
+        
+        enableAllButtons();
+        requestFocusInWindow();
+        repaint();
+    }
+
     public void updateCombat() {
         if (inputCooldown > 0) {
             inputCooldown--;
@@ -166,7 +207,7 @@ public class CombatPanel extends JPanel {
                     inputCooldown = 15;
                 }
             }
-        } else {
+        } else if (isMinigameActive) {
             combatController.update();
 
             // Damage check
@@ -198,6 +239,29 @@ public class CombatPanel extends JPanel {
 
                     int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
                     enemyHealthBar.takeDamage(damageHecho);
+                    
+                    // Sincronizar daño con el objeto real
+                    if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
+                        ((equipoilerntale.model.entity.Zombie) enemyTarget).takeDamage(damageHecho);
+                    } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                        ((equipoilerntale.model.entity.Boss) enemyTarget).takeDamage(damageHecho);
+                    }
+
+                    // Comprobar si el enemigo ha muerto
+                    if (enemyHealthBar.getHealth() <= 0) {
+                        isMinigameActive = false;
+                        arenaModel.stopCombat(); // Importante limpiar aquí también
+                        centerTextMessage = "¡VICTORIA!";
+                        repaint();
+                        javax.swing.Timer winTimer = new javax.swing.Timer(1500, new java.awt.event.ActionListener() {
+                            @Override
+                            public void actionPerformed(java.awt.event.ActionEvent ev) {
+                                mainFrame.finalizarCombate(true, enemyTarget);
+                            }
+                        });
+                        winTimer.setRepeats(false);
+                        winTimer.start();
+                    }
                 }
             }
 
@@ -245,6 +309,7 @@ public class CombatPanel extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.setStroke(new BasicStroke(3));
         g2d.drawRect(405, 30, 180, 180);
+
 
         // UI Vida Enemigo Arriba a la Izquierda
         if (enemyHealthBar != null) {
@@ -345,6 +410,25 @@ public class CombatPanel extends JPanel {
     }
 
     private void inicializarPaneles() {
+        // PANEL PEQUEÑO PARA LA IMAGEN DEL ENEMIGO (NUEVO)
+        enemyIconPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (enemyImage != null) {
+                    Graphics2D g2d = (Graphics2D) g;
+                    int drawW = getWidth() - 20;
+                    int drawH = getHeight() - 20;
+                    int x = (getWidth() - drawW) / 2;
+                    int y = (getHeight() - drawH) / 2;
+                    g2d.drawImage(enemyImage, x, y, drawW, drawH, null);
+                }
+            }
+        };
+        enemyIconPanel.setBounds(405 + 3, 30 + 3, 180 - 6, 180 - 6);
+        enemyIconPanel.setOpaque(false);
+        add(enemyIconPanel);
+
         JPanel buttonPanel = createButtonPanel();
         buttonPanel.setBounds(0, 510, 1000, 70);
         add(buttonPanel);
@@ -570,6 +654,9 @@ public class CombatPanel extends JPanel {
         if (!isMinigameActive)
             return;
         isMinigameActive = false;
+        if (inputHandler != null) {
+            inputHandler.reset();
+        }
         arenaModel.stopCombat();
         currentRules = null;
         enableAllButtons();

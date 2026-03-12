@@ -18,6 +18,8 @@ public class Zombie extends Entity {
     private double customSpeed;
     private double trackingPrecision;
     private double wobbleOffset;
+    private int detectionRadius;
+    private boolean hasDetectedPlayer = false;
 
     public static final int SIZE = GameSettings.ZOMBIE_TAMANO;
     public static final int SPEED = GameSettings.ZOMBIE_VELOCIDAD;
@@ -42,6 +44,8 @@ public class Zombie extends Entity {
         this.trackingPrecision = 0.7 + (Math.random() * 0.3);
         // Oscilación aleatoria para que no todos caminen en línea recta perfecta
         this.wobbleOffset = Math.random() * Math.PI * 2;
+        // Radio de detección: GameSettings.ZOMBIE_DETECTION_RADIUS +/- 150px
+        this.detectionRadius = GameSettings.ZOMBIE_DETECTION_RADIUS + (int)(Math.random() * 300 - 150);
     }
 
     // ============ ESTADO Y ATRIBUTOS ============
@@ -72,6 +76,13 @@ public class Zombie extends Entity {
      */
     public int getFrameIndex() {
         return frameIndex;
+    }
+
+    /**
+     * ESTABLECE SI EL ZOMBIE HA DETECTADO AL JUGADOR.
+     */
+    public void setDetectedPlayer(boolean detected) {
+        this.hasDetectedPlayer = detected;
     }
 
     /**
@@ -112,7 +123,12 @@ public class Zombie extends Entity {
         double diffY = targetY - this.y;
         double distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
-        if (distance > 5) {
+        // Si ya detectó al jugador o el jugador entra en su radio, empieza el seguimiento
+        if (!hasDetectedPlayer && distance < detectionRadius) {
+            hasDetectedPlayer = true;
+        }
+
+        if (hasDetectedPlayer && distance > 5) {
             // --- Dirección base: hacia el jugador con "Wobble" (zig-zag aleatorio) ---
             long now = System.currentTimeMillis();
             double wobble = Math.sin((now / 500.0) + wobbleOffset) * 0.3;
