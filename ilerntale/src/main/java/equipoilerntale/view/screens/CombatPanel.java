@@ -139,7 +139,7 @@ public class CombatPanel extends JPanel {
         if (enemy instanceof equipoilerntale.model.entity.Zombie) {
             equipoilerntale.model.entity.Zombie z = (equipoilerntale.model.entity.Zombie) enemy;
             this.enemyImage = assetService.getZombieSprite(z.getType(), equipoilerntale.model.entity.Direction.DOWN, 1);
-            this.enemyHealthBar.setMaxHealth(equipoilerntale.model.entity.Zombie.MAX_HEALTH);
+            this.enemyHealthBar.setMaxHealth(z.getMaxHealth());
             this.enemyHealthBar.setHealth(z.getHealth());
         } else if (enemy instanceof equipoilerntale.model.entity.Boss) {
             equipoilerntale.model.entity.Boss b = (equipoilerntale.model.entity.Boss) enemy;
@@ -533,7 +533,7 @@ public class CombatPanel extends JPanel {
                                     "Hambre... el cafe... nos cambio..",
                                     "iLERNA... prometio... inteligencia... solo hay... hambre...",
                                     "¿Donde esta... mi examen? No... siento la logica...",
-                                    "El agua... las máquinas... sabían a codigo amargo...",
+                                    "El agua... las máquinas... sabian a codigo amargo...",
                                     "Solo... queriamos... aprobar..."
                             };
                             loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
@@ -683,7 +683,13 @@ public class CombatPanel extends JPanel {
         btnFight.setEnabled(true);
         btnAct.setEnabled(true);
         btnItem.setEnabled(true);
-        btnMercy.setEnabled(true);
+        
+        // Bloquear botón MERCI si el enemigo es un Boss
+        if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+            btnMercy.setEnabled(false);
+        } else {
+            btnMercy.setEnabled(true);
+        }
     }
 
     private void endMinigame() {

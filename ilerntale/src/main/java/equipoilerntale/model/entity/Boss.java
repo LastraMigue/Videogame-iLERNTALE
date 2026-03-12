@@ -13,7 +13,7 @@ public class Boss extends Entity {
 
     // Tamaño base del jefe, el hitbox luego se ajustará
     public static final int SIZE = 120;
-    public static final int MAX_HEALTH = 500;
+    public static final int MAX_HEALTH = 100;
     public static final int DAMAGE = 30;
 
     /**
