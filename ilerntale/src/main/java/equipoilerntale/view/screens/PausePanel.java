@@ -5,6 +5,8 @@ import java.awt.FontFormatException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.*;
 
@@ -45,6 +47,22 @@ public class PausePanel extends JPanel {
 
         TransparentPanel fondoOscuro = new TransparentPanel(new Color(0, 0, 0, 150));
         fondoOscuro.setLayout(new GridBagLayout());
+        
+        // BLOQUEO DE INPUT: Consumir todos los eventos de ratón
+        MouseAdapter blocker = new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { e.consume(); }
+            @Override public void mousePressed(MouseEvent e) { e.consume(); }
+            @Override public void mouseReleased(MouseEvent e) { e.consume(); }
+            @Override public void mouseEntered(MouseEvent e) { e.consume(); }
+            @Override public void mouseExited(MouseEvent e) { e.consume(); }
+            @Override public void mouseMoved(MouseEvent e) { e.consume(); }
+            @Override public void mouseDragged(MouseEvent e) { e.consume(); }
+            @Override public void mouseWheelMoved(java.awt.event.MouseWheelEvent e) { e.consume(); }
+        };
+        fondoOscuro.addMouseListener(blocker);
+        fondoOscuro.addMouseMotionListener(blocker);
+        fondoOscuro.addMouseWheelListener(blocker);
+
         add(fondoOscuro, BorderLayout.CENTER);
 
         JPanel menuContainer = new JPanel();

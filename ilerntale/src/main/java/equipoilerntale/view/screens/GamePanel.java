@@ -7,9 +7,16 @@ import java.awt.event.MouseEvent;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Logger;
 
 import equipoilerntale.view.MainFrame;
@@ -34,6 +41,7 @@ public class GamePanel extends JPanel {
     private Timer timerSiguienteDialogo;
     private Timer timerCierre;
     private Timer timerPausaEntreDialogos;
+    private JButton btnSkip;
 
     private static class PasoDialogo {
         String personaje;
@@ -71,7 +79,45 @@ public class GamePanel extends JPanel {
 
         cargarFondo();
         cargarNPCs();
+        crearBotonSkip();
         configurarEventos();
+    }
+
+    private void crearBotonSkip() {
+        btnSkip = new JButton("SKIP >>");
+
+        // Cargar fuente Deltarune
+        try {
+            InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
+            if (fontStream != null) {
+                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(24f);
+                btnSkip.setFont(deltaruneFont);
+            }
+        } catch (FontFormatException | IOException e) {
+            btnSkip.setFont(new Font("Monospaced", Font.BOLD, 20));
+        }
+
+        // Estilo visual
+        btnSkip.setOpaque(false);
+        btnSkip.setContentAreaFilled(false);
+        btnSkip.setBorderPainted(false);
+        btnSkip.setFocusPainted(false);
+        btnSkip.setForeground(Color.WHITE);
+        btnSkip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // Posicionar en la esquina superior derecha
+        btnSkip.setBounds(850, 20, 120, 40);
+
+        btnSkip.addActionListener(e -> skipIntro());
+
+        add(btnSkip);
+        setComponentZOrder(btnSkip, 0); // Asegurar que esté por encima de todo
+    }
+
+    private void skipIntro() {
+        LOG.info("Intro saltada por el usuario.");
+        detenerDialogoBucle();
+        mainFrame.cambiarPantalla("EXPLORACION");
     }
 
     private void configurarEventos() {
