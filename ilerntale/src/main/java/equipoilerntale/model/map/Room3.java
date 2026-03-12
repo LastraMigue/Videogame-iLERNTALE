@@ -46,7 +46,10 @@ public class Room3 extends AbstractRoom {
         // OBJETOS DEL AULA 125
         this.items.add(new WorldItem(
                 new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 1, true),
-                800, 450
-        ));
+                800, 450));
+        this.items.add(new WorldItem(
+                new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 1, true),
+                1000, 400));
+
     }
 }

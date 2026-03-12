@@ -46,13 +46,18 @@ public class GamePanel extends JPanel {
     }
 
     private PasoDialogo[] secuenciaDialogos = {
-            new PasoDialogo("Soraya", "Hola, soy la memoria virtual de Soraya, vuestra profesora de Programación. El instituto ha sido infectado."),
-            new PasoDialogo("Soraya", "Dos profesores, hartos de bajo nivel de sus alumnos, fabricaron una fórmula para potenciar su desarrollo cognitivo."),
-            new PasoDialogo("Jesica", "Hola, soy la memoria virtual de Jesica, vuestra profe de Lenguaje de Marcas."),
-            new PasoDialogo("Jesica", "Introdujeron la fórmula en el agua de las máquinas de café, pero los resultados no fueron los esperados..."),
-            new PasoDialogo("Soraya", "Jessica y yo sucumbimos al café. El instituto ahora está infestado de Zombies dominados por esos profesores."),
-            new PasoDialogo("Soraya", "¡Acabad con ellos o estaréis SUSPENDIDOS! Sois nuestra última esperanza."),
-            new PasoDialogo("Jesica", "Recordad: WASD o flechas para moveros, E para puertas y ESC para pausar. Hay objetos por el mapa. ¡Suerte!")
+            new PasoDialogo("Soraya",
+                    "Hola, soy la memoria virtual de Soraya, vuestra profesora de Programación. El instituto ha sido infectado."),
+            new PasoDialogo("Soraya",
+                    "Dos profesores, hartos de bajo nivel de sus alumnos, fabricaron una fórmula para potenciar su desarrollo cognitivo."),
+            new PasoDialogo("Jesica", "Hola, soy la memoria virtual de Jessica, vuestra profe de Lenguaje de Marcas."),
+            new PasoDialogo("Jesica",
+                    "Introdujeron la fórmula en el agua de las máquinas de café, pero los resultados no fueron los esperados..."),
+            new PasoDialogo("Soraya",
+                    "Jessica y yo sucumbimos al café. El instituto ahora está infestado de Zombies dominados por esos profesores."),
+            new PasoDialogo("Soraya", "¡Acabad con ellos o estaréis TODOS SUSPENSOS! Sois nuestra última esperanza."),
+            new PasoDialogo("Jesica",
+                    "Recordad: WASD o flechas para moveros, E para puertas y ESC para pausar. Hay objetos por el mapa. ¡Suerte!")
     };
 
     private int indicePasos = 0;

@@ -2,7 +2,9 @@ package equipoilerntale.controller;
 
 import java.awt.Image;
 import java.awt.Rectangle;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import equipoilerntale.GameSettings;
@@ -35,6 +37,7 @@ public class ExplorationManager {
     private final Object mainFrame;
 
     private AbstractRoom currentRoom;
+    private final Map<String, AbstractRoom> roomCache = new HashMap<>();
     private String lastRoomName = "";
 
     private int animationFrameIndex = 0;
@@ -59,9 +62,13 @@ public class ExplorationManager {
         AssetService.getInstance().loadCharacterSprites(characterName, Player.SIZE);
         this.player = new Player(GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT);
         this.enemySystem = new EnemySystem();
+        
+        // INICIALIZAR CACHÉ CON LA SALA INICIAL
+        AbstractRoom startRoom = new RoomPasillo();
+        roomCache.put(startRoom.getName(), startRoom);
 
         // CARGAMOS LA SALA INICIAL POR DEFECTO AL CREAR EL MANAGER
-        loadRoom(new RoomPasillo(), Player.START_X, Player.START_Y);
+        loadRoom(startRoom, Player.START_X, Player.START_Y);
     }
 
     /**
@@ -204,15 +211,30 @@ public class ExplorationManager {
         if (inputHandler.ePressed && currentRoom != null) {
             for (DoorModel door : currentRoom.getDoors()) {
                 if (player.intersects(door.getArea())) {
-                    if (door.getTargetRoomName().equals("Aula 124")) {
-                        loadRoom(new Room1(), door.getTargetPlayerX(), door.getTargetPlayerY());
-                    } else if (door.getTargetRoomName().equals("Pasillo Principal")) {
-                        loadRoom(new RoomPasillo(), door.getTargetPlayerX(), door.getTargetPlayerY());
-                    } else if (door.getTargetRoomName().equals("Aula 123")) {
-                        loadRoom(new Room2(), door.getTargetPlayerX(), door.getTargetPlayerY());
-                    } else if (door.getTargetRoomName().equals("Aula 125")) {
-                        loadRoom(new Room3(), door.getTargetPlayerX(), door.getTargetPlayerY());
+                    String targetName = door.getTargetRoomName();
+                    AbstractRoom targetRoom = roomCache.get(targetName);
+
+                    // Si la sala no está en caché, la creamos
+                    if (targetRoom == null) {
+                        if (targetName.equals("Aula 124")) {
+                            targetRoom = new Room1();
+                        } else if (targetName.equals("Pasillo Principal")) {
+                            targetRoom = new RoomPasillo();
+                        } else if (targetName.equals("Aula 123")) {
+                            targetRoom = new Room2();
+                        } else if (targetName.equals("Aula 125")) {
+                            targetRoom = new Room3();
+                        }
+                        
+                        if (targetRoom != null) {
+                            roomCache.put(targetName, targetRoom);
+                        }
                     }
+
+                    if (targetRoom != null) {
+                        loadRoom(targetRoom, door.getTargetPlayerX(), door.getTargetPlayerY());
+                    }
+                    
                     inputHandler.ePressed = false; // Evitar salto doble por mantener pulsado
                     break;
                 }

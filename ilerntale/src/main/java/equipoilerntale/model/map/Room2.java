@@ -50,7 +50,9 @@ public class Room2 extends AbstractRoom {
         // OBJETOS DEL AULA 123
         this.items.add(new WorldItem(
                 new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 1, true),
-                1200, 450
-        ));
+                1200, 450));
+        this.items.add(new WorldItem(
+                new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 1, true),
+                800, 450));
     }
 }
