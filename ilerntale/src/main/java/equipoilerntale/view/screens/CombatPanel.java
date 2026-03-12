@@ -129,11 +129,11 @@ public class CombatPanel extends JPanel {
         this.inputCooldown = 0;
         this.escudoPatito = 0;
         this.dobleDañoRonda = false;
-        
+
         if (inputHandler != null) {
             inputHandler.reset();
         }
-        
+
         // Cargar imagen del enemigo
         equipoilerntale.service.AssetService assetService = equipoilerntale.service.AssetService.getInstance();
         if (enemy instanceof equipoilerntale.model.entity.Zombie) {
@@ -147,7 +147,7 @@ public class CombatPanel extends JPanel {
             this.enemyHealthBar.setMaxHealth(equipoilerntale.model.entity.Boss.MAX_HEALTH);
             this.enemyHealthBar.setHealth(b.getHealth());
         }
-        
+
         enableAllButtons();
         requestFocusInWindow();
         repaint();
@@ -239,7 +239,7 @@ public class CombatPanel extends JPanel {
 
                     int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
                     enemyHealthBar.takeDamage(damageHecho);
-                    
+
                     // Sincronizar daño con el objeto real
                     if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
                         ((equipoilerntale.model.entity.Zombie) enemyTarget).takeDamage(damageHecho);
@@ -309,7 +309,6 @@ public class CombatPanel extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.setStroke(new BasicStroke(3));
         g2d.drawRect(405, 30, 180, 180);
-
 
         // UI Vida Enemigo Arriba a la Izquierda
         if (enemyHealthBar != null) {
@@ -525,6 +524,45 @@ public class CombatPanel extends JPanel {
                         lastBadCollisions = 0;
                         break;
                     case "act":
+                        isItemMenuOpen = false;
+                        disableAllButtons();
+                        String loreMessage = "";
+
+                        if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
+                            String[] zombieLore = {
+                                    "Hambre... el cafe... nos cambio..",
+                                    "iLERNA... prometio... inteligencia... solo hay... hambre...",
+                                    "¿Donde esta... mi examen? No... siento la logica...",
+                                    "El agua... las máquinas... sabían a codigo amargo...",
+                                    "Solo... queriamos... aprobar..."
+                            };
+                            loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
+                        } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                            String[] bossLore = {
+                                    "¡Esto no compila en produccion! ¡ESTAIS SUSPENDIDOS!",
+                                    "¿Has revisado el tema 4 sobre polimorfismo? ¡MUERE!",
+                                    "El examen final sera... vuestra tumba.",
+                                    "iLERNA era solo el principio... el café hará el resto.",
+                                    "¡Vuestro código es tan sucio como este instituto!"
+                            };
+                            loreMessage = bossLore[new java.util.Random().nextInt(bossLore.length)];
+                        } else {
+                            loreMessage = "El enemigo te ignora...";
+                        }
+
+                        centerTextMessage = loreMessage;
+                        repaint();
+
+                        Timer actTimer = new Timer(2500, new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent ev) {
+                                centerTextMessage = "";
+                                enableAllButtons();
+                                repaint();
+                            }
+                        });
+                        actTimer.setRepeats(false);
+                        actTimer.start();
                         break;
                     case "item":
                         currentCombatItems = inventario.getObjetosCombate();
@@ -548,18 +586,16 @@ public class CombatPanel extends JPanel {
                         if (chance <= 0.10) {
                             centerTextMessage = "HAS TENIDO PIEDAD";
                             repaint();
-                            // Temporizador para cambio de layout en el futuro
-                            Timer transitionTimer = new Timer(2000, new ActionListener() {
+                            // Al tener piedad, finalizamos el combate como una victoria para que el enemigo
+                            // desaparezca
+                            Timer victoryTimer = new Timer(2000, new ActionListener() {
                                 @Override
                                 public void actionPerformed(ActionEvent ev) {
-                                    // TODO: Cambiar layout aquí
-                                    centerTextMessage = "";
-                                    repaint();
-                                    enableAllButtons();
+                                    mainFrame.finalizarCombate(true, enemyTarget);
                                 }
                             });
-                            transitionTimer.setRepeats(false);
-                            transitionTimer.start();
+                            victoryTimer.setRepeats(false);
+                            victoryTimer.start();
                         } else {
                             centerTextMessage = "QUIERE MORDERTE";
                             repaint();

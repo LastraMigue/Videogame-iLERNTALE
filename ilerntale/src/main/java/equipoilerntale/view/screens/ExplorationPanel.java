@@ -55,10 +55,7 @@ public class ExplorationPanel extends JPanel {
     // ==================== INICIALIZACIÓN ====================
 
     private void inicializarRecursosExploracion() {
-        // EL FONDO SE CARGARÁ DINÁMICAMENTE POR HABITACIÓN EN dibujarExploracion(),
-        // AQUÍ NO HACEMOS NADA PERO SE MANTIENE POR SI AÑADES OTROS EFECTOS GLOBALES.
-        Image backgroundExploracion = cargarFondo("/mapa/pasillo.png", GameSettings.ANCHO_PANTALLA,
-                GameSettings.ALTO_PANTALLA);
+        // EL FONDO SE CARGA DINÁMICAMENTE POR HABITACIÓN EN dibujarExploracion().
     }
 
     private void configurarCicloVida() {
@@ -80,12 +77,7 @@ public class ExplorationPanel extends JPanel {
     // ==================== CARGA DE RECURSOS ====================
 
     private Image cargarFondo(String ruta, int w, int h) {
-        java.net.URL url = getClass().getResource(ruta);
-        if (url == null) {
-            LOG.warning("NO SE ENCONTRÓ EL RECURSO: " + ruta);
-            return null;
-        }
-        return new ImageIcon(url).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+        return AssetService.getInstance().loadBackground(ruta);
     }
 
     private ImageIcon cargarImagen(String ruta, int w, int h) {

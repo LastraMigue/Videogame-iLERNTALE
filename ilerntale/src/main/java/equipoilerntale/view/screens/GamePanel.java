@@ -10,10 +10,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import java.util.logging.Logger;
 
 import equipoilerntale.view.MainFrame;
 
 public class GamePanel extends JPanel {
+    private static final Logger LOG = Logger.getLogger(GamePanel.class.getName());
     private MainFrame mainFrame;
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
@@ -44,10 +46,13 @@ public class GamePanel extends JPanel {
     }
 
     private PasoDialogo[] secuenciaDialogos = {
-            new PasoDialogo("Soraya", "¡Hola! Soy Soraya."),
-            new PasoDialogo("Jesica", "¡Hola! Soy Jessica."),
-            new PasoDialogo("Soraya", "Bienvenido al mundo de iLERNTALE."),
-            new PasoDialogo("Jesica", "¡Vamos a explorar juntos!")
+            new PasoDialogo("Soraya", "Hola, soy la memoria virtual de Soraya, vuestra profesora de Programación. El instituto ha sido infectado."),
+            new PasoDialogo("Soraya", "Dos profesores, hartos de bajo nivel de sus alumnos, fabricaron una fórmula para potenciar su desarrollo cognitivo."),
+            new PasoDialogo("Jesica", "Hola, soy la memoria virtual de Jesica, vuestra profe de Lenguaje de Marcas."),
+            new PasoDialogo("Jesica", "Introdujeron la fórmula en el agua de las máquinas de café, pero los resultados no fueron los esperados..."),
+            new PasoDialogo("Soraya", "Jessica y yo sucumbimos al café. El instituto ahora está infestado de Zombies dominados por esos profesores."),
+            new PasoDialogo("Soraya", "¡Acabad con ellos o estaréis SUSPENDIDOS! Sois nuestra última esperanza."),
+            new PasoDialogo("Jesica", "Recordad: WASD o flechas para moveros, E para puertas y ESC para pausar. Hay objetos por el mapa. ¡Suerte!")
     };
 
     private int indicePasos = 0;
@@ -98,10 +103,10 @@ public class GamePanel extends JPanel {
     private ImageIcon cargarImagen(String ruta) {
         URL url = getClass().getResource(ruta);
         if (url == null) {
-            System.err.println("ERROR: No se encontró la imagen en la ruta: " + ruta);
+            LOG.severe("ERROR: No se encontró la imagen en la ruta: " + ruta);
             return null;
         }
-        System.out.println("Cargando imagen: " + url);
+        LOG.info("Cargando imagen: " + url);
         return new ImageIcon(url);
     }
 
@@ -113,7 +118,7 @@ public class GamePanel extends JPanel {
             labelFondo.setBounds(0, 0, 1000, 600);
             labelFondo.setOpaque(false);
             add(labelFondo);
-            System.out.println("Fondo cargado correctamente");
+            LOG.info("Fondo cargado correctamente");
         } else {
             labelFondo = new JLabel("FONDO NO CARGADO");
             labelFondo.setBounds(0, 0, WIDTH, HEIGHT);
@@ -122,10 +127,10 @@ public class GamePanel extends JPanel {
     }
 
     private void cargarNPCs() {
-        System.out.println("Cargando NPCs...");
+        LOG.info("Cargando NPCs...");
 
         iconoSoraya = cargarImagen("/dialogue/soraya.png");
-        System.out.println("Soraya: " + (iconoSoraya != null ? "CARGADA" : "FALLIDA"));
+        LOG.info("Soraya: " + (iconoSoraya != null ? "CARGADA" : "FALLIDA"));
 
         if (iconoSoraya != null) {
             Image imgSoraya = iconoSoraya.getImage().getScaledInstance(TAMANO_PERSONAJE, TAMANO_PERSONAJE,
@@ -143,11 +148,11 @@ public class GamePanel extends JPanel {
                 }
             });
             add(labelSoraya);
-            System.out.println("Soraya añadida (oculta)");
+            LOG.info("Soraya añadida (oculta)");
         }
 
         iconoJesica = cargarImagen("/dialogue/jesica.png");
-        System.out.println("Jesica: " + (iconoJesica != null ? "CARGADA" : "FALLIDA"));
+        LOG.info("Jesica: " + (iconoJesica != null ? "CARGADA" : "FALLIDA"));
 
         if (iconoJesica != null) {
             Image imgJesica = iconoJesica.getImage().getScaledInstance(TAMANO_PERSONAJE, TAMANO_PERSONAJE,
@@ -160,17 +165,17 @@ public class GamePanel extends JPanel {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     // Click manual no reinicia, solo informa
-                    System.out.println("Click en Jesica detectado");
+                    LOG.info("Click en Jesica detectado");
                 }
 
             });
             add(labelJesica);
-            System.out.println("Jesica añadida (oculta)");
+            LOG.info("Jesica añadida (oculta)");
         }
 
         setComponentZOrder(labelFondo, getComponentCount() - 1);
 
-        System.out.println("Total componentes en panel: " + getComponentCount());
+        LOG.info("Total componentes en panel: " + getComponentCount());
     }
 
     private void gestionarVisibilidad(boolean visible, String nombre) {
@@ -192,7 +197,7 @@ public class GamePanel extends JPanel {
         timerSiguienteDialogo = new Timer(3000, e -> lanzarSiguienteDialogo());
         timerSiguienteDialogo.setRepeats(false);
         timerSiguienteDialogo.start();
-        System.out.println("Sistema de secuencia narrativa iniciado");
+        LOG.info("Sistema de secuencia narrativa iniciado");
     }
 
     private void lanzarSiguienteDialogo() {
@@ -219,7 +224,7 @@ public class GamePanel extends JPanel {
                     timerPausaEntreDialogos.setRepeats(false);
                     timerPausaEntreDialogos.start();
                 } else {
-                    System.out.println("Fin de la secuencia narrativa. Cambiando a EXPLORACION.");
+                    LOG.info("Fin de la secuencia narrativa. Cambiando a EXPLORACION.");
                     mainFrame.cambiarPantalla("EXPLORACION");
                 }
             });
@@ -238,7 +243,7 @@ public class GamePanel extends JPanel {
         if (timerPausaEntreDialogos != null) {
             timerPausaEntreDialogos.stop();
         }
-        System.out.println("Sistema de secuencia narrativa pausado");
+        LOG.info("Sistema de secuencia narrativa pausado");
     }
 
     public void detenerDialogoBucle() {
@@ -246,12 +251,12 @@ public class GamePanel extends JPanel {
         mainFrame.hideDialogue();
         gestionarVisibilidad(false, "Soraya");
         gestionarVisibilidad(false, "Jesica");
-        System.out.println("Sistema de secuencia narrativa detenido");
+        LOG.info("Sistema de secuencia narrativa detenido");
     }
 
     public void reanudarDialogoBucle() {
         if (indicePasos < secuenciaDialogos.length) {
-            System.out.println("Reanudando secuencia narrativa desde paso: " + indicePasos);
+            LOG.info("Reanudando secuencia narrativa desde paso: " + indicePasos);
             lanzarSiguienteDialogo();
         }
     }

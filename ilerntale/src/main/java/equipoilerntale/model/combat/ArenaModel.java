@@ -9,6 +9,7 @@ public class ArenaModel {
     private int goodCollisions = 0;
     private int badCollisions = 0;
 
+
     public void startCombat() {
         initMouseCenter();
         projectiles = new CopyOnWriteArrayList<>();
@@ -16,6 +17,7 @@ public class ArenaModel {
         badCollisions = 0;
     }
 
+    // 
     public void initMouseCenter() {
         int x = 200, y = 240, width = 600, height = 250;
         int mouseStartX = x + (width / 2) - 15;
