@@ -125,21 +125,24 @@ public class ExplorationPanel extends JPanel {
 
         playerRenderer.drawPlayer(ctx, manager.getPlayerCurrentSprite(), manager.getPlayer());
 
-        for (Zombie z : manager.getActiveZombies()) {
-            zombieRenderer.drawZombie(ctx, z);
-        }
+        // DIBUJAR ENTIDADES (Sincronizado para evitar ConcurrentModificationException)
+        synchronized(manager) {
+            for (Zombie z : manager.getActiveZombies()) {
+                zombieRenderer.drawZombie(ctx, z);
+            }
 
-        for (Boss b : manager.getActiveBosses()) {
-            bossRenderer.drawBoss(ctx, b);
-        }
+            for (Boss b : manager.getActiveBosses()) {
+                bossRenderer.drawBoss(ctx, b);
+            }
 
-        // DIBUJAR OBJETOS DEL MAPA
-        if (manager.getCurrentRoom() != null) {
-            for (WorldItem item : manager.getCurrentRoom().getItems()) {
-                if (!item.isCollected() && item.getItem().getSprite() != null) {
-                    ctx.getGraphics().drawImage(item.getItem().getSprite(), 
-                        item.getX(), item.getY(), 
-                        item.getSize(), item.getSize(), null);
+            // DIBUJAR OBJETOS DEL MAPA
+            if (manager.getCurrentRoom() != null) {
+                for (WorldItem item : manager.getCurrentRoom().getItems()) {
+                    if (!item.isCollected() && item.getItem().getSprite() != null) {
+                        ctx.getGraphics().drawImage(item.getItem().getSprite(), 
+                            item.getX(), item.getY(), 
+                            item.getSize(), item.getSize(), null);
+                    }
                 }
             }
         }

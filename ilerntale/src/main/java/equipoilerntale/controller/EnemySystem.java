@@ -122,16 +122,37 @@ public class EnemySystem {
             if (dist < minDistance) {
                 // Vector de alejamiento
                 double angle = Math.atan2(z.getY() - py, z.getX() - px);
-                if (dist < 1) angle = random.nextDouble() * Math.PI * 2;
-                
-                // Mover fuera del radio de detección (máximo 550px)
-                int pushDist = 600; 
-                int newX = px + (int) (Math.cos(angle) * pushDist);
-                int newY = py + (int) (Math.sin(angle) * pushDist);
-                
-                z.setX(newX);
-                z.setY(newY);
+                if (dist < 1)
+                    angle = random.nextDouble() * Math.PI * 2;
+
+                // Intentar alejar al zombie a una posición segura (fuera de muros)
+                int pushDist = 600;
+                boolean foundSafe = false;
+
+                // Intentamos desde el alejamiento máximo hacia abajo hasta encontrar sitio
+                for (int d = pushDist; d >= 100; d -= 20) {
+                    int nextX = px + (int) (Math.cos(angle) * d);
+                    int nextY = py + (int) (Math.sin(angle) * d);
+
+                    // Límites del mapa (evitar salir por los bordes)
+                    nextX = Math.max(20, Math.min(nextX, GameSettings.MAP_WIDTH - Zombie.SIZE - 20));
+                    nextY = Math.max(250, Math.min(nextY, GameSettings.MAP_HEIGHT - Zombie.SIZE - 20));
+
+                    Rectangle testHitbox = z.getHitbox(nextX, nextY);
+                    boolean hits = walls.stream().anyMatch(w -> w.intersects(testHitbox));
+
+                    if (!hits) {
+                        z.setX(nextX);
+                        z.setY(nextY);
+                        foundSafe = true;
+                        break;
+                    }
+                }
+
                 z.setDetectedPlayer(false); // Olvidar al jugador momentáneamente
+                if (!foundSafe) {
+                    LOG.info("No se encontró punto de dispersión seguro para zombie en " + z.getX() + "," + z.getY());
+                }
             }
         }
         // Los bosses no se dispersan ya que suelen ser estáticos o importantes en su sitio

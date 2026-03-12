@@ -20,8 +20,8 @@ public class Room3 extends AbstractRoom {
         // CONFIGURACIÓN DE ZOMBIES
         this.zombiesToSpawn = GameSettings.ZOMBIES_AULA_125;
 
-        // EL ÁREA DE GENERACIÓN DE ZOMBIES
-        this.zombieSpawnArea = new Rectangle(400, 300, GameSettings.MAP_WIDTH - 500, GameSettings.MAP_HEIGHT - 350);
+        // EL ÁREA DE GENERACIÓN DE ZOMBIES (Ajustada para máxima seguridad)
+        this.zombieSpawnArea = new Rectangle(400, 380, GameSettings.MAP_WIDTH - 600, GameSettings.MAP_HEIGHT - 450);
 
         // BOSS AL FINAL DEL AULA
         this.bossSpawnArea = new Rectangle(GameSettings.MAP_WIDTH - 200, GameSettings.MAP_HEIGHT - 200, 100, 100);

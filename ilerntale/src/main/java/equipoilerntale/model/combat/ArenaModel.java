@@ -96,6 +96,14 @@ public class ArenaModel {
         return badCollisions;
     }
 
+    public void addGoodCollision() {
+        this.goodCollisions++;
+    }
+
+    public void addBadCollision() {
+        this.badCollisions++;
+    }
+
     public boolean allBulletsHit() {
         if (projectiles == null || projectiles.size() < 12)
             return false;

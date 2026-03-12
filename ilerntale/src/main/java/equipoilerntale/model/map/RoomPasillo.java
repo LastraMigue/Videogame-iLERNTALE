@@ -22,10 +22,9 @@ public class RoomPasillo extends AbstractRoom {
                 // CONFIGURACIÓN DE PUERTAS Y ZOMBIES
                 this.zombiesToSpawn = GameSettings.ZOMBIES_PASILLO;
 
-                // EL ÁREA DE GENERACIÓN DE ZOMBIES (Ajustada para estar debajo del muro
-                // superior)
-                this.zombieSpawnArea = new Rectangle(500, 320, GameSettings.MAP_WIDTH - 600,
-                                GameSettings.MAP_HEIGHT - 350);
+                // EL ÁREA DE GENERACIÓN DE ZOMBIES (Ajustada para máxima seguridad)
+                this.zombieSpawnArea = new Rectangle(500, 380, GameSettings.MAP_WIDTH - 800,
+                                GameSettings.MAP_HEIGHT - 450);
 
                 // CONFIGURACIÓN DE LOS LÍMITES/MUROS DEL MAPA PASILLO
                 // MURO SUPERIOR E INFERIOR
