@@ -169,11 +169,17 @@ public class Zombie extends Entity {
                     if (!z.isAlive())
                         continue;
                     double distToNeighbor = Math.sqrt(Math.pow(z.x - this.x, 2) + Math.pow(z.y - this.y, 2));
-                    if (distToNeighbor > 0 && distToNeighbor < SEPARATION_RADIUS) {
-                        // Alejarse del vecino, con fuerza inversamente proporcional a la distancia
-                        double weight = (SEPARATION_RADIUS - distToNeighbor) / SEPARATION_RADIUS;
-                        sepX += ((this.x - z.x) / distToNeighbor) * weight;
-                        sepY += ((this.y - z.y) / distToNeighbor) * weight;
+                    if (distToNeighbor < SEPARATION_RADIUS) {
+                        if (distToNeighbor == 0) {
+                            // Si están exactamente en el mismo sitio, empujar en dirección aleatoria
+                            sepX += (Math.random() * 2 - 1);
+                            sepY += (Math.random() * 2 - 1);
+                        } else {
+                            // Alejarse del vecino, con fuerza inversamente proporcional a la distancia
+                            double weight = (SEPARATION_RADIUS - distToNeighbor) / SEPARATION_RADIUS;
+                            sepX += ((this.x - z.x) / distToNeighbor) * weight;
+                            sepY += ((this.y - z.y) / distToNeighbor) * weight;
+                        }
                         neighborCount++;
                     }
                 }

@@ -74,9 +74,15 @@ public class EnemySystem {
 
             Rectangle spawnBounds = new Zombie(rx, ry, GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT).getHitbox(rx,
                     ry);
+            
+            // Margen de seguridad: expandir el hitbox de prueba para no nacer pegado a muros
+            Rectangle safetyBounds = new Rectangle(
+                spawnBounds.x - 10, spawnBounds.y - 10, 
+                spawnBounds.width + 20, spawnBounds.height + 20
+            );
 
             // Verificar que no colisione con muros
-            boolean hitsWall = walls.stream().anyMatch(w -> w.intersects(spawnBounds));
+            boolean hitsWall = walls.stream().anyMatch(w -> w.intersects(safetyBounds));
             if (hitsWall)
                 continue;
 
