@@ -34,8 +34,6 @@ import equipoilerntale.model.combat.minigames.ShieldRules;
 import equipoilerntale.model.combat.minigames.ShooterRules;
 import equipoilerntale.model.combat.minigames.TargetDodgeRules;
 import equipoilerntale.model.combat.minigames.ThreeLinesRules;
-import equipoilerntale.model.combat.minigames.SimonDiceRules;
-import equipoilerntale.model.combat.minigames.RitmoRules;
 import equipoilerntale.view.ui.Inventario;
 import equipoilerntale.model.entity.ItemModel;
 import equipoilerntale.view.ui.BarraVida;
@@ -494,7 +492,7 @@ public class CombatPanel extends JPanel {
                         isItemMenuOpen = false;
                         disableAllButtons();
 
-                        int randomMinigame = new java.util.Random().nextInt(8);
+                        int randomMinigame = new java.util.Random().nextInt(6);
                         switch (randomMinigame) {
                             case 0:
                                 currentRules = new ClassicDodgeRules();
@@ -513,12 +511,6 @@ public class CombatPanel extends JPanel {
                                 break;
                             case 5:
                                 currentRules = new MazeRules();
-                                break;
-                            case 6:
-                                currentRules = new SimonDiceRules();
-                                break;
-                            case 7:
-                                currentRules = new RitmoRules();
                                 break;
                         }
 
@@ -617,7 +609,7 @@ public class CombatPanel extends JPanel {
                                 public void actionPerformed(ActionEvent ev) {
                                     centerTextMessage = "";
 
-                                    int randomMinigame = new java.util.Random().nextInt(8);
+                                    int randomMinigame = new java.util.Random().nextInt(6);
                                     switch (randomMinigame) {
                                         case 0:
                                             currentRules = new ClassicDodgeRules();
@@ -636,12 +628,6 @@ public class CombatPanel extends JPanel {
                                             break;
                                         case 5:
                                             currentRules = new MazeRules();
-                                            break;
-                                        case 6:
-                                            currentRules = new SimonDiceRules();
-                                            break;
-                                        case 7:
-                                            currentRules = new RitmoRules();
                                             break;
                                     }
 
@@ -704,7 +690,7 @@ public class CombatPanel extends JPanel {
         btnFight.setEnabled(true);
         btnAct.setEnabled(true);
         btnItem.setEnabled(true);
-        
+
         // Bloquear botón MERCI si el enemigo es un Boss
         if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
             btnMercy.setEnabled(false);

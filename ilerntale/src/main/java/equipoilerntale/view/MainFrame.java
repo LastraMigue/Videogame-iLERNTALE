@@ -396,6 +396,22 @@ public class MainFrame extends JFrame {
         return null;
     }
 
+    /**
+     * REINICIA EL ESTADO COMPLETO DEL JUEGO.
+     */
+    public void reiniciarJuego() {
+        // Reiniciar inventario
+        equipoilerntale.view.ui.Inventario.getInstance().limpiar();
+        // Reiniciar vida
+        if (playerHealthBar != null) {
+            playerHealthBar.setHealth(playerHealthBar.getMaxHealth());
+        }
+        // Reiniciar variables y controladores reconstruyendo el ExplorationManager
+        setPersonajeSeleccionado(getPersonajeSeleccionado());
+        
+        LOG.info("JUEGO REINICIADO COMPLETAMENTE");
+    }
+
     // ============ GETTERS ============
 
     /**

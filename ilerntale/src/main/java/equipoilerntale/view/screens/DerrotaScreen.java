@@ -43,6 +43,7 @@ public class DerrotaScreen extends JPanel {
             btnSalir.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    mainFrame.reiniciarJuego();
                     mainFrame.cambiarPantalla("MENU");
                 }
             });

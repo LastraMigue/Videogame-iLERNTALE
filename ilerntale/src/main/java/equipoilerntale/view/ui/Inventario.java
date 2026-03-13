@@ -54,6 +54,15 @@ public class Inventario {
         return null;
     }
 
+    public void limpiar() {
+        this.items.clear();
+        // Agregar objetos principales nuevamente
+        this.agregarItem(new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 0, true));
+        this.agregarItem(new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 0, true));
+        this.agregarItem(new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 0, true));
+        this.agregarItem(new ItemModel("Llave", "Abre una puerta\ncerrada.", "/objects/llave.png", 0, false));
+    }
+
     /**
      * @return Solo los objetos que tienen cantidad > 0 y son usables en combate.
      */
