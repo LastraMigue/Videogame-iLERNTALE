@@ -3,15 +3,15 @@ package equipoilerntale.view.screens;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontFormatException;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.awt.Cursor;
-import java.net.URL;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -43,9 +43,12 @@ public class MainMenu extends JPanel {
     }
 
     private void cargarRecursos() {
-        URL url = getClass().getResource("/title/menu1.jpg");
-        if (url != null) {
-            imagenFondo = new ImageIcon(url).getImage();
+        try (InputStream is = getClass().getResourceAsStream("/title/menu1.jpg")) {
+            if (is != null) {
+                imagenFondo = ImageIO.read(is);
+            }
+        } catch (IOException e) {
+            System.err.println("Error cargando fondo del menú: " + e.getMessage());
         }
     }
 
@@ -117,11 +120,10 @@ public class MainMenu extends JPanel {
     private JButton createImageButton(String imagePath, String fallbackText) {
         JButton button = new JButton();
 
-        URL imageUrl = getClass().getResource(imagePath);
-        if (imageUrl != null) {
-            ImageIcon originalIcon = new ImageIcon(imageUrl);
-            Image img = originalIcon.getImage();
-            if (img != null) {
+        try (InputStream is = getClass().getResourceAsStream(imagePath)) {
+            if (is != null) {
+                BufferedImage img = ImageIO.read(is);
+                if (img != null) {
                 // 1. Imagen en estado normal
                 int anchoNormal = 200;
                 int altoNormal = 60;
@@ -150,7 +152,10 @@ public class MainMenu extends JPanel {
                 g2.dispose();
                 
                 button.setPressedIcon(new ImageIcon(canvas));
+                }
             }
+        } catch (IOException e) {
+            System.err.println("Error cargando botón " + imagePath + ": " + e.getMessage());
         }
 
         if (button.getIcon() == null) {
@@ -176,29 +181,15 @@ public class MainMenu extends JPanel {
     }
 
     private ImageIcon asignarImagenMenu(String ruta) {
-        URL url = getClass().getResource(ruta);
-        if (url == null) {
-            System.err.println("No se encontro la imagen: " + ruta);
+        try (InputStream is = getClass().getResourceAsStream(ruta)) {
+            if (is == null) {
+                System.err.println("No se encontro la imagen: " + ruta);
+                return null;
+            }
+            return new ImageIcon(ImageIO.read(is));
+        } catch (IOException e) {
+            System.err.println("Error cargando imagen para el menú: " + e.getMessage());
             return null;
-        }
-        return new ImageIcon(url);
-    }
-
-    private void cargarImagenMenu() {
-        ImageIcon imagenMenu = asignarImagenMenu("/title/menu1.jpg");
-
-        int ancho = 1000;
-        int alto = 600;
-
-        if (imagenMenu != null) {
-            Image imagenEscalada = imagenMenu.getImage().getScaledInstance(ancho, alto, Image.SCALE_DEFAULT);
-            JLabel labelMenu = new JLabel(new ImageIcon(imagenEscalada));
-            labelMenu.setBounds(0, 0, ancho, alto);
-            add(labelMenu);
-            System.out.println("Menu cargado correctamente");
-        } else {
-            setBackground(new Color(20, 20, 30));
-            System.err.println("ERROR: No se pudo cargar la imagen de fondo");
         }
     }
 }

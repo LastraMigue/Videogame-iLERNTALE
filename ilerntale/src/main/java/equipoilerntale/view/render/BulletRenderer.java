@@ -2,9 +2,10 @@ package equipoilerntale.view.render;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.net.URL;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.List;
-import javax.swing.ImageIcon;
+import javax.imageio.ImageIO;
 import equipoilerntale.model.combat.ProjectileModel;
 
 public class BulletRenderer {
@@ -17,9 +18,12 @@ public class BulletRenderer {
     }
 
     private Image cargar(String ruta) {
-        URL url = getClass().getResource(ruta);
-        if (url != null) {
-            return new ImageIcon(url).getImage();
+        try (InputStream is = getClass().getResourceAsStream(ruta)) {
+            if (is != null) {
+                return ImageIO.read(is);
+            }
+        } catch (Exception e) {
+            System.err.println("Error cargando proyectil " + ruta + ": " + e.getMessage());
         }
         return null;
     }

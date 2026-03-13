@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -13,7 +12,7 @@ import java.awt.event.MouseEvent;
 import java.awt.Cursor;
 import java.io.InputStream;
 import java.io.IOException;
-import java.net.URL;
+import javax.imageio.ImageIO;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -82,11 +81,16 @@ public class CharacterSelector extends JPanel {
         button.setBorder(javax.swing.BorderFactory.createLineBorder(Color.WHITE, 2));
         button.setOpaque(true);
 
-        URL imageUrl = getClass().getResource("/player/" + characterName + "/abajo1" + characterName + ".png");
-        if (imageUrl != null) {
-            button.setIcon(new ImageIcon(imageUrl));
-        } else {
-            System.err.println("Imagen no encontrada para: " + characterName);
+        try (InputStream is = getClass().getResourceAsStream("/player/" + characterName + "/abajo1" + characterName + ".png")) {
+            if (is != null) {
+                button.setIcon(new ImageIcon(ImageIO.read(is)));
+            } else {
+                System.err.println("Imagen no encontrada para: " + characterName);
+                button.setText(characterName.toUpperCase());
+                button.setForeground(Color.WHITE);
+            }
+        } catch (IOException e) {
+            System.err.println("Error cargando imagen de personaje: " + e.getMessage());
             button.setText(characterName.toUpperCase());
             button.setForeground(Color.WHITE);
         }

@@ -1,10 +1,10 @@
 package equipoilerntale.service;
 
 import equipoilerntale.model.entity.Direction;
-import javax.swing.ImageIcon;
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.net.URL;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -196,17 +196,18 @@ public class AssetService {
         if (imageCache.containsKey(path))
             return imageCache.get(path);
 
-        URL url = getClass().getResource(path);
-        if (url == null)
+        try (InputStream is = getClass().getResourceAsStream(path)) {
+            if (is == null) {
+                LOG.warning("No se encontró la imagen: " + path);
+                return null;
+            }
+            BufferedImage img = ImageIO.read(is);
+            imageCache.put(path, img);
+            return img;
+        } catch (Exception e) {
+            LOG.severe("Error cargando imagen " + path + ": " + e.getMessage());
             return null;
-
-        ImageIcon icon = new ImageIcon(url);
-        Image img = icon.getImage();
-        if (img.getWidth(null) == -1)
-            return null;
-
-        imageCache.put(path, img);
-        return img;
+        }
     }
 
     /**

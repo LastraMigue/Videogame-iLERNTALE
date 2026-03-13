@@ -2,19 +2,23 @@ package equipoilerntale.view.render;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.net.URL;
-import javax.swing.ImageIcon;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
+import javax.imageio.ImageIO;
 import equipoilerntale.model.combat.MouseModel;
 
 public class MouseRenderer {
     private Image imagenMouse;
 
     public MouseRenderer() {
-        URL url = getClass().getResource("/attack/raton.png");
-        if (url != null) {
-            imagenMouse = new ImageIcon(url).getImage();
-        } else {
-            System.err.println("¡No se encontró la imagen del ratón!");
+        try (InputStream is = getClass().getResourceAsStream("/attack/raton.png")) {
+            if (is != null) {
+                imagenMouse = ImageIO.read(is);
+            } else {
+                System.err.println("¡No se encontró la imagen del ratón!");
+            }
+        } catch (Exception e) {
+            System.err.println("Error cargando imagen del ratón: " + e.getMessage());
         }
     }
 

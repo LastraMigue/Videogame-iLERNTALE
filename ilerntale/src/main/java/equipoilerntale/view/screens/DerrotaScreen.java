@@ -4,7 +4,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -21,15 +21,18 @@ public class DerrotaScreen extends JPanel {
         this.mainFrame = frame;
         setLayout(null); // Absolute positioning
 
-        try {
-            backgroundImage = ImageIO.read(new File("ilerntale/src/main/resources/title/derrota.jpg"));
+        try (InputStream is = getClass().getResourceAsStream("/title/derrota.jpg")) {
+            if (is != null) {
+                backgroundImage = ImageIO.read(is);
+            }
         } catch (Exception e) {
             System.err.println("Error al cargar la imagen de derrota: " + e.getMessage());
         }
 
-        try {
-            Image btnImage = ImageIO.read(new File("ilerntale/src/main/resources/title/salir.png"));
-            Image scaledBtnImage = btnImage.getScaledInstance(300, 100, Image.SCALE_SMOOTH);
+        try (InputStream is = getClass().getResourceAsStream("/title/salir.png")) {
+            if (is != null) {
+                Image btnImage = ImageIO.read(is);
+                Image scaledBtnImage = btnImage.getScaledInstance(300, 100, Image.SCALE_SMOOTH);
             btnSalir = new JButton(new ImageIcon(scaledBtnImage));
             btnSalir.setBorderPainted(false);
             btnSalir.setContentAreaFilled(false);
@@ -49,6 +52,7 @@ public class DerrotaScreen extends JPanel {
                 }
             });
             add(btnSalir);
+        }
         } catch (Exception e) {
             System.err.println("Error al cargar la imagen del boton salir: " + e.getMessage());
         }

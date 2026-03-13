@@ -4,7 +4,8 @@ import java.awt.*;
 import java.awt.FontFormatException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -120,40 +121,42 @@ public class PausePanel extends JPanel {
     private JButton createImageButton(String imagePath, String fallbackText) {
         JButton button = new JButton();
 
-        URL imageUrl = getClass().getResource(imagePath);
-        if (imageUrl != null) {
-            ImageIcon originalIcon = new ImageIcon(imageUrl);
-            Image img = originalIcon.getImage();
-            if (img != null) {
-                // 1. Imagen en estado normal
-                int anchoNormal = 200;
-                int altoNormal = 60;
-                Image normalImg = img.getScaledInstance(anchoNormal, altoNormal, Image.SCALE_SMOOTH);
-                button.setIcon(new ImageIcon(normalImg));
+        try (InputStream is = getClass().getResourceAsStream(imagePath)) {
+            if (is != null) {
+                BufferedImage img = ImageIO.read(is);
+                if (img != null) {
+                    // 1. Imagen en estado normal
+                    int anchoNormal = 200;
+                    int altoNormal = 60;
+                    Image normalImg = img.getScaledInstance(anchoNormal, altoNormal, Image.SCALE_SMOOTH);
+                    button.setIcon(new ImageIcon(normalImg));
 
-                // 2. Imagen en estado pulsado (SÍNCRONO Y CENTRADO)
-                int anchoPulsado = (int) (anchoNormal * 0.9);
-                int altoPulsado = (int) (altoNormal * 0.9);
+                    // 2. Imagen en estado pulsado (SÍNCRONO Y CENTRADO)
+                    int anchoPulsado = (int) (anchoNormal * 0.9);
+                    int altoPulsado = (int) (altoNormal * 0.9);
 
-                // Creamos lienzo transparente de tamaño completo
-                java.awt.image.BufferedImage canvas = new java.awt.image.BufferedImage(
-                        anchoNormal, altoNormal, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-                java.awt.Graphics2D g2 = canvas.createGraphics();
+                    // Creamos lienzo transparente de tamaño completo
+                    java.awt.image.BufferedImage canvas = new java.awt.image.BufferedImage(
+                            anchoNormal, altoNormal, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                    java.awt.Graphics2D g2 = canvas.createGraphics();
 
-                // Suavizado de bordes
-                g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
-                        java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    // Suavizado de bordes
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                            java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-                // Calculamos offsets
-                int offX = (anchoNormal - anchoPulsado) / 2;
-                int offY = (altoNormal - altoPulsado) / 2;
+                    // Calculamos offsets
+                    int offX = (anchoNormal - anchoPulsado) / 2;
+                    int offY = (altoNormal - altoPulsado) / 2;
 
-                // Dibujamos la imagen original escalándola directamente en el canvas (SÍNCRONO)
-                g2.drawImage(img, offX, offY, anchoPulsado, altoPulsado, null);
-                g2.dispose();
+                    // Dibujamos la imagen original escalándola directamente en el canvas (SÍNCRONO)
+                    g2.drawImage(img, offX, offY, anchoPulsado, altoPulsado, null);
+                    g2.dispose();
 
-                button.setPressedIcon(new ImageIcon(canvas));
+                    button.setPressedIcon(new ImageIcon(canvas));
+                }
             }
+        } catch (IOException e) {
+            System.err.println("Error cargando botón " + imagePath + ": " + e.getMessage());
         }
 
         if (button.getIcon() == null) {

@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.logging.Logger;
 
 import equipoilerntale.GameSettings;
@@ -82,12 +83,17 @@ public class ExplorationPanel extends JPanel {
     }
 
     private ImageIcon cargarImagen(String ruta, int w, int h) {
-        java.net.URL url = getClass().getResource(ruta);
-        if (url == null) {
-            LOG.warning("NO SE ENCONTRÓ EL RECURSO: " + ruta);
+        try (InputStream is = getClass().getResourceAsStream(ruta)) {
+            if (is == null) {
+                LOG.warning("NO SE ENCONTRÓ EL RECURSO: " + ruta);
+                return null;
+            }
+            BufferedImage img = javax.imageio.ImageIO.read(is);
+            return new ImageIcon(img.getScaledInstance(w, h, Image.SCALE_SMOOTH));
+        } catch (java.io.IOException e) {
+            LOG.severe("Error cargando imagen " + ruta + ": " + e.getMessage());
             return null;
         }
-        return new ImageIcon(new ImageIcon(url).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
     }
 
     // ==================== RENDERIZADO ====================

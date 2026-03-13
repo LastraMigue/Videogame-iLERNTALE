@@ -11,7 +11,10 @@ import java.awt.event.ActionListener;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -183,13 +186,17 @@ public class CombatPanel extends JPanel {
             inputHandler.reset();
 
         // Imagen del boss final
-        java.awt.Image imgFinal = equipoilerntale.service.AssetService.getInstance()
-                .loadImage("/boss/sergio/sergiofinal.png");
-        if (imgFinal != null) {
-            this.enemyImage = equipoilerntale.service.AssetService.getInstance()
-                    .scaleImage(imgFinal,
-                            equipoilerntale.model.entity.Boss.WIDTH,
-                            equipoilerntale.model.entity.Boss.HEIGHT);
+        try (InputStream is = equipoilerntale.service.AssetService.getInstance().getClass()
+                .getResourceAsStream("/boss/sergio/sergiofinal.png")) {
+            if (is != null) {
+                BufferedImage imgFinal = ImageIO.read(is);
+                this.enemyImage = equipoilerntale.service.AssetService.getInstance()
+                        .scaleImage(imgFinal,
+                                equipoilerntale.model.entity.Boss.WIDTH,
+                                equipoilerntale.model.entity.Boss.HEIGHT);
+            }
+        } catch (IOException e) {
+            System.err.println("Error cargando boss final: " + e.getMessage());
         }
 
         this.enemyTarget = null; // No hay entidad física en el mapa para fase 2
@@ -575,16 +582,22 @@ public class CombatPanel extends JPanel {
         button.setIconTextGap(0);
         button.setText("");
 
-        URL urlImagen = getClass().getResource("/attack/" + accion + "1.png");
-        if (urlImagen != null) {
-            button.setIcon(
-                    new ImageIcon(new ImageIcon(urlImagen).getImage().getScaledInstance(200, 60, Image.SCALE_SMOOTH)));
+        try (InputStream is = getClass().getResourceAsStream("/attack/" + accion + "1.png")) {
+            if (is != null) {
+                BufferedImage img = ImageIO.read(is);
+                button.setIcon(new ImageIcon(img.getScaledInstance(200, 60, Image.SCALE_SMOOTH)));
+            }
+        } catch (IOException e) {
+            System.err.println("Error cargando botón " + accion + ": " + e.getMessage());
         }
 
-        URL urlImagenPressed = getClass().getResource("/attack/" + accion + "2.png");
-        if (urlImagenPressed != null) {
-            button.setPressedIcon(new ImageIcon(
-                    new ImageIcon(urlImagenPressed).getImage().getScaledInstance(200, 60, Image.SCALE_SMOOTH)));
+        try (InputStream is = getClass().getResourceAsStream("/attack/" + accion + "2.png")) {
+            if (is != null) {
+                BufferedImage img = ImageIO.read(is);
+                button.setPressedIcon(new ImageIcon(img.getScaledInstance(200, 60, Image.SCALE_SMOOTH)));
+            }
+        } catch (IOException e) {
+            System.err.println("Error cargando botón presionado " + accion + ": " + e.getMessage());
         }
 
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -763,10 +776,9 @@ public class CombatPanel extends JPanel {
     }
 
     private void cargarFuente() {
-        try {
-            URL fontUrl = getClass().getResource("/font/deltarune.ttf");
-            if (fontUrl != null) {
-                Font baseFont = Font.createFont(Font.TRUETYPE_FONT, fontUrl.openStream());
+        try (InputStream is = getClass().getResourceAsStream("/font/deltarune.ttf")) {
+            if (is != null) {
+                Font baseFont = Font.createFont(Font.TRUETYPE_FONT, is);
                 customFont = baseFont.deriveFont(Font.BOLD, 40f);
             } else {
                 customFont = new Font("Monospaced", Font.BOLD, 40);
@@ -778,9 +790,13 @@ public class CombatPanel extends JPanel {
     }
 
     private void cargarImagenCombate() {
-        URL url = getClass().getResource("/attack/ataque.jpg");
-        if (url != null) {
-            imagenFondo = new ImageIcon(url).getImage().getScaledInstance(1000, 600, Image.SCALE_DEFAULT);
+        try (InputStream is = getClass().getResourceAsStream("/attack/ataque.jpg")) {
+            if (is != null) {
+                BufferedImage img = ImageIO.read(is);
+                imagenFondo = img.getScaledInstance(1000, 600, Image.SCALE_DEFAULT);
+            }
+        } catch (IOException e) {
+            System.err.println("Error cargando fondo de combate: " + e.getMessage());
         }
     }
 

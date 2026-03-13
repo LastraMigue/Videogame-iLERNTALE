@@ -2,7 +2,6 @@ package equipoilerntale.view.screens;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.io.File;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -47,9 +46,12 @@ public class FinalVideoScreen extends JPanel {
                     mediaPlayer.dispose();
                 }
 
-                // Ruta del video final
-                File archivoVideo = new File("ilerntale/src/main/resources/vid/final.mp4");
-                String uriVideo = archivoVideo.toURI().toString();
+                // Ruta del video final (JAR compatible)
+                java.net.URL resource = getClass().getResource("/vid/final.mp4");
+                if (resource == null) {
+                    throw new java.io.FileNotFoundException("No se encontró el video final en resources");
+                }
+                String uriVideo = resource.toExternalForm();
 
                 Media media = new Media(uriVideo);
                 mediaPlayer = new MediaPlayer(media);

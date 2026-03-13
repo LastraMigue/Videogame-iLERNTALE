@@ -2,7 +2,6 @@ package equipoilerntale.view.screens;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.io.File;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -43,8 +42,12 @@ public class TransformacionVideoScreen extends JPanel {
                     mediaPlayer.dispose();
                 }
 
-                File archivoVideo = new File("ilerntale/src/main/resources/vid/transformacion.mp4");
-                String uriVideo = archivoVideo.toURI().toString();
+                // Ruta del video (JAR compatible)
+                java.net.URL resource = getClass().getResource("/vid/transformacion.mp4");
+                if (resource == null) {
+                    throw new java.io.FileNotFoundException("No se encontró el video de transformación en resources");
+                }
+                String uriVideo = resource.toExternalForm();
 
                 Media media = new Media(uriVideo);
                 mediaPlayer = new MediaPlayer(media);

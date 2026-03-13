@@ -8,6 +8,9 @@ import java.util.logging.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import javax.imageio.ImageIO;
 
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
@@ -70,12 +73,15 @@ public class MainFrame extends JFrame {
         setTitle("iLERNTALE");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
-        // ESTABLECER ICONO DEL JFRAME
-        java.net.URL iconURL = getClass().getResource("/title/titozeio.png");
-        if (iconURL != null) {
-            setIconImage(new ImageIcon(iconURL).getImage());
-        } else {
-            LOG.warning("No se pudo encontrar el icono de la ventana: /title/titozeio.png");
+        // ESTABLECER ICONO DEL JFRAME (JAR compatible)
+        try (InputStream is = getClass().getResourceAsStream("/title/titozeio.png")) {
+            if (is != null) {
+                setIconImage(ImageIO.read(is));
+            } else {
+                LOG.warning("No se pudo encontrar el icono de la ventana: /title/titozeio.png");
+            }
+        } catch (IOException e) {
+            LOG.severe("Error cargando icono de ventana: " + e.getMessage());
         }
 
         // INICIALIZAR CONTROLADORES
@@ -429,6 +435,7 @@ public class MainFrame extends JFrame {
         videoScreen.setName("VIDEO");
         contenedor.add(videoScreen, "VIDEO");
         contenedor.add(transformacionVideo, "TRANSFORMACION_VIDEO");
+        contenedor.add(finalVideoScreen, "FINAL_VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
         contenedor.add(gamePanel, "GAME");
         contenedor.add(tutorial, "TUTORIAL");
