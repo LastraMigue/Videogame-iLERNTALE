@@ -11,8 +11,10 @@ public class Boss extends Entity {
     private int health;
     private boolean isAlive;
 
-    // Tamaño base del jefe, el hitbox luego se ajustará
-    public static final int SIZE = 120;
+    // Tamaño base del jefe, modificado para respetar el aspect ratio original
+    // (412x720) y ajustado al personaje (80x80)
+    public static final int WIDTH = 80;
+    public static final int HEIGHT = 140;
     public static final int MAX_HEALTH = 100;
     public static final int DAMAGE = 30;
 
@@ -20,13 +22,21 @@ public class Boss extends Entity {
      * CONSTRUCTOR DEL BOOS.
      */
     public Boss(int x, int y, int mapWidth, int mapHeight) {
-        super(x, y, SIZE, "sergio", mapWidth, mapHeight);
+        super(x, y, WIDTH, "sergio", mapWidth, mapHeight);
         this.health = MAX_HEALTH;
         this.isAlive = true;
     }
 
     public int getHealth() {
         return health;
+    }
+
+    public int getBossWidth() {
+        return WIDTH;
+    }
+
+    public int getBossHeight() {
+        return HEIGHT;
     }
 
     public boolean isAlive() {
@@ -38,20 +48,24 @@ public class Boss extends Entity {
         if (this.health <= 0) {
             this.health = 0;
             this.isAlive = false;
+
         }
     }
 
     /**
-     * CAJA DE COLISIONES.
-     * SE HACE MÁS GRANDE QUE LA DE UN ZOMBIE O LA DE UN JUGADOR PARA DIFICULTAR
-     * PASAR A SU LADO.
+     * CAJA DE COLISIONES AJUSTADA AL NUEVO TAMAÑO ACHATADO.
      */
     @Override
     public Rectangle getHitbox(int currentX, int currentY) {
-        int hitboxWidth = (int) (SIZE * 0.8);
-        int hitboxHeight = (int) (SIZE * 0.6);
-        int hitboxX = currentX + (SIZE - hitboxWidth) / 2;
-        int hitboxY = currentY + (SIZE - hitboxHeight);
+        int hitboxWidth = (int) (WIDTH * 0.8);
+        int hitboxHeight = (int) (HEIGHT * 0.6);
+        int hitboxX = currentX + (WIDTH - hitboxWidth) / 2;
+        int hitboxY = currentY + (HEIGHT - hitboxHeight);
         return new Rectangle(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
+    }
+
+    @Override
+    public Rectangle getBounds() {
+        return new Rectangle(x, y, WIDTH, HEIGHT);
     }
 }

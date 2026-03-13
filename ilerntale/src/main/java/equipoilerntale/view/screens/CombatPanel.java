@@ -77,6 +77,9 @@ public class CombatPanel extends JPanel {
     private int escudoPatito = 0;
     private boolean dobleDañoRonda = false;
 
+    // Fase Final Boss (Fase 2)
+    private boolean isFinalBossPhase = false;
+
     // Vida Enemigo
     private BarraVida enemyHealthBar;
 
@@ -157,6 +160,59 @@ public class CombatPanel extends JPanel {
         repaint();
     }
 
+    /**
+     * PREPARA EL BOSS EN SU FASE FINAL (FASE 2): 200 HP, imagen sergiofinal,
+     * controles invertidos, daño doble al jugador.
+     */
+    public void prepararFinalBoss() {
+        this.isMinigameActive = false;
+        this.isItemMenuOpen = false;
+        this.centerTextMessage = "";
+        this.currentRound = 1;
+        this.lastGoodCollisions = 0;
+        this.lastBadCollisions = 0;
+        this.inputCooldown = 0;
+        this.escudoPatito = 0;
+        this.dobleDañoRonda = false;
+        this.isFinalBossPhase = true;
+        if (inputHandler != null)
+            inputHandler.reset();
+
+        // Imagen del boss final
+        java.awt.Image imgFinal = equipoilerntale.service.AssetService.getInstance()
+                .loadImage("/boss/sergio/sergiofinal.png");
+        if (imgFinal != null) {
+            this.enemyImage = equipoilerntale.service.AssetService.getInstance()
+                    .scaleImage(imgFinal,
+                            equipoilerntale.model.entity.Boss.WIDTH,
+                            equipoilerntale.model.entity.Boss.HEIGHT);
+        }
+
+        this.enemyTarget = null; // No hay entidad física en el mapa para fase 2
+        this.enemyHealthBar.setMaxHealth(200);
+        this.enemyHealthBar.setHealth(200);
+
+        // Controles invertidos en la arena
+        arenaModel.setReversedControls(true);
+
+        enableAllButtons();
+        requestFocusInWindow();
+        repaint();
+    }
+
+    /**
+     * REINICIA EL ESTADO DEL COMBATE (Para salir al menú o reiniciar juego).
+     */
+    public void reiniciarEstado() {
+        this.isFinalBossPhase = false;
+        if (arenaModel != null) {
+            arenaModel.stopCombat();
+        }
+        this.isMinigameActive = false;
+        this.centerTextMessage = "";
+        repaint();
+    }
+
     public void updateCombat() {
         if (inputCooldown > 0) {
             inputCooldown--;
@@ -232,8 +288,11 @@ public class CombatPanel extends JPanel {
 
                     if (damageRecibido > 0) {
                         damageBlinkTicks = 30; // 0.5s de parpadeo
-                        shakeIntensity = 10;   // Intensidad de la sacudida
+                        shakeIntensity = 10; // Intensidad de la sacudida
                         mainFrame.getPlayerHealthBar().takeDamage(damageRecibido);
+                        // En fase final el boss inflige daño doble
+                        int finalDamage = isFinalBossPhase ? damageRecibido * 2 : damageRecibido;
+                        mainFrame.getPlayerHealthBar().takeDamage(finalDamage);
                         if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
                             endMinigame();
                             mainFrame.cambiarPantalla("DERROTA");
@@ -256,18 +315,29 @@ public class CombatPanel extends JPanel {
                         ((equipoilerntale.model.entity.Boss) enemyTarget).takeDamage(damageHecho);
                     }
 
-                    // Comprobar si el enemigo ha muerto
+                    // Comprobar si el enemigo ha muerto (Generalizado)
                     if (enemyHealthBar.getHealth() <= 0) {
                         isMinigameActive = false;
-                        arenaModel.stopCombat(); // Importante limpiar aquí también
+                        arenaModel.stopCombat();
+                        arenaModel.setReversedControls(false); // Limpiar controles invertidos
                         centerTextMessage = "¡VICTORIA!";
                         repaint();
-                        javax.swing.Timer winTimer = new javax.swing.Timer(1500, new java.awt.event.ActionListener() {
-                            @Override
-                            public void actionPerformed(java.awt.event.ActionEvent ev) {
-                                mainFrame.finalizarCombate(true, enemyTarget);
-                            }
-                        });
+
+                        javax.swing.Timer winTimer = new javax.swing.Timer(1500,
+                                new java.awt.event.ActionListener() {
+                                    @Override
+                                    public void actionPerformed(java.awt.event.ActionEvent ev) {
+                                        if (isFinalBossPhase) {
+                                            // Fase 2 superada: video final y vuelta al menú
+                                            isFinalBossPhase = false;
+                                            mainFrame.cambiarPantalla("FINAL_VIDEO");
+                                        } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                                            mainFrame.triggerBossDefeated(enemyTarget);
+                                        } else {
+                                            mainFrame.finalizarCombate(true, enemyTarget);
+                                        }
+                                    }
+                                });
                         winTimer.setRepeats(false);
                         winTimer.start();
                     }
@@ -418,10 +488,24 @@ public class CombatPanel extends JPanel {
             }
             g2d.setColor(Color.WHITE);
             FontMetrics fm = g2d.getFontMetrics();
-            int stringWidth = fm.stringWidth(centerTextMessage);
-            int x = 200 + (600 - stringWidth) / 2;
-            int y = 240 + (250 - fm.getHeight()) / 2 + fm.getAscent();
-            g2d.drawString(centerTextMessage, x, y);
+
+            // Procesar diálogos multilínea (\n)
+            String[] lines = centerTextMessage.split("\n");
+
+            // Calcular la altura total del bloque de texto
+            int linePadding = 5;
+            int totalHeight = (fm.getHeight() * lines.length) + (linePadding * (lines.length - 1));
+
+            // Punto de inicio Y para centrar el bloque verticalmente
+            int startY = 240 + (250 - totalHeight) / 2 + fm.getAscent();
+
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i].trim();
+                int stringWidth = fm.stringWidth(line);
+                int x = 200 + (600 - stringWidth) / 2;
+                int y = startY + (i * (fm.getHeight() + linePadding));
+                g2d.drawString(line, x, y);
+            }
         }
     }
 
@@ -550,20 +634,20 @@ public class CombatPanel extends JPanel {
 
                         if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
                             String[] zombieLore = {
-                                    "Hambre... el cafe... nos cambio..",
-                                    "iLERNA... prometio... inteligencia... solo hay... hambre...",
-                                    "¿Donde esta... mi examen? No... siento la logica...",
-                                    "El agua... las máquinas... sabian a codigo amargo...",
-                                    "Solo... queriamos... aprobar..."
+                                    "Hambre... el cafe... \nnos cambio..",
+                                    "iLERNA... prometio... \ninteligencia...\nsolo hay... hambre...",
+                                    "Donde esta... mi examen? \nNo... siento la logica...",
+                                    "El agua... las maquinas... \nsabian a codigo amargo...",
+                                    "Solo... queriamos... \naprobar..."
                             };
                             loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
                         } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
                             String[] bossLore = {
-                                    "¡Esto no compila en produccion! ¡ESTAIS SUSPENDIDOS!",
-                                    "¿Has revisado el tema 4 sobre polimorfismo? ¡MUERE!",
-                                    "El examen final sera... vuestra tumba.",
-                                    "iLERNA era solo el principio... el café hará el resto.",
-                                    "¡Vuestro código es tan sucio como este instituto!"
+                                    "Esto no compila \nen produccion! \nESTAIS SUSPENDIDOS!",
+                                    "Has revisado el tema 4 \nsobre polimorfismo? \nMUERE!",
+                                    "El examen final sera... \nvuestra tumba.",
+                                    "iLERNA era solo el principio... \nel cafe hara el resto.",
+                                    "Vuestro codigo es tan sucio \ncomo este instituto!"
                             };
                             loreMessage = bossLore[new java.util.Random().nextInt(bossLore.length)];
                         } else {
@@ -707,8 +791,8 @@ public class CombatPanel extends JPanel {
         btnAct.setEnabled(true);
         btnItem.setEnabled(true);
 
-        // Bloquear botón MERCI si el enemigo es un Boss
-        if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+        // Bloquear botón MERCI si el enemigo es un Boss o estamos en Fase 2
+        if (isFinalBossPhase || enemyTarget instanceof equipoilerntale.model.entity.Boss) {
             btnMercy.setEnabled(false);
         } else {
             btnMercy.setEnabled(true);

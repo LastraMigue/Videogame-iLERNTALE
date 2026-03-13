@@ -20,8 +20,9 @@ import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
 import equipoilerntale.view.screens.TutorialPanel;
 import equipoilerntale.view.screens.VideoScreen;
+import equipoilerntale.view.screens.TransformacionVideoScreen;
+import equipoilerntale.view.screens.FinalVideoScreen;
 import equipoilerntale.view.ui.CajaTexto;
-import equipoilerntale.controller.MainController;
 import equipoilerntale.view.ui.BarraVida;
 
 /**
@@ -42,6 +43,8 @@ public class MainFrame extends JFrame {
     private CombatPanel combate;
     private DerrotaScreen derrota;
     private VideoScreen videoScreen;
+    private TransformacionVideoScreen transformacionVideo;
+    private FinalVideoScreen finalVideoScreen;
     private ExplorationPanel exploracion;
     private GamePanel gamePanel;
     private TutorialPanel tutorial;
@@ -88,6 +91,8 @@ public class MainFrame extends JFrame {
         combate = new CombatPanel(this);
         derrota = new DerrotaScreen(this);
         videoScreen = new VideoScreen(this);
+        transformacionVideo = new TransformacionVideoScreen(this);
+        finalVideoScreen = new FinalVideoScreen(this);
         tutorial = new TutorialPanel(this);
         gamePanel = new GamePanel(this);
 
@@ -101,6 +106,8 @@ public class MainFrame extends JFrame {
         contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO"); // Útil para exclusiones
         contenedor.add(videoScreen, "VIDEO");
+        contenedor.add(transformacionVideo, "TRANSFORMACION_VIDEO");
+        contenedor.add(finalVideoScreen, "FINAL_VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
         contenedor.add(gamePanel, "GAME");
         contenedor.add(tutorial, "TUTORIAL");
@@ -210,9 +217,17 @@ public class MainFrame extends JFrame {
         this.pantallaActual = nombre;
         cardLayout.show(contenedor, nombre);
 
-        // Si vamos a la pantalla del video, iniciamos el video
+        // Si vamos a la pantalla del video intro, iniciamos el video
         if (nombre.equals("VIDEO")) {
             videoScreen.playVideo();
+        }
+        // Si vamos a la pantalla de transformación del boss
+        if (nombre.equals("TRANSFORMACION_VIDEO")) {
+            transformacionVideo.playVideo();
+        }
+        // Si vamos al video final
+        if (nombre.equals("FINAL_VIDEO")) {
+            finalVideoScreen.playVideo();
         }
 
         // Al salir de EXPLORACION: desactivar (pausa) en lugar de destruir assets
@@ -248,6 +263,7 @@ public class MainFrame extends JFrame {
 
     /**
      * FINALIZA EL COMBATE Y VUELVE A LA EXPLORACIÓN.
+     * 
      * @param victoria Indica si el jugador ganó (elimina al enemigo) o no.
      */
     public void finalizarCombate(boolean victoria, Object enemy) {
@@ -255,6 +271,28 @@ public class MainFrame extends JFrame {
             explorationManager.removeEnemy(enemy);
         }
         cambiarPantalla("EXPLORACION");
+    }
+
+    /**
+     * DERROTA AL BOSS FASE 1, LO ELIMINA DEL MAPA Y REPRODUCE EL VIDEO DE TRANSFORMACIÓN.
+     * Al terminar el video, se inicia automáticamente la Fase 2.
+     */
+    public void triggerBossDefeated(Object boss) {
+        if (explorationManager != null) {
+            explorationManager.removeEnemy(boss);
+        }
+        cambiarPantalla("TRANSFORMACION_VIDEO");
+    }
+
+    /**
+     * INICIA LA FASE 2 DEL BOSS DIRECTAMENTE en el CombatPanel.
+     * Se llama desde TransformacionVideoScreen al terminar el video.
+     */
+    public void triggerPhase2() {
+        if (combate != null) {
+            combate.prepararFinalBoss();
+            cambiarPantalla("COMBATE");
+        }
     }
 
     public void togglePause() {
@@ -270,15 +308,15 @@ public class MainFrame extends JFrame {
             if (comp != null)
                 comp.requestFocusInWindow();
 
-            } else {
-                // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
-                pausarDialogosExistentes();
+        } else {
+            // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
+            pausarDialogosExistentes();
 
-                pause.setVisible(true);
-                if (mainController != null)
-                    mainController.pauseGame();
-                // Asegurar que el panel de pausa se redibuje
-                pause.repaint();
+            pause.setVisible(true);
+            if (mainController != null)
+                mainController.pauseGame();
+            // Asegurar que el panel de pausa se redibuje
+            pause.repaint();
         }
     }
 
@@ -376,6 +414,7 @@ public class MainFrame extends JFrame {
         contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO");
         contenedor.add(videoScreen, "VIDEO");
+        contenedor.add(transformacionVideo, "TRANSFORMACION_VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
         contenedor.add(gamePanel, "GAME");
         contenedor.add(tutorial, "TUTORIAL");
@@ -405,6 +444,10 @@ public class MainFrame extends JFrame {
         // Reiniciar vida
         if (playerHealthBar != null) {
             playerHealthBar.setHealth(playerHealthBar.getMaxHealth());
+        }
+        // Reiniciar estados de combate (fase boss, controles, etc)
+        if (combate != null) {
+            combate.reiniciarEstado();
         }
         // Reiniciar variables y controladores reconstruyendo el ExplorationManager
         setPersonajeSeleccionado(getPersonajeSeleccionado());
