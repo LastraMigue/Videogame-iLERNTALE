@@ -64,7 +64,7 @@ public class CombatPanel extends JPanel {
     // Inventario
     private Inventario inventario;
     private List<ItemModel> currentCombatItems;
-    private boolean isItemMenuOpen = false;
+    private boolean isInventoryActive = false;
     private int selectedItemIndex = 0;
     private int inputCooldown = 0;
 
@@ -81,7 +81,7 @@ public class CombatPanel extends JPanel {
 
     // Buffos de Objetos
     private int escudoPatito = 0;
-    private boolean dobleDañoRonda = false;
+    private boolean isDoubleDamageActive = false;
 
     // Fase Final Boss (Fase 2)
     private boolean isFinalBossPhase = false;
@@ -97,7 +97,7 @@ public class CombatPanel extends JPanel {
     private JButton btnItem;
     private JButton btnMercy;
 
-    private int damageBlinkTicks = 0;
+    private int damageFlashTicks = 0;
     private int shakeIntensity = 0;
     private int popupCooldown = 0;
 
@@ -135,7 +135,7 @@ public class CombatPanel extends JPanel {
     public void prepararCombate(Object enemy) {
         this.enemyTarget = enemy;
         this.isMinigameActive = false;
-        this.isItemMenuOpen = false;
+        this.isInventoryActive = false;
         this.centerTextMessage = "";
         this.currentRound = 1;
         if (arenaModel != null)
@@ -144,7 +144,7 @@ public class CombatPanel extends JPanel {
         this.lastBadCollisions = 0;
         this.inputCooldown = 0;
         this.escudoPatito = 0;
-        this.dobleDañoRonda = false;
+        this.isDoubleDamageActive = false;
 
         if (inputHandler != null) {
             inputHandler.reset();
@@ -176,7 +176,7 @@ public class CombatPanel extends JPanel {
      */
     public void prepararFinalBoss() {
         this.isMinigameActive = false;
-        this.isItemMenuOpen = false;
+        this.isInventoryActive = false;
         this.centerTextMessage = "";
         this.currentRound = 1;
         if (arenaModel != null)
@@ -236,7 +236,7 @@ public class CombatPanel extends JPanel {
     public void updateCombat() {
         actualizarEnfriamientos();
 
-        if (isItemMenuOpen) {
+        if (isInventoryActive) {
             gestionarEntradaMenuObjetos();
         } else if (isMinigameActive) {
             combatController.update();
@@ -250,8 +250,8 @@ public class CombatPanel extends JPanel {
         if (inputCooldown > 0) {
             inputCooldown--;
         }
-        if (damageBlinkTicks > 0) {
-            damageBlinkTicks--;
+        if (damageFlashTicks > 0) {
+            damageFlashTicks--;
         }
 
         if (isFinalBossPhase) {
@@ -291,11 +291,11 @@ public class CombatPanel extends JPanel {
                     } else if (itemName.equals("Patito Aguante")) {
                         escudoPatito = 3;
                     } else if (itemName.equals("Pelota Ataque")) {
-                        dobleDañoRonda = true;
+                        isDoubleDamageActive = true;
                     }
 
                     centerTextMessage = "USASTE " + selected.getNombre().toUpperCase();
-                    isItemMenuOpen = false;
+                    isInventoryActive = false;
                     repaint();
 
                     Timer msgTimer = new Timer(1500, new ActionListener() {
@@ -329,7 +329,7 @@ public class CombatPanel extends JPanel {
             }
 
             if (damageRecibido > 0) {
-                damageBlinkTicks = 30; // 0.5s de parpadeo
+                damageFlashTicks = 30; // 0.5s de parpadeo
                 shakeIntensity = 10; // Intensidad de la sacudida
                 SoundService.getInstance().playSFX("/sound/hitmalo.wav");
 
@@ -353,7 +353,7 @@ public class CombatPanel extends JPanel {
             int hits = currentGood - lastGoodCollisions;
             lastGoodCollisions = currentGood;
 
-            int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
+            int damageHecho = isDoubleDamageActive ? (hits * 2) : hits;
             enemyHealthBar.takeDamage(damageHecho);
             SoundService.getInstance().playSFX("/sound/hitbueno.wav");
 
@@ -516,7 +516,7 @@ public class CombatPanel extends JPanel {
                 bulletRenderer.render(g2d, arenaModel.getProjectiles());
             }
             if (arenaModel.getMouse() != null) {
-                mouseRenderer.render(g2d, arenaModel.getMouse(), damageBlinkTicks > 0);
+                mouseRenderer.render(g2d, arenaModel.getMouse(), damageFlashTicks > 0);
             }
         }
 
@@ -526,7 +526,7 @@ public class CombatPanel extends JPanel {
         }
 
         // 3. MENÚ DE OBJETOS
-        if (isItemMenuOpen) {
+        if (isInventoryActive) {
             itemRenderer.renderMenu(g2d, currentCombatItems, selectedItemIndex, customFont);
         }
 
@@ -645,7 +645,7 @@ public class CombatPanel extends JPanel {
                 SoundService.getInstance().playSFX("/sound/mouse_click.wav");
                 switch (accion) {
                     case "fight":
-                        isItemMenuOpen = false;
+                        isInventoryActive = false;
                         disableAllButtons();
 
                         int randomMinigame = new java.util.Random().nextInt(6);
@@ -689,7 +689,7 @@ public class CombatPanel extends JPanel {
                         lastBadCollisions = 0;
                         break;
                     case "act":
-                        isItemMenuOpen = false;
+                        isInventoryActive = false;
                         disableAllButtons();
                         String loreMessage = "";
 
@@ -733,19 +733,19 @@ public class CombatPanel extends JPanel {
                         currentCombatItems = inventario.getObjetosCombate();
                         if (currentCombatItems != null && !currentCombatItems.isEmpty()) {
                             // Se cambia de true a un toggle y no se bloquean los botones
-                            isItemMenuOpen = !isItemMenuOpen;
+                            isInventoryActive = !isInventoryActive;
                             selectedItemIndex = 0;
                             centerTextMessage = ""; // Limpiar cualquier texto de combate
                             requestFocusInWindow();
                             repaint();
                         } else {
                             // Si no hay objetos usables en combate y con cantidad > 0, ciérralo.
-                            isItemMenuOpen = false;
+                            isInventoryActive = false;
                             repaint();
                         }
                         break;
                     case "mercy":
-                        isItemMenuOpen = false;
+                        isInventoryActive = false;
                         disableAllButtons();
                         double chance = Math.random();
                         if (chance <= 0.10) {
@@ -881,7 +881,7 @@ public class CombatPanel extends JPanel {
         currentRound++;
         if (arenaModel != null)
             arenaModel.setCurrentRound(currentRound);
-        dobleDañoRonda = false;
+        isDoubleDamageActive = false;
         repaint();
     }
 
