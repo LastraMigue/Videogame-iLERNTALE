@@ -494,7 +494,7 @@ public class CombatPanel extends JPanel {
                         isItemMenuOpen = false;
                         disableAllButtons();
 
-                        int randomMinigame = new java.util.Random().nextInt(5);
+                        int randomMinigame = new java.util.Random().nextInt(8);
                         switch (randomMinigame) {
                             case 0:
                                 currentRules = new ClassicDodgeRules();
@@ -510,6 +510,15 @@ public class CombatPanel extends JPanel {
                                 break;
                             case 4:
                                 currentRules = new ShieldRules();
+                                break;
+                            case 5:
+                                currentRules = new MazeRules();
+                                break;
+                            case 6:
+                                currentRules = new SimonDiceRules();
+                                break;
+                            case 7:
+                                currentRules = new RitmoRules();
                                 break;
                         }
 
