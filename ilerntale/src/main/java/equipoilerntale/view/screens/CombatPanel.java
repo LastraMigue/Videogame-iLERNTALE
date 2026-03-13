@@ -234,6 +234,19 @@ public class CombatPanel extends JPanel {
     }
 
     public void updateCombat() {
+        actualizarEnfriamientos();
+
+        if (isItemMenuOpen) {
+            gestionarEntradaMenuObjetos();
+        } else if (isMinigameActive) {
+            combatController.update();
+            procesarDanyRecibido();
+            procesarDanyHecho();
+            actualizarTemporizadorMinijuego();
+        }
+    }
+
+    private void actualizarEnfriamientos() {
         if (inputCooldown > 0) {
             inputCooldown--;
         }
@@ -248,158 +261,163 @@ public class CombatPanel extends JPanel {
                 popupCooldown = 0;
             }
         }
+    }
 
-        if (isItemMenuOpen) {
-            if (inputCooldown == 0 && currentCombatItems != null && !currentCombatItems.isEmpty()) {
-                if (inputHandler.upPressed) {
-                    selectedItemIndex--;
-                    if (selectedItemIndex < 0) {
-                        selectedItemIndex = currentCombatItems.size() - 1;
-                    }
-                    inputCooldown = 10;
-                    repaint();
-                } else if (inputHandler.downPressed) {
-                    selectedItemIndex++;
-                    if (selectedItemIndex >= currentCombatItems.size()) {
-                        selectedItemIndex = 0;
-                    }
-                    inputCooldown = 10;
-                    repaint();
-                } else if (inputHandler.enterPressed) {
-                    // Consumir objeto
-                    ItemModel selected = currentCombatItems.get(selectedItemIndex);
-                    if (selected != null) {
-                        selected.consumir(); // Disminuye la cantidad
+    private void gestionarEntradaMenuObjetos() {
+        if (inputCooldown == 0 && currentCombatItems != null && !currentCombatItems.isEmpty()) {
+            if (inputHandler.upPressed) {
+                selectedItemIndex--;
+                if (selectedItemIndex < 0) {
+                    selectedItemIndex = currentCombatItems.size() - 1;
+                }
+                inputCooldown = 10;
+                repaint();
+            } else if (inputHandler.downPressed) {
+                selectedItemIndex++;
+                if (selectedItemIndex >= currentCombatItems.size()) {
+                    selectedItemIndex = 0;
+                }
+                inputCooldown = 10;
+                repaint();
+            } else if (inputHandler.enterPressed) {
+                // Consumir objeto
+                ItemModel selected = currentCombatItems.get(selectedItemIndex);
+                if (selected != null) {
+                    selected.consumir(); // Disminuye la cantidad
 
-                        String itemName = selected.getNombre();
-                        if (itemName.equals("Botella Vida")) {
-                            mainFrame.getPlayerHealthBar().heal(30);
-                        } else if (itemName.equals("Patito Aguante")) {
-                            escudoPatito = 3;
-                        } else if (itemName.equals("Pelota Ataque")) {
-                            dobleDañoRonda = true;
+                    String itemName = selected.getNombre();
+                    if (itemName.equals("Botella Vida")) {
+                        mainFrame.getPlayerHealthBar().heal(30);
+                    } else if (itemName.equals("Patito Aguante")) {
+                        escudoPatito = 3;
+                    } else if (itemName.equals("Pelota Ataque")) {
+                        dobleDañoRonda = true;
+                    }
+
+                    centerTextMessage = "USASTE " + selected.getNombre().toUpperCase();
+                    isItemMenuOpen = false;
+                    repaint();
+
+                    Timer msgTimer = new Timer(1500, new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            centerTextMessage = "";
+                            repaint();
+                            enableAllButtons();
                         }
+                    });
+                    msgTimer.setRepeats(false);
+                    msgTimer.start();
+                }
+                inputCooldown = 15;
+            }
+        }
+    }
 
-                        centerTextMessage = "USASTE " + selected.getNombre().toUpperCase();
-                        isItemMenuOpen = false;
-                        repaint();
+    private void procesarDanyRecibido() {
+        if (arenaModel == null) return;
 
-                        Timer msgTimer = new Timer(1500, new ActionListener() {
+        int currentBad = arenaModel.getBadCollisions();
+        if (currentBad > lastBadCollisions) {
+            int damageRecibido = currentBad - lastBadCollisions;
+            lastBadCollisions = currentBad;
+
+            if (escudoPatito > 0) {
+                int absorbido = Math.min(escudoPatito, damageRecibido);
+                escudoPatito -= absorbido;
+                damageRecibido -= absorbido;
+            }
+
+            if (damageRecibido > 0) {
+                damageBlinkTicks = 30; // 0.5s de parpadeo
+                shakeIntensity = 10; // Intensidad de la sacudida
+                SoundService.getInstance().playSFX("/sound/hitmalo.wav");
+
+                // En fase final el boss inflige daño doble
+                int finalDamage = isFinalBossPhase ? damageRecibido * 2 : damageRecibido;
+                mainFrame.getPlayerHealthBar().takeDamage(finalDamage);
+
+                if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
+                    endMinigame();
+                    mainFrame.cambiarPantalla("DERROTA");
+                }
+            }
+        }
+    }
+
+    private void procesarDanyHecho() {
+        if (arenaModel == null) return;
+
+        int currentGood = arenaModel.getGoodCollisions();
+        if (currentGood > lastGoodCollisions) {
+            int hits = currentGood - lastGoodCollisions;
+            lastGoodCollisions = currentGood;
+
+            int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
+            enemyHealthBar.takeDamage(damageHecho);
+            SoundService.getInstance().playSFX("/sound/hitbueno.wav");
+
+            // Sincronizar daño con el objeto real
+            if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
+                ((equipoilerntale.model.entity.Zombie) enemyTarget).takeDamage(damageHecho);
+            } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                ((equipoilerntale.model.entity.Boss) enemyTarget).takeDamage(damageHecho);
+            }
+
+            // Comprobar si el enemigo ha muerto (Generalizado)
+            if (enemyHealthBar.getHealth() <= 0) {
+                isMinigameActive = false;
+                arenaModel.stopCombat();
+                arenaModel.setReversedControls(false); // Limpiar controles invertidos
+                centerTextMessage = "VICTORIA";
+                repaint();
+
+                javax.swing.Timer winTimer = new javax.swing.Timer(1500,
+                        new java.awt.event.ActionListener() {
                             @Override
-                            public void actionPerformed(ActionEvent e) {
-                                centerTextMessage = "";
-                                repaint();
-                                enableAllButtons();
+                            public void actionPerformed(java.awt.event.ActionEvent ev) {
+                                if (isFinalBossPhase) {
+                                    // Fase 2 superada: video final y vuelta al menú
+                                    isFinalBossPhase = false;
+                                    mainFrame.cambiarPantalla("FINAL_VIDEO");
+                                } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                                    mainFrame.triggerBossDefeated(enemyTarget);
+                                } else {
+                                    mainFrame.finalizarCombate(true, enemyTarget);
+                                }
                             }
                         });
-                        msgTimer.setRepeats(false);
-                        msgTimer.start();
-                    }
-                    inputCooldown = 15;
+                winTimer.setRepeats(false);
+                winTimer.start();
+            }
+        }
+    }
+
+    private void actualizarTemporizadorMinijuego() {
+        if (currentRules != null) {
+            long now = System.currentTimeMillis();
+
+            // Si la diferencia de tiempo es muy grande, asumimos que hubo una pausa
+            if (lastUpdateTime > 0) {
+                long delta = now - lastUpdateTime;
+                if (delta > 50) { // Si pasan más de 50ms (por pausa o lag), congelamos el tiempo
+                    minigameEndTime += delta;
                 }
             }
-        } else if (isMinigameActive) {
-            combatController.update();
+            lastUpdateTime = now;
 
-            // Damage check
-            if (arenaModel != null) {
-                int currentBad = arenaModel.getBadCollisions();
-                if (currentBad > lastBadCollisions) {
-                    int damageRecibido = currentBad - lastBadCollisions;
-                    lastBadCollisions = currentBad;
-
-                    if (escudoPatito > 0) {
-                        int absorbido = Math.min(escudoPatito, damageRecibido);
-                        escudoPatito -= absorbido;
-                        damageRecibido -= absorbido;
-                    }
-
-                    if (damageRecibido > 0) {
-                        damageBlinkTicks = 30; // 0.5s de parpadeo
-                        shakeIntensity = 10; // Intensidad de la sacudida
-                        SoundService.getInstance().playSFX("/sound/hitmalo.wav");
-
-                        // En fase final el boss inflige daño doble
-                        int finalDamage = isFinalBossPhase ? damageRecibido * 2 : damageRecibido;
-                        mainFrame.getPlayerHealthBar().takeDamage(finalDamage);
-
-                        if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
-                            endMinigame();
-                            mainFrame.cambiarPantalla("DERROTA");
-                        }
-                    }
-                }
-
-                int currentGood = arenaModel.getGoodCollisions();
-                if (currentGood > lastGoodCollisions) {
-                    int hits = currentGood - lastGoodCollisions;
-                    lastGoodCollisions = currentGood;
-
-                    int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
-                    enemyHealthBar.takeDamage(damageHecho);
-                    SoundService.getInstance().playSFX("/sound/hitbueno.wav");
-
-                    // Sincronizar daño con el objeto real
-                    if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
-                        ((equipoilerntale.model.entity.Zombie) enemyTarget).takeDamage(damageHecho);
-                    } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
-                        ((equipoilerntale.model.entity.Boss) enemyTarget).takeDamage(damageHecho);
-                    }
-
-                    // Comprobar si el enemigo ha muerto (Generalizado)
-                    if (enemyHealthBar.getHealth() <= 0) {
-                        isMinigameActive = false;
-                        arenaModel.stopCombat();
-                        arenaModel.setReversedControls(false); // Limpiar controles invertidos
-                        centerTextMessage = "VICTORIA";
-                        repaint();
-
-                        javax.swing.Timer winTimer = new javax.swing.Timer(1500,
-                                new java.awt.event.ActionListener() {
-                                    @Override
-                                    public void actionPerformed(java.awt.event.ActionEvent ev) {
-                                        if (isFinalBossPhase) {
-                                            // Fase 2 superada: video final y vuelta al menú
-                                            isFinalBossPhase = false;
-                                            mainFrame.cambiarPantalla("FINAL_VIDEO");
-                                        } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
-                                            mainFrame.triggerBossDefeated(enemyTarget);
-                                        } else {
-                                            mainFrame.finalizarCombate(true, enemyTarget);
-                                        }
-                                    }
-                                });
-                        winTimer.setRepeats(false);
-                        winTimer.start();
-                    }
-                }
-            }
-
-            if (isMinigameActive && currentRules != null) {
-                long now = System.currentTimeMillis();
-
-                // Si la diferencia de tiempo es muy grande, asumimos que hubo una pausa
-                if (lastUpdateTime > 0) {
-                    long delta = now - lastUpdateTime;
-                    if (delta > 50) { // Si pasan más de 50ms (por pausa o lag), congelamos el tiempo
-                        minigameEndTime += delta;
-                    }
-                }
-                lastUpdateTime = now;
-
-                if (currentRules.isIntroActive()) {
-                    // Pausa el minijuego empujando el tiempo final hacia adelante
-                    minigameEndTime = now + (currentRules.getDurationInSeconds() * 1000);
-                } else {
-                    if (now >= minigameEndTime) {
-                        endMinigame();
-                    }
-                }
-
-                repaint();
-                if (combatController.isMinigameFinished()) {
+            if (currentRules.isIntroActive()) {
+                // Pausa el minijuego empujando el tiempo final hacia adelante
+                minigameEndTime = now + (currentRules.getDurationInSeconds() * 1000);
+            } else {
+                if (now >= minigameEndTime) {
                     endMinigame();
                 }
+            }
+
+            repaint();
+            if (combatController.isMinigameFinished()) {
+                endMinigame();
             }
         }
     }
