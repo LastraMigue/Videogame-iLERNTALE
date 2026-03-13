@@ -235,7 +235,8 @@ public class MainFrame extends JFrame {
         if (hudPanel != null) {
             hudPanel.setVisible(mostrarHUD);
         }
-        // El diálogo solo se muestra cuando hay texto, pero aseguramos que esté oculto al cambiar
+        // El diálogo solo se muestra cuando hay texto, pero aseguramos que esté oculto
+        // al cambiar
         if (!mostrarHUD && dialogueContainer != null) {
             dialogueContainer.setVisible(false);
         }
@@ -284,7 +285,8 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * DERROTA AL BOSS FASE 1, LO ELIMINA DEL MAPA Y REPRODUCE EL VIDEO DE TRANSFORMACIÓN.
+     * DERROTA AL BOSS FASE 1, LO ELIMINA DEL MAPA Y REPRODUCE EL VIDEO DE
+     * TRANSFORMACIÓN.
      * Al terminar el video, se inicia automáticamente la Fase 2.
      */
     public void triggerBossDefeated(Object boss) {
@@ -371,9 +373,9 @@ public class MainFrame extends JFrame {
         // Posicionamiento dinámico: centrado horizontalmente, Y ajustable
         panel.setLocation(250, y);
         dialogueContainer.add(panel);
-        
+
         // Solo mostrar si la pantalla actual lo permite o es necesario
-        dialogueContainer.setVisible(true); 
+        dialogueContainer.setVisible(true);
         dialogueContainer.revalidate();
         dialogueContainer.repaint();
     }
@@ -463,7 +465,7 @@ public class MainFrame extends JFrame {
         }
         // Reiniciar variables y controladores reconstruyendo el ExplorationManager
         setPersonajeSeleccionado(getPersonajeSeleccionado());
-        
+
         LOG.info("JUEGO REINICIADO COMPLETAMENTE");
     }
 

@@ -150,6 +150,6 @@ public class MazeRules implements MinigameRules {
 
     @Override
     public int getDurationInSeconds() {
-        return 25;
+        return 15;
     }
 }

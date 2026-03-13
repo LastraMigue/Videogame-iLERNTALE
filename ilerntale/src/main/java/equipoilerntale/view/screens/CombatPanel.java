@@ -131,7 +131,8 @@ public class CombatPanel extends JPanel {
         this.isItemMenuOpen = false;
         this.centerTextMessage = "";
         this.currentRound = 1;
-        if (arenaModel != null) arenaModel.setCurrentRound(1);
+        if (arenaModel != null)
+            arenaModel.setCurrentRound(1);
         this.lastGoodCollisions = 0;
         this.lastBadCollisions = 0;
         this.inputCooldown = 0;
@@ -170,7 +171,8 @@ public class CombatPanel extends JPanel {
         this.isItemMenuOpen = false;
         this.centerTextMessage = "";
         this.currentRound = 1;
-        if (arenaModel != null) arenaModel.setCurrentRound(1);
+        if (arenaModel != null)
+            arenaModel.setCurrentRound(1);
         this.lastGoodCollisions = 0;
         this.lastBadCollisions = 0;
         this.inputCooldown = 0;
@@ -291,10 +293,11 @@ public class CombatPanel extends JPanel {
                     if (damageRecibido > 0) {
                         damageBlinkTicks = 30; // 0.5s de parpadeo
                         shakeIntensity = 10; // Intensidad de la sacudida
-                        mainFrame.getPlayerHealthBar().takeDamage(damageRecibido);
+
                         // En fase final el boss inflige daño doble
                         int finalDamage = isFinalBossPhase ? damageRecibido * 2 : damageRecibido;
                         mainFrame.getPlayerHealthBar().takeDamage(finalDamage);
+
                         if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
                             endMinigame();
                             mainFrame.cambiarPantalla("DERROTA");
@@ -322,7 +325,7 @@ public class CombatPanel extends JPanel {
                         isMinigameActive = false;
                         arenaModel.stopCombat();
                         arenaModel.setReversedControls(false); // Limpiar controles invertidos
-                        centerTextMessage = "¡VICTORIA!";
+                        centerTextMessage = "VICTORIA";
                         repaint();
 
                         javax.swing.Timer winTimer = new javax.swing.Timer(1500,
@@ -643,7 +646,7 @@ public class CombatPanel extends JPanel {
                                     "Solo... queriamos... \naprobar..."
                             };
                             loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
-                        } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                        } else if (isFinalBossPhase || enemyTarget instanceof equipoilerntale.model.entity.Boss) {
                             String[] bossLore = {
                                     "Esto no compila \nen produccion! \nESTAIS SUSPENDIDOS!",
                                     "Has revisado el tema 4 \nsobre polimorfismo? \nMUERE!",
@@ -812,7 +815,8 @@ public class CombatPanel extends JPanel {
         currentRules = null;
         enableAllButtons();
         currentRound++;
-        if (arenaModel != null) arenaModel.setCurrentRound(currentRound);
+        if (arenaModel != null)
+            arenaModel.setCurrentRound(currentRound);
         dobleDañoRonda = false;
         repaint();
     }
