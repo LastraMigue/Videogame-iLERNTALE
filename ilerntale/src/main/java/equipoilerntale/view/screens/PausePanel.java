@@ -122,11 +122,37 @@ public class PausePanel extends JPanel {
 
         URL imageUrl = getClass().getResource(imagePath);
         if (imageUrl != null) {
-            ImageIcon icon = new ImageIcon(imageUrl);
-            Image img = icon.getImage();
+            ImageIcon originalIcon = new ImageIcon(imageUrl);
+            Image img = originalIcon.getImage();
             if (img != null) {
-                Image scaledImg = img.getScaledInstance(200, 60, Image.SCALE_SMOOTH);
-                button.setIcon(new ImageIcon(scaledImg));
+                // 1. Imagen en estado normal
+                int anchoNormal = 200;
+                int altoNormal = 60;
+                Image normalImg = img.getScaledInstance(anchoNormal, altoNormal, Image.SCALE_SMOOTH);
+                button.setIcon(new ImageIcon(normalImg));
+
+                // 2. Imagen en estado pulsado (SÍNCRONO Y CENTRADO)
+                int anchoPulsado = (int) (anchoNormal * 0.9);
+                int altoPulsado = (int) (altoNormal * 0.9);
+
+                // Creamos lienzo transparente de tamaño completo
+                java.awt.image.BufferedImage canvas = new java.awt.image.BufferedImage(
+                        anchoNormal, altoNormal, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                java.awt.Graphics2D g2 = canvas.createGraphics();
+
+                // Suavizado de bordes
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                        java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+                // Calculamos offsets
+                int offX = (anchoNormal - anchoPulsado) / 2;
+                int offY = (altoNormal - altoPulsado) / 2;
+
+                // Dibujamos la imagen original escalándola directamente en el canvas (SÍNCRONO)
+                g2.drawImage(img, offX, offY, anchoPulsado, altoPulsado, null);
+                g2.dispose();
+
+                button.setPressedIcon(new ImageIcon(canvas));
             }
         }
 
@@ -140,6 +166,14 @@ public class PausePanel extends JPanel {
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // FORZAR CENTRADO DE ICONOS: Asegura que el escalado sea simétrico
+        button.setHorizontalAlignment(JButton.CENTER);
+        button.setVerticalAlignment(JButton.CENTER);
+        button.setHorizontalTextPosition(JButton.CENTER);
+        button.setVerticalTextPosition(JButton.CENTER);
+        button.setIconTextGap(0);
+        button.setMargin(new java.awt.Insets(0, 0, 0, 0));
 
         return button;
     }
