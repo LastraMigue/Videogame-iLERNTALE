@@ -11,6 +11,7 @@ public class ItemModel {
     private Image sprite;
     private int cantidad;
     private boolean esUsableEnCombate;
+    private boolean usado = false;
 
     public ItemModel(String nombre, String descripcion, String rutaImagen, int cantidad, boolean esUsableEnCombate) {
         this.nombre = nombre;
@@ -58,5 +59,13 @@ public class ItemModel {
         if (cantidad > 0) {
             cantidad--;
         }
+    }
+
+    public boolean isUsado() {
+        return usado;
+    }
+
+    public void setUsado(boolean usado) {
+        this.usado = usado;
     }
 }

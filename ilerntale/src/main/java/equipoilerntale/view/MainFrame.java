@@ -165,7 +165,7 @@ public class MainFrame extends JFrame {
                     if (keyIcon != null) {
                         boolean tieneLlave = false;
                         for (equipoilerntale.model.entity.ItemModel item : equipoilerntale.view.ui.Inventario.getInstance().getItems()) {
-                            if ("Llave".equals(item.getNombre()) && item.getCantidad() > 0) {
+                            if ("Llave".equals(item.getNombre()) && item.getCantidad() > 0 && !item.isUsado()) {
                                 tieneLlave = true;
                                 break;
                             }

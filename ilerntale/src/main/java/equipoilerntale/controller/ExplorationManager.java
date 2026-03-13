@@ -209,24 +209,31 @@ public class ExplorationManager {
 
                     // VALIDACIÓN DE LLAVE PARA EL AULA 124
                     if (targetName.equals("Aula 124")) {
-                        boolean tieneLlave = false;
+                        equipoilerntale.model.entity.ItemModel llave = null;
                         for (equipoilerntale.model.entity.ItemModel im : Inventario.getInstance().getItems()) {
-                            if ("Llave".equals(im.getNombre()) && im.getCantidad() > 0) {
-                                tieneLlave = true;
+                            if ("Llave".equals(im.getNombre())) {
+                                llave = im;
                                 break;
                             }
                         }
 
-                        if (!tieneLlave) {
+                        // Lógica de acceso:
+                        // 1. Si ya se usó anteriormente, pasa directo.
+                        // 2. Si no se ha usado pero se tiene (cantidad > 0), se marca como usada y pasa.
+                        // 3. Si no se tiene ni se ha usado, se bloquea.
+                        if (llave != null && llave.isUsado()) {
+                            // YA USADA: OK
+                        } else if (llave != null && llave.getCantidad() > 0) {
+                            // PRIMER USO: MARCAR COMO USADA
+                            llave.setUsado(true);
+                            LOG.info("LLAVE RECOGIDA Y USADA PARA ABRIR AULA 124");
+                        } else {
+                            // NO TIENE LA LLAVE (o cantidad 0)
                             if (mainFrame instanceof equipoilerntale.view.MainFrame) {
                                 ((equipoilerntale.view.MainFrame) mainFrame).showTimedDialogue("Está cerrada. Necesitas una llave.", 2000);
                             }
                             inputHandler.ePressed = false;
                             return; // CANCELAR TRANSICIÓN
-                        } else {
-                            // CONSUMIR LLAVE
-                            Inventario.getInstance().eliminarItem("Llave");
-                            LOG.info("LLAVE CONSUMIDA PARA ABRIR AULA 125");
                         }
                     }
 
