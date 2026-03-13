@@ -41,7 +41,7 @@ public class RoomPasillo extends AbstractRoom {
                 // CONFIGURACIÓN DEL ÁREA DE TRANSICIÓN (PUERTAS)
                 // Puerta Metálica al final (Aula 124)
                 this.doors.add(new DoorModel(
-                                1750, 150, 220, 250,
+                                1750, 220, 220, 250, // Bajamos Y a 220 para emparejar con el aula
                                 "Aula 124", 1750, 320 // Aparece en el aula frente a la puerta metálica
                 ));
 

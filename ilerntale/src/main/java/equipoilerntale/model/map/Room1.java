@@ -31,8 +31,8 @@ public class Room1 extends AbstractRoom {
         this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
         this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
 
-        // MURO SUPERIOR DERECHO (Ajustado para no bloquear la nueva puerta metálica)
-        this.walls.add(new Rectangle(1550, 0, 200, 350));
+        // MURO SUPERIOR DERECHO (Ajustado para bloquear la esquina y los laterales de la puerta)
+        this.walls.add(new Rectangle(1550, 0, 500, 350));
 
         // LÍMITES LATERALES
         this.walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
@@ -40,7 +40,7 @@ public class Room1 extends AbstractRoom {
 
         // CONFIGURACIÓN DE LA SALIDA (VOLVER AL PASILLO)
         this.doors.add(new DoorModel(
-                1750, 150, 220, 250,
+                1750, 220, 220, 250, // Bajamos Y a 220 para mejorar el acceso
                 "Pasillo Principal", 1750, 320 // Aparece frente a la puerta 1B
         ));
     }

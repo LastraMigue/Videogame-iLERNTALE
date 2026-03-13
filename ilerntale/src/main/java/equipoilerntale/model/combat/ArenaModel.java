@@ -78,9 +78,16 @@ public class ArenaModel {
                 continue;
 
             if (mouse.getBounds().intersects(proj.getBounds())) {
-                proj.setActive(false);
+                if (proj.isDeactivateOnHit()) {
+                    proj.setActive(false);
+                }
+                
                 if (proj.getType() == 1) {
                     goodCollisions++;
+                } else if (proj.getType() == 10) {
+                    // El daño de las paredes (tipo 10) lo suele gestionar MazeRules 
+                    // para el daño por contacto continuo, pero podemos sumar uno inicial aquí
+                    // si quisiéramos centralizarlo. Por ahora, dejamos que las reglas lo lleven.
                 } else {
                     badCollisions++;
                 }
