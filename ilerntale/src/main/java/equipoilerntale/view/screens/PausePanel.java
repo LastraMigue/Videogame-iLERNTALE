@@ -10,8 +10,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import equipoilerntale.view.MainFrame;
+import equipoilerntale.service.SoundService;
 
 public class PausePanel extends JPanel {
     private MainFrame mainFrame;
@@ -109,7 +112,35 @@ public class PausePanel extends JPanel {
         });
 
         menuContainer.add(titulo);
+        menuContainer.add(Box.createVerticalStrut(20));
+
+        // CONTROLES DE VOLUMEN
+        JLabel lblVolumen = new JLabel("VOLUMEN");
+        lblVolumen.setForeground(Color.WHITE);
+        lblVolumen.setAlignmentX(CENTER_ALIGNMENT);
+        
+        // Intentar usar la misma fuente que el título pero más pequeña
+        lblVolumen.setFont(titulo.getFont().deriveFont(24f));
+        
+        JSlider sliderVolumen = new JSlider(JSlider.HORIZONTAL, 0, 100, (int)(SoundService.getInstance().getVolume() * 100));
+        sliderVolumen.setBackground(Color.BLACK);
+        sliderVolumen.setForeground(Color.WHITE);
+        sliderVolumen.setPreferredSize(new Dimension(200, 40));
+        sliderVolumen.setMaximumSize(new Dimension(250, 40));
+        sliderVolumen.setAlignmentX(CENTER_ALIGNMENT);
+        
+        sliderVolumen.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                float volume = sliderVolumen.getValue() / 100f;
+                SoundService.getInstance().setVolume(volume);
+            }
+        });
+
+        menuContainer.add(lblVolumen);
+        menuContainer.add(sliderVolumen);
         menuContainer.add(Box.createVerticalStrut(30));
+
         menuContainer.add(btnReanudar);
         menuContainer.add(Box.createVerticalStrut(20));
         menuContainer.add(btnSalir);

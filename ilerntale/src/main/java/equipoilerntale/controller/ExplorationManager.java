@@ -21,6 +21,7 @@ import equipoilerntale.model.map.RoomPasillo;
 import equipoilerntale.model.entity.WorldItem;
 import equipoilerntale.view.ui.Inventario;
 import equipoilerntale.service.AssetService;
+import equipoilerntale.service.SoundService;
 
 /**
  * ORQUESTA LA FASE DE EXPLORACIÓN DEL JUEGO.
@@ -258,6 +259,7 @@ public class ExplorationManager {
 
                     if (targetRoom != null) {
                         loadRoom(targetRoom, door.getTargetPlayerX(), door.getTargetPlayerY());
+                        SoundService.getInstance().playSFX("/sound/door.wav");
                     }
                     
                     inputHandler.ePressed = false; // Evitar salto doble por mantener pulsado
