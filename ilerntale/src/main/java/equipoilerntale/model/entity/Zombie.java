@@ -15,7 +15,7 @@ public class Zombie extends Entity {
     private final int type; // 1-8
     private int frameIndex = 1;
     private long lastAnimationTime = 0;
-    
+
     private double customSpeed;
     private double trackingPrecision;
     private double wobbleOffset;
@@ -33,8 +33,8 @@ public class Zombie extends Entity {
      */
     public Zombie(int x, int y, int mapWidth, int mapHeight) {
         super(x, y, SIZE, "Zombie", mapWidth, mapHeight);
-        // Salud aleatoria entre 25 y 75 para cada Zombie
-        this.health = 25 + (int) (Math.random() * 51);
+        // Salud aleatoria entre 25 y 50 para cada Zombie
+        this.health = 25 + (int) (Math.random() * 26);
         this.maxHealth = this.health;
         this.isAlive = true;
         this.type = (int) (Math.random() * 8) + 1;
@@ -48,7 +48,7 @@ public class Zombie extends Entity {
         // Oscilación aleatoria para que no todos caminen en línea recta perfecta
         this.wobbleOffset = Math.random() * Math.PI * 2;
         // Radio de detección: GameSettings.ZOMBIE_DETECTION_RADIUS +/- 150px
-        this.detectionRadius = GameSettings.ZOMBIE_DETECTION_RADIUS + (int)(Math.random() * 300 - 150);
+        this.detectionRadius = GameSettings.ZOMBIE_DETECTION_RADIUS + (int) (Math.random() * 300 - 150);
     }
 
     // ============ ESTADO Y ATRIBUTOS ============
@@ -133,7 +133,8 @@ public class Zombie extends Entity {
         double diffY = targetY - this.y;
         double distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
-        // Si ya detectó al jugador o el jugador entra en su radio, empieza el seguimiento
+        // Si ya detectó al jugador o el jugador entra en su radio, empieza el
+        // seguimiento
         if (!hasDetectedPlayer && distance < detectionRadius) {
             hasDetectedPlayer = true;
         }
@@ -142,7 +143,7 @@ public class Zombie extends Entity {
             // --- Dirección base: hacia el jugador con "Wobble" (zig-zag aleatorio) ---
             long now = System.currentTimeMillis();
             double wobble = Math.sin((now / 500.0) + wobbleOffset) * 0.3;
-            
+
             // Vector al jugador
             double baseDx = (diffX / distance);
             double baseDy = (diffY / distance);
@@ -150,7 +151,7 @@ public class Zombie extends Entity {
             // Aplicar imprecisión (mezclar con wobble)
             double targetDx = baseDx * trackingPrecision + (Math.random() * 0.4 - 0.2);
             double targetDy = baseDy * trackingPrecision + (Math.random() * 0.4 - 0.2);
-            
+
             // Re-normalizar y aplicar velocidad
             double finalDist = Math.sqrt(targetDx * targetDx + targetDy * targetDy);
             double dx = (targetDx / finalDist) * customSpeed;
