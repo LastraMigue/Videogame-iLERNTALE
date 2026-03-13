@@ -40,6 +40,8 @@ import equipoilerntale.model.combat.minigames.ThreeLinesRules;
 import equipoilerntale.view.ui.Inventario;
 import equipoilerntale.model.entity.ItemModel;
 import equipoilerntale.view.ui.BarraVida;
+import equipoilerntale.view.ui.PopupScare;
+import java.awt.Toolkit;
 
 public class CombatPanel extends JPanel {
     private MainFrame mainFrame;
@@ -96,6 +98,7 @@ public class CombatPanel extends JPanel {
 
     private int damageBlinkTicks = 0;
     private int shakeIntensity = 0;
+    private int popupCooldown = 0;
 
     public CombatPanel(MainFrame frame) {
         this.mainFrame = frame;
@@ -182,6 +185,7 @@ public class CombatPanel extends JPanel {
         this.escudoPatito = 0;
         this.dobleDañoRonda = false;
         this.isFinalBossPhase = true;
+        this.popupCooldown = 0;
         if (inputHandler != null)
             inputHandler.reset();
 
@@ -216,6 +220,7 @@ public class CombatPanel extends JPanel {
      */
     public void reiniciarEstado() {
         this.isFinalBossPhase = false;
+        this.popupCooldown = 0;
         if (arenaModel != null) {
             arenaModel.stopCombat();
             arenaModel.setReversedControls(false);
@@ -231,6 +236,14 @@ public class CombatPanel extends JPanel {
         }
         if (damageBlinkTicks > 0) {
             damageBlinkTicks--;
+        }
+
+        if (isFinalBossPhase) {
+            popupCooldown++;
+            if (popupCooldown >= 900) { // 15 segundos (15 * 60 fps)
+                spawnScarePopups();
+                popupCooldown = 0;
+            }
         }
 
         if (isItemMenuOpen) {
@@ -846,5 +859,14 @@ public class CombatPanel extends JPanel {
             arenaModel.setCurrentRound(currentRound);
         dobleDañoRonda = false;
         repaint();
+    }
+
+    private void spawnScarePopups() {
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        for (int i = 0; i < 5; i++) {
+            int x = (int) (Math.random() * (screenSize.width - 250));
+            int y = (int) (Math.random() * (screenSize.height - 150));
+            new PopupScare(x, y, 200, 100).showFor(1000);
+        }
     }
 }
