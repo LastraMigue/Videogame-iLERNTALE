@@ -264,7 +264,7 @@ public class GamePanel extends JPanel {
             mainFrame.showDialogue(paso.texto, 350);
 
             // Timer para cerrar este diálogo y preparar el siguiente (4 segundos)
-            timerCierre = new Timer(4000, e -> {
+            timerCierre = new Timer(6000, e -> {
                 mainFrame.hideDialogue();
                 gestionarVisibilidad(false, paso.personaje);
                 indicePasos++;
