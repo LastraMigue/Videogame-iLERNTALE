@@ -47,8 +47,6 @@ public class ExplorationManager {
     // pantalla visible
     private boolean active = false;
 
-    // FLAG PARA VISUALIZAR LOS MUROS EN MODO DEBUG
-    private boolean debugMurosVisibles = true;
 
     /**
      * CONSTRUCTOR DEL GESTOR DE EXPLORACIÓN.
@@ -202,11 +200,6 @@ public class ExplorationManager {
     }
 
     private void checkInteractions() {
-        // TOGGLE DE VISIBILIDAD DE MUROS CON LA TECLA M
-        if (inputHandler.mPressed) {
-            debugMurosVisibles = !debugMurosVisibles;
-            inputHandler.mPressed = false; // PREVENIR MULTIPLES CAMBIOS
-        }
 
         // COMPROBAR COLISIÓN CON PUERTAS
         if (inputHandler.ePressed && currentRoom != null) {
@@ -318,19 +311,6 @@ public class ExplorationManager {
         return inputHandler;
     }
 
-    /**
-     * ESTABLECE SI LOS MUROS SON VISIBLES EN MODO DEBUG.
-     */
-    public void setDebugMurosVisibles(boolean visible) {
-        this.debugMurosVisibles = visible;
-    }
-
-    /**
-     * INDICA SI LOS MUROS SON VISIBLES ACTUALMENTE.
-     */
-    public boolean isDebugMurosVisibles() {
-        return debugMurosVisibles;
-    }
 
     /**
      * LIMPIA LOS RECURSOS DEL GESTOR DE EXPLORACIÓN.
