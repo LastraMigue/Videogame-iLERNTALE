@@ -252,7 +252,7 @@ public class CombatPanel extends JPanel {
                     if (enemyHealthBar.getHealth() <= 0) {
                         isMinigameActive = false;
                         arenaModel.stopCombat(); // Importante limpiar aquí también
-                        centerTextMessage = "¡VICTORIA!";
+                        centerTextMessage = "VICTORIA!";
                         repaint();
                         javax.swing.Timer winTimer = new javax.swing.Timer(1500, new java.awt.event.ActionListener() {
                             @Override
@@ -402,10 +402,24 @@ public class CombatPanel extends JPanel {
             }
             g2d.setColor(Color.WHITE);
             FontMetrics fm = g2d.getFontMetrics();
-            int stringWidth = fm.stringWidth(centerTextMessage);
-            int x = 200 + (600 - stringWidth) / 2;
-            int y = 240 + (250 - fm.getHeight()) / 2 + fm.getAscent();
-            g2d.drawString(centerTextMessage, x, y);
+
+            // Procesar diálogos multilínea (\n)
+            String[] lines = centerTextMessage.split("\n");
+
+            // Calcular la altura total del bloque de texto
+            int linePadding = 5;
+            int totalHeight = (fm.getHeight() * lines.length) + (linePadding * (lines.length - 1));
+
+            // Punto de inicio Y para centrar el bloque verticalmente
+            int startY = 240 + (250 - totalHeight) / 2 + fm.getAscent();
+
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i].trim();
+                int stringWidth = fm.stringWidth(line);
+                int x = 200 + (600 - stringWidth) / 2;
+                int y = startY + (i * (fm.getHeight() + linePadding));
+                g2d.drawString(line, x, y);
+            }
         }
     }
 
@@ -534,20 +548,20 @@ public class CombatPanel extends JPanel {
 
                         if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
                             String[] zombieLore = {
-                                    "Hambre... el cafe... nos cambio..",
-                                    "iLERNA... prometio... inteligencia... solo hay... hambre...",
-                                    "¿Donde esta... mi examen? No... siento la logica...",
-                                    "El agua... las máquinas... sabian a codigo amargo...",
-                                    "Solo... queriamos... aprobar..."
+                                    "Hambre... el cafe... \nnos cambio..",
+                                    "iLERNA... prometio... \ninteligencia...\nsolo hay... hambre...",
+                                    "Donde esta... mi examen? \nNo... siento la logica...",
+                                    "El agua... las maquinas... \nsabian a codigo amargo...",
+                                    "Solo... queriamos... \naprobar..."
                             };
                             loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
                         } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
                             String[] bossLore = {
-                                    "¡Esto no compila en produccion! ¡ESTAIS SUSPENDIDOS!",
-                                    "¿Has revisado el tema 4 sobre polimorfismo? ¡MUERE!",
-                                    "El examen final sera... vuestra tumba.",
-                                    "iLERNA era solo el principio... el café hará el resto.",
-                                    "¡Vuestro código es tan sucio como este instituto!"
+                                    "Esto no compila \nen produccion! \nESTAIS SUSPENDIDOS!",
+                                    "Has revisado el tema 4 \nsobre polimorfismo? \nMUERE!",
+                                    "El examen final sera... \nvuestra tumba.",
+                                    "iLERNA era solo el principio... \nel cafe hara el resto.",
+                                    "Vuestro codigo es tan sucio \ncomo este instituto!"
                             };
                             loreMessage = bossLore[new java.util.Random().nextInt(bossLore.length)];
                         } else {
