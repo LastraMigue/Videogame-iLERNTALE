@@ -102,48 +102,54 @@ public class MainController implements Runnable {
     // Estado en pausa
     private GameState state = GameState.PLAYING;
 
+    /**
+     * ACTUALIZA LA LÓGICA DE JUEGO SEGÚN EL ESTADO ACTUAL Y LA PANTALLA VISIBLE.
+     * ESTE MÉTODO ES LLAMADO DESDE EL HILO DEL JUEGO A UN RITMO DE 60 FPS.
+     */
     private void update() {
-        // Obtenemos el panel activo desde MainFrame (asegúrate de tener este método en
-        // MainFrame)
-        JPanel panelActual = mainFrame.getPanelActual();
-
-        // Si está en pausa no se actualiza lógica de combate (evita que el minijuego
-        // avance)
+        // SI EL JUEGO ESTÁ EN PAUSA, NO SE ACTUALIZA NADA (EL TIEMPO SE DETIENE)
         if (state == GameState.PAUSED) {
             return;
         }
 
+        JPanel panelActual = mainFrame.getPanelActual();
+
+        // 1. ACTUALIZAR LÓGICA DE COMBATE (SI CORRESPONDE)
         if (panelActual instanceof CombatPanel) {
             ((CombatPanel) panelActual).updateCombat();
         }
 
-        // ExplorationManager filtra internamente si está activo o no
+        // 2. ACTUALIZAR LÓGICA DE EXPLORACIÓN
+        // (ExplorationManager ya filtra internamente si debe correr o no mediante su flag 'active')
         if (explorationManager != null) {
             explorationManager.update();
         }
     }
 
-    // Sección para controlar EN JUEGO y EN PAUSA
-    // Puede que haya que meterlo en el método Update
-
-    // Métodos para que el juego esté "en juego" o "en pausa"
-
+    /**
+     * PAUSA LA EJECUCIÓN DE LA LÓGICA DEL JUEGO.
+     */
     public void pauseGame() {
+        LOG.info("ESTADO: PAUSADO");
         state = GameState.PAUSED;
-
     }
 
+    /**
+     * REANUDA LA EJECUCIÓN DE LA LÓGICA DEL JUEGO.
+     */
     public void resumeGame() {
+        LOG.info("ESTADO: JUGANDO");
         state = GameState.PLAYING;
     }
 
-    // Seleccionar modo "Pausa" si está jugando o "Reanudar" si está pausado
+    /**
+     * CAMBIA ENTRE EL ESTADO DE PAUSA Y EL DE JUEGO.
+     */
     public void togglePause() {
         if (state == GameState.PLAYING) {
             pauseGame();
         } else {
             resumeGame();
-
         }
     }
 

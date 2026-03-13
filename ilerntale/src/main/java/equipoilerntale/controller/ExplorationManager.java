@@ -29,6 +29,13 @@ import equipoilerntale.service.SoundService;
 public class ExplorationManager {
     private static final Logger LOG = Logger.getLogger(ExplorationManager.class.getName());
 
+    public static final String ROOM_AULA_124 = "Aula 124";
+    public static final String ROOM_AULA_125 = "Aula 125";
+    public static final String ROOM_AULA_126 = "Aula 126";
+    public static final String ROOM_PASILLO = "Pasillo";
+    public static final String ROOM_SECRETARÍA = "Secretaría";
+    public static final String ROOM_ENTRADA = "Entrada";
+
     private static final long ANIMATION_FRAME_DELAY = 100;
 
     private final Player player;
@@ -153,16 +160,17 @@ public class ExplorationManager {
         checkInteractions();
     }
 
+
     private void handlePlayerMovement() {
         int dx = 0;
         int dy = 0;
-        if (inputHandler.leftPressed)
+        if (inputHandler.isLeftPressed())
             dx -= Player.SPEED;
-        else if (inputHandler.rightPressed)
+        else if (inputHandler.isRightPressed())
             dx += Player.SPEED;
-        if (inputHandler.upPressed)
+        if (inputHandler.isUpPressed())
             dy -= Player.SPEED;
-        else if (inputHandler.downPressed)
+        else if (inputHandler.isDownPressed())
             dy += Player.SPEED;
 
         boolean moving = (dx != 0 || dy != 0);
@@ -203,13 +211,13 @@ public class ExplorationManager {
     private void checkInteractions() {
 
         // COMPROBAR COLISIÓN CON PUERTAS
-        if (inputHandler.ePressed && currentRoom != null) {
+        if (inputHandler.isEPressed() && currentRoom != null) {
             for (DoorModel door : currentRoom.getDoors()) {
                 if (player.intersects(door.getArea())) {
                     String targetName = door.getTargetRoomName();
 
                     // VALIDACIÓN DE LLAVE PARA EL AULA 124
-                    if (targetName.equals("Aula 124")) {
+                    if (targetName.equals(ROOM_AULA_124)) {
                         equipoilerntale.model.entity.ItemModel llave = null;
                         for (equipoilerntale.model.entity.ItemModel im : Inventario.getInstance().getItems()) {
                             if ("Llave".equals(im.getNombre())) {
@@ -222,18 +230,18 @@ public class ExplorationManager {
                         // 1. Si ya se usó anteriormente, pasa directo.
                         // 2. Si no se ha usado pero se tiene (cantidad > 0), se marca como usada y pasa.
                         // 3. Si no se tiene ni se ha usado, se bloquea.
-                        if (llave != null && llave.isUsado()) {
-                            // YA USADA: OK
-                        } else if (llave != null && llave.getCantidad() > 0) {
-                            // PRIMER USO: MARCAR COMO USADA
-                            llave.setUsado(true);
-                            LOG.info("LLAVE RECOGIDA Y USADA PARA ABRIR AULA 124");
+                        if (llave != null && (llave.isUsado() || llave.getCantidad() > 0)) {
+                            if (!llave.isUsado()) {
+                                llave.setUsado(true);
+                                LOG.info("LLAVE RECOGIDA Y USADA PARA ABRIR AULA 124");
+                            }
+                            // OK
                         } else {
                             // NO TIENE LA LLAVE (o cantidad 0)
                             if (mainFrame instanceof equipoilerntale.view.MainFrame) {
                                 ((equipoilerntale.view.MainFrame) mainFrame).showTimedDialogue("Está cerrada. Necesitas una llave.", 2000);
                             }
-                            inputHandler.ePressed = false;
+                            inputHandler.setPressed(java.awt.event.KeyEvent.VK_E, false);
                             return; // CANCELAR TRANSICIÓN
                         }
                     }
@@ -242,14 +250,14 @@ public class ExplorationManager {
 
                     // Si la sala no está en caché, la creamos
                     if (targetRoom == null) {
-                        if (targetName.equals("Aula 124")) {
+                        if (targetName.equals(ROOM_AULA_124)) {
                             targetRoom = new Room1();
-                        } else if (targetName.equals("Pasillo Principal")) {
+                        } else if (targetName.equals(ROOM_PASILLO)) {
                             targetRoom = new RoomPasillo();
-                        } else if (targetName.equals("Aula 123")) {
-                            targetRoom = new Room2();
-                        } else if (targetName.equals("Aula 125")) {
+                        } else if (targetName.equals(ROOM_AULA_125)) {
                             targetRoom = new Room3();
+                        } else if (targetName.equals(ROOM_AULA_126)) {
+                            targetRoom = new Room2();
                         }
                         
                         if (targetRoom != null) {
@@ -262,7 +270,7 @@ public class ExplorationManager {
                         SoundService.getInstance().playSFX("/sound/door.wav");
                     }
                     
-                    inputHandler.ePressed = false; // Evitar salto doble por mantener pulsado
+                    inputHandler.setPressed(java.awt.event.KeyEvent.VK_E, false); // Evitar salto doble por mantener pulsado
                     break;
                 }
             }

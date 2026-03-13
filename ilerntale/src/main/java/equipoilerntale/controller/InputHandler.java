@@ -8,15 +8,20 @@ public class InputHandler implements KeyListener {
 
     private static final Logger LOG = Logger.getLogger(InputHandler.class.getName());
 
-    public boolean upPressed;
-    public boolean downPressed;
-    public boolean leftPressed;
-    public boolean rightPressed;
-    public boolean enterPressed;
-    public boolean ePressed;
-    public String lastHorizontal = "derecha";
-    public String lastVertical = "abajo";
-    public boolean preferHorizontal = true;
+    public static final String DIR_UP = "arriba";
+    public static final String DIR_DOWN = "abajo";
+    public static final String DIR_LEFT = "izquierda";
+    public static final String DIR_RIGHT = "derecha";
+
+    private boolean upPressed;
+    private boolean downPressed;
+    private boolean leftPressed;
+    private boolean rightPressed;
+    private boolean enterPressed;
+    private boolean ePressed;
+    private String lastHorizontal = DIR_RIGHT;
+    private String lastVertical = DIR_DOWN;
+    private boolean preferHorizontal = true;
 
     /**
      * ESTABLECE EL ESTADO DE PRESIÓN DE UNA TECLA ESPECÍFICA.
@@ -28,7 +33,7 @@ public class InputHandler implements KeyListener {
             case KeyEvent.VK_UP:
                 upPressed = pressed;
                 if (pressed) {
-                    lastVertical = "arriba";
+                    lastVertical = DIR_UP;
                     preferHorizontal = false;
                 }
                 break;
@@ -36,7 +41,7 @@ public class InputHandler implements KeyListener {
             case KeyEvent.VK_DOWN:
                 downPressed = pressed;
                 if (pressed) {
-                    lastVertical = "abajo";
+                    lastVertical = DIR_DOWN;
                     preferHorizontal = false;
                 }
                 break;
@@ -44,7 +49,7 @@ public class InputHandler implements KeyListener {
             case KeyEvent.VK_LEFT:
                 leftPressed = pressed;
                 if (pressed) {
-                    lastHorizontal = "izquierda";
+                    lastHorizontal = DIR_LEFT;
                     preferHorizontal = true;
                 }
                 break;
@@ -52,7 +57,7 @@ public class InputHandler implements KeyListener {
             case KeyEvent.VK_RIGHT:
                 rightPressed = pressed;
                 if (pressed) {
-                    lastHorizontal = "derecha";
+                    lastHorizontal = DIR_RIGHT;
                     preferHorizontal = true;
                 }
                 break;
@@ -64,6 +69,16 @@ public class InputHandler implements KeyListener {
                 break;
         }
     }
+
+    public boolean isUpPressed() { return upPressed; }
+    public boolean isDownPressed() { return downPressed; }
+    public boolean isLeftPressed() { return leftPressed; }
+    public boolean isRightPressed() { return rightPressed; }
+    public boolean isEnterPressed() { return enterPressed; }
+    public boolean isEPressed() { return ePressed; }
+    public String getLastHorizontal() { return lastHorizontal; }
+    public String getLastVertical() { return lastVertical; }
+    public boolean isPreferHorizontal() { return preferHorizontal; }
 
     /**
      * REINICIA TODOS LOS ESTADOS DE LAS TECLAS A FALSE.

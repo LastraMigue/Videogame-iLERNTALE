@@ -82,8 +82,8 @@ public class ShooterRules implements MinigameRules {
 
         // Movimiento solo horizontal
         int dx = 0;
-        if (input.leftPressed) dx = -1;
-        if (input.rightPressed) dx = 1;
+        if (input.isLeftPressed()) dx = -1;
+        if (input.isRightPressed()) dx = 1;
 
         if (dx != 0) {
             arena.intentarMoverMouse(dx, 0); // dy=0
@@ -98,7 +98,7 @@ public class ShooterRules implements MinigameRules {
         }
 
         // Disparar
-        if (input.enterPressed && shootCooldown == 0) {
+        if (input.isEnterPressed() && shootCooldown == 0) {
             // Bala del jugador (tipo 99)
             arena.addProjectile(new PlayerBullet(mouse.getX() + (mouse.getAncho() / 2) - 5, mouse.getY() - 10, 10, 10));
             shootCooldown = 15; 

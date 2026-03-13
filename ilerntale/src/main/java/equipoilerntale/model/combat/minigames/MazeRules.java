@@ -53,10 +53,10 @@ public class MazeRules implements MinigameRules {
 
         // 1. Obtener dirección deseada
         int dx = 0, dy = 0;
-        if (input.upPressed) dy = -1;
-        if (input.downPressed) dy = 1;
-        if (input.leftPressed) dx = -1;
-        if (input.rightPressed) dx = 1;
+        if (input.isUpPressed()) dy = -1;
+        if (input.isDownPressed()) dy = 1;
+        if (input.isLeftPressed()) dx = -1;
+        if (input.isRightPressed()) dx = 1;
 
         boolean touchingWall = false;
 

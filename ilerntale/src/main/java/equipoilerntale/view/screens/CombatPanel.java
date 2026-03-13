@@ -265,21 +265,21 @@ public class CombatPanel extends JPanel {
 
     private void gestionarEntradaMenuObjetos() {
         if (inputCooldown == 0 && currentCombatItems != null && !currentCombatItems.isEmpty()) {
-            if (inputHandler.upPressed) {
+            if (inputHandler.isUpPressed()) {
                 selectedItemIndex--;
                 if (selectedItemIndex < 0) {
                     selectedItemIndex = currentCombatItems.size() - 1;
                 }
                 inputCooldown = 10;
                 repaint();
-            } else if (inputHandler.downPressed) {
+            } else if (inputHandler.isDownPressed()) {
                 selectedItemIndex++;
                 if (selectedItemIndex >= currentCombatItems.size()) {
                     selectedItemIndex = 0;
                 }
                 inputCooldown = 10;
                 repaint();
-            } else if (inputHandler.enterPressed) {
+            } else if (inputHandler.isEnterPressed()) {
                 // Consumir objeto
                 ItemModel selected = currentCombatItems.get(selectedItemIndex);
                 if (selected != null) {

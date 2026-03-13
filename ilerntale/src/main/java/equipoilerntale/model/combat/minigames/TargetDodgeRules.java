@@ -26,13 +26,13 @@ public class TargetDodgeRules implements MinigameRules {
         // Mover ratón
         int dx = 0;
         int dy = 0;
-        if (input.upPressed)
+        if (input.isUpPressed())
             dy = -1;
-        if (input.downPressed)
+        if (input.isDownPressed())
             dy = 1;
-        if (input.leftPressed)
+        if (input.isLeftPressed())
             dx = -1;
-        if (input.rightPressed)
+        if (input.isRightPressed())
             dx = 1;
 
         if (dx != 0 || dy != 0) {

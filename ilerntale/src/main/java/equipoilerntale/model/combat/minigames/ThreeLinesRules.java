@@ -50,9 +50,9 @@ public class ThreeLinesRules implements MinigameRules {
 
         // Movimiento Horizontal Normal
         int dx = 0;
-        if (input.leftPressed)
+        if (input.isLeftPressed())
             dx = -1;
-        if (input.rightPressed)
+        if (input.isRightPressed())
             dx = 1;
 
         if (dx != 0) {
@@ -61,10 +61,10 @@ public class ThreeLinesRules implements MinigameRules {
 
         // Cambio de línea (Vertical)
         if (verticalCooldown == 0) {
-            if (input.upPressed && currentLineIndex > 0) {
+            if (input.isUpPressed() && currentLineIndex > 0) {
                 currentLineIndex--;
                 verticalCooldown = 15; // 15 frames lock
-            } else if (input.downPressed && currentLineIndex < 2) {
+            } else if (input.isDownPressed() && currentLineIndex < 2) {
                 currentLineIndex++;
                 verticalCooldown = 15; // 15 frames lock
             }

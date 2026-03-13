@@ -46,13 +46,13 @@ public class ShieldRules implements MinigameRules {
         mouse.setY(365 - (mouse.getAlto() / 2));
 
         // Cambiar dirección del escudo
-        if (input.upPressed)
+        if (input.isUpPressed())
             shieldDirection = 0;
-        else if (input.rightPressed)
+        else if (input.isRightPressed())
             shieldDirection = 1;
-        else if (input.downPressed)
+        else if (input.isDownPressed())
             shieldDirection = 2;
-        else if (input.leftPressed)
+        else if (input.isLeftPressed())
             shieldDirection = 3;
 
         // Proyectiles
