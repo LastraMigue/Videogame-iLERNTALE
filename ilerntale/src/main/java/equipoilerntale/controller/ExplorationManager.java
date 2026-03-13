@@ -5,7 +5,6 @@ import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import equipoilerntale.GameSettings;
 import equipoilerntale.model.entity.Direction;
@@ -27,12 +26,11 @@ import equipoilerntale.service.SoundService;
  * ORQUESTA LA FASE DE EXPLORACIÓN DEL JUEGO.
  */
 public class ExplorationManager {
-    private static final Logger LOG = Logger.getLogger(ExplorationManager.class.getName());
 
     public static final String ROOM_AULA_124 = "Aula 124";
     public static final String ROOM_AULA_125 = "Aula 125";
-    public static final String ROOM_AULA_126 = "Aula 126";
-    public static final String ROOM_PASILLO = "Pasillo";
+    public static final String ROOM_AULA_123 = "Aula 123";
+    public static final String ROOM_PASILLO = "Pasillo Principal";
     public static final String ROOM_SECRETARÍA = "Secretaría";
     public static final String ROOM_ENTRADA = "Entrada";
 
@@ -55,7 +53,6 @@ public class ExplorationManager {
     // pantalla visible
     private boolean active = false;
 
-
     /**
      * CONSTRUCTOR DEL GESTOR DE EXPLORACIÓN.
      * INICIALIZA EL JUGADOR, EL SISTEMA DE ENEMIGOS Y LOS MUROS DEL MUNDO.
@@ -68,7 +65,7 @@ public class ExplorationManager {
         AssetService.getInstance().loadCharacterSprites(characterName, Player.SIZE);
         this.player = new Player(GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT);
         this.enemySystem = new EnemySystem();
-        
+
         // INICIALIZAR CACHÉ CON LA SALA INICIAL
         AbstractRoom startRoom = new RoomPasillo();
         roomCache.put(startRoom.getName(), startRoom);
@@ -82,9 +79,8 @@ public class ExplorationManager {
      * DETIENE ENEMIGOS PREVIOS Y ESTABLECE LOS NUEVOS DATOS DEL MAPA.
      */
     public void loadRoom(AbstractRoom room, int playerStartX, int playerStartY) {
-        LOG.info("CARGANDO HABITACIÓN: " + room.getName());
         enemySystem.clear(); // Limpiar zombies
-        
+
         this.currentRoom = room;
         this.lastRoomName = room.getName(); // Registrar sala cargada
 
@@ -125,7 +121,6 @@ public class ExplorationManager {
                 // Dispersamos a los enemigos cercanos para dar un respiro al jugador
                 enemySystem.disperseEnemiesFrom(player.getX(), player.getY(), 450);
             }
-            LOG.info("ExplorationManager activado.");
         }
     }
 
@@ -134,7 +129,6 @@ public class ExplorationManager {
      */
     public void deactivate() {
         active = false;
-        LOG.info("ExplorationManager desactivado.");
     }
 
     public void spawnZombies() {
@@ -160,7 +154,6 @@ public class ExplorationManager {
         checkInteractions();
     }
 
-
     private void handlePlayerMovement() {
         int dx = 0;
         int dy = 0;
@@ -184,11 +177,8 @@ public class ExplorationManager {
 
             // COMPROBAR COLISIONES CON LOS MUROS DE LA SALA ACTUAL
             List<Rectangle> roomWalls = currentRoom.getWalls();
-            boolean movedX = player.moveIfNoCollision(dx, 0, roomWalls);
-            boolean movedY = player.moveIfNoCollision(0, dy, roomWalls);
-            
-            if (!movedX && dx != 0) LOG.info("Colisión horizontal en x=" + player.getX() + ", y=" + player.getY());
-            if (!movedY && dy != 0) LOG.info("Colisión vertical en x=" + player.getX() + ", y=" + player.getY());
+            player.moveIfNoCollision(dx, 0, roomWalls);
+            player.moveIfNoCollision(0, dy, roomWalls);
         }
     }
 
@@ -217,51 +207,45 @@ public class ExplorationManager {
                     String targetName = door.getTargetRoomName();
 
                     // VALIDACIÓN DE LLAVE PARA EL AULA 124
-                    if (targetName.equals(ROOM_AULA_124)) {
+                    String targetNameNorm = targetName.trim();
+                    if (targetNameNorm.equalsIgnoreCase(ROOM_AULA_124)) {
                         equipoilerntale.model.entity.ItemModel llave = null;
                         for (equipoilerntale.model.entity.ItemModel im : Inventario.getInstance().getItems()) {
-                            if ("Llave".equals(im.getNombre())) {
+                            if ("Llave".equalsIgnoreCase(im.getNombre())) {
                                 llave = im;
                                 break;
                             }
                         }
 
-                        // Lógica de acceso:
-                        // 1. Si ya se usó anteriormente, pasa directo.
-                        // 2. Si no se ha usado pero se tiene (cantidad > 0), se marca como usada y pasa.
-                        // 3. Si no se tiene ni se ha usado, se bloquea.
                         if (llave != null && (llave.isUsado() || llave.getCantidad() > 0)) {
                             if (!llave.isUsado()) {
                                 llave.setUsado(true);
-                                LOG.info("LLAVE RECOGIDA Y USADA PARA ABRIR AULA 124");
                             }
-                            // OK
                         } else {
-                            // NO TIENE LA LLAVE (o cantidad 0)
                             if (mainFrame instanceof equipoilerntale.view.MainFrame) {
-                                ((equipoilerntale.view.MainFrame) mainFrame).showTimedDialogue("Está cerrada. Necesitas una llave.", 2000);
+                                ((equipoilerntale.view.MainFrame) mainFrame)
+                                        .showTimedDialogue("Está cerrada. Necesitas una llave.", 2000);
                             }
                             inputHandler.setPressed(java.awt.event.KeyEvent.VK_E, false);
-                            return; // CANCELAR TRANSICIÓN
+                            return;
                         }
                     }
 
-                    AbstractRoom targetRoom = roomCache.get(targetName);
+                    AbstractRoom targetRoom = roomCache.get(targetNameNorm);
 
-                    // Si la sala no está en caché, la creamos
                     if (targetRoom == null) {
-                        if (targetName.equals(ROOM_AULA_124)) {
+                        if (targetNameNorm.equalsIgnoreCase(ROOM_AULA_124)) {
                             targetRoom = new Room1();
-                        } else if (targetName.equals(ROOM_PASILLO)) {
+                        } else if (targetNameNorm.equalsIgnoreCase(ROOM_PASILLO)) {
                             targetRoom = new RoomPasillo();
-                        } else if (targetName.equals(ROOM_AULA_125)) {
+                        } else if (targetNameNorm.equalsIgnoreCase(ROOM_AULA_125)) {
                             targetRoom = new Room3();
-                        } else if (targetName.equals(ROOM_AULA_126)) {
+                        } else if (targetNameNorm.equalsIgnoreCase(ROOM_AULA_123)) {
                             targetRoom = new Room2();
                         }
-                        
+
                         if (targetRoom != null) {
-                            roomCache.put(targetName, targetRoom);
+                            roomCache.put(targetNameNorm, targetRoom);
                         }
                     }
 
@@ -269,8 +253,9 @@ public class ExplorationManager {
                         loadRoom(targetRoom, door.getTargetPlayerX(), door.getTargetPlayerY());
                         SoundService.getInstance().playSFX("/sound/door.wav");
                     }
-                    
-                    inputHandler.setPressed(java.awt.event.KeyEvent.VK_E, false); // Evitar salto doble por mantener pulsado
+
+                    inputHandler.setPressed(java.awt.event.KeyEvent.VK_E, false); // Evitar salto doble por mantener
+                                                                                  // pulsado
                     break;
                 }
             }
@@ -287,10 +272,10 @@ public class ExplorationManager {
         // COMPROBAR COLISIÓN CON OBJETOS DEL MAPA
         if (currentRoom != null) {
             for (WorldItem item : currentRoom.getItems()) {
-                if (!item.isCollected() && player.getHitbox(player.getX(), player.getY()).intersects(item.getHitbox())) {
+                if (!item.isCollected()
+                        && player.getHitbox(player.getX(), player.getY()).intersects(item.getHitbox())) {
                     item.setCollected(true);
                     Inventario.getInstance().agregarItem(item.getItem());
-                    LOG.info("OBJETO RECOGIDO: " + item.getItem().getNombre());
                 }
             }
         }
@@ -304,12 +289,6 @@ public class ExplorationManager {
             enemySystem.getZombies().remove(enemy);
         } else if (enemy instanceof Boss) {
             enemySystem.getBosses().remove(enemy);
-        }
-    }
-
-    private void triggerScreenChange(String screenName) {
-        if (mainFrame instanceof equipoilerntale.view.MainFrame) {
-            ((equipoilerntale.view.MainFrame) mainFrame).cambiarPantalla(screenName);
         }
     }
 
@@ -352,7 +331,6 @@ public class ExplorationManager {
         return inputHandler;
     }
 
-
     /**
      * LIMPIA LOS RECURSOS DEL GESTOR DE EXPLORACIÓN.
      * DESACTIVA LA EXPLORACIÓN Y ELIMINA LOS ZOMBIES.
@@ -362,6 +340,5 @@ public class ExplorationManager {
         // Destruir el singleton borraría todos los sprites para futuros usos.
         deactivate();
         enemySystem.clear();
-        LOG.info("ExplorationManager limpiado (assets conservados).");
     }
 }

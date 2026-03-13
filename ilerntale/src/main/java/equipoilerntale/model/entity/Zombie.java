@@ -18,7 +18,6 @@ public class Zombie extends Entity {
 
     private double customSpeed;
     private double trackingPrecision;
-    private double wobbleOffset;
     private int detectionRadius;
     private boolean hasDetectedPlayer = false;
 
@@ -45,8 +44,6 @@ public class Zombie extends Entity {
         this.customSpeed = SPEED + (Math.random() * 3.0 - 1.5);
         // Seguimiento: 0.7 a 1.0 (cuánto de su vector va al jugador vs inercia/error)
         this.trackingPrecision = 0.7 + (Math.random() * 0.3);
-        // Oscilación aleatoria para que no todos caminen en línea recta perfecta
-        this.wobbleOffset = Math.random() * Math.PI * 2;
         // Radio de detección: GameSettings.ZOMBIE_DETECTION_RADIUS +/- 150px
         this.detectionRadius = GameSettings.ZOMBIE_DETECTION_RADIUS + (int) (Math.random() * 300 - 150);
     }
@@ -122,7 +119,8 @@ public class Zombie extends Entity {
      * ACTUALIZA EL MOVIMIENTO HACIA EL JUGADOR CON SEPARACIÓN DE VECINOS.
      */
     public void updateMovement(int targetX, int targetY, List<Rectangle> walls, List<? extends Object> allZombies) {
-        if (!isAlive) return;
+        if (!isAlive)
+            return;
 
         double diffX = targetX - this.x;
         double diffY = targetY - this.y;
@@ -145,10 +143,9 @@ public class Zombie extends Entity {
         }
     }
 
-    private double[] calculateMoveVector(double diffX, double diffY, double distance, List<? extends Object> allZombies) {
+    private double[] calculateMoveVector(double diffX, double diffY, double distance,
+            List<? extends Object> allZombies) {
         // Vector base con wobble (zig-zag)
-        long now = System.currentTimeMillis();
-        double wobble = Math.sin((now / 500.0) + wobbleOffset) * 0.3;
 
         double targetDx = (diffX / distance) * trackingPrecision + (Math.random() * 0.4 - 0.2);
         double targetDy = (diffY / distance) * trackingPrecision + (Math.random() * 0.4 - 0.2);
@@ -165,7 +162,7 @@ public class Zombie extends Entity {
             dy = dy * 0.7 + separation[1] * customSpeed * 0.3;
         }
 
-        return new double[]{dx, dy};
+        return new double[] { dx, dy };
     }
 
     private double[] calculateSeparation(List<? extends Object> allZombies) {
@@ -174,9 +171,11 @@ public class Zombie extends Entity {
         final double SEPARATION_RADIUS = 80.0;
 
         for (Object other : allZombies) {
-            if (other == this || !(other instanceof Zombie)) continue;
+            if (other == this || !(other instanceof Zombie))
+                continue;
             Zombie z = (Zombie) other;
-            if (!z.isAlive()) continue;
+            if (!z.isAlive())
+                continue;
 
             double distToNeighbor = Math.sqrt(Math.pow(z.x - this.x, 2) + Math.pow(z.y - this.y, 2));
             if (distToNeighbor < SEPARATION_RADIUS) {
@@ -191,7 +190,7 @@ public class Zombie extends Entity {
                 neighborCount++;
             }
         }
-        return new double[]{sepX, sepY, neighborCount};
+        return new double[] { sepX, sepY, neighborCount };
     }
 
     private void updateSpriteDirection(double dx, double dy) {

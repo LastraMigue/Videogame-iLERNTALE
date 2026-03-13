@@ -1,7 +1,6 @@
 package equipoilerntale.view.render;
 
 import java.awt.*;
-import java.util.List;
 import equipoilerntale.GameSettings;
 
 /**

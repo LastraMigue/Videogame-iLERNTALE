@@ -4,8 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
+
 import java.util.logging.Logger;
 
 import equipoilerntale.GameSettings;
@@ -27,7 +26,6 @@ public class ExplorationPanel extends JPanel {
     private static final Logger LOG = Logger.getLogger(ExplorationPanel.class.getName());
 
     // ==================== ATRIBUTOS ====================
-    private final MainFrame mainFrame;
     private final ExplorationManager manager;
     private final MapRenderer mapRenderer = new MapRenderer();
     private final PlayerRenderer playerRenderer = new PlayerRenderer();
@@ -40,7 +38,6 @@ public class ExplorationPanel extends JPanel {
 
     // ==================== CONSTRUCTOR ====================
     public ExplorationPanel(MainFrame mainFrame, String characterName, ExplorationManager manager) {
-        this.mainFrame = mainFrame;
         this.manager = manager;
 
         setPreferredSize(new Dimension(GameSettings.ANCHO_PANTALLA, GameSettings.ALTO_PANTALLA));
@@ -76,26 +73,6 @@ public class ExplorationPanel extends JPanel {
         });
     }
 
-    // ==================== CARGA DE RECURSOS ====================
-
-    private Image cargarFondo(String ruta, int w, int h) {
-        return AssetService.getInstance().loadBackground(ruta);
-    }
-
-    private ImageIcon cargarImagen(String ruta, int w, int h) {
-        try (InputStream is = getClass().getResourceAsStream(ruta)) {
-            if (is == null) {
-                LOG.warning("NO SE ENCONTRÓ EL RECURSO: " + ruta);
-                return null;
-            }
-            BufferedImage img = javax.imageio.ImageIO.read(is);
-            return new ImageIcon(img.getScaledInstance(w, h, Image.SCALE_SMOOTH));
-        } catch (java.io.IOException e) {
-            LOG.severe("Error cargando imagen " + ruta + ": " + e.getMessage());
-            return null;
-        }
-    }
-
     // ==================== RENDERIZADO ====================
     @Override
     protected void paintComponent(Graphics g) {
@@ -123,11 +100,10 @@ public class ExplorationPanel extends JPanel {
             mapRenderer.drawBackground(ctx, currentBackground);
         }
 
-
         playerRenderer.drawPlayer(ctx, manager.getPlayerCurrentSprite(), manager.getPlayer());
 
         // DIBUJAR ENTIDADES (Sincronizado para evitar ConcurrentModificationException)
-        synchronized(manager) {
+        synchronized (manager) {
             for (Zombie z : manager.getActiveZombies()) {
                 zombieRenderer.drawZombie(ctx, z);
             }
@@ -140,7 +116,7 @@ public class ExplorationPanel extends JPanel {
             if (manager.getCurrentRoom() != null) {
                 g2d.setFont(new Font("Arial", Font.BOLD, 14));
                 g2d.setColor(Color.WHITE);
-                
+
                 for (WorldItem item : manager.getCurrentRoom().getItems()) {
                     if (!item.isCollected()) {
                         // Dibujar el item
@@ -158,14 +134,13 @@ public class ExplorationPanel extends JPanel {
                     Rectangle area = door.getArea();
                     double distX = Math.abs(manager.getPlayer().getX() - area.getCenterX());
                     double distY = Math.abs(manager.getPlayer().getY() - area.getCenterY());
-                    
+
                     if (distX < 120 && distY < 120) {
-                        g2d.drawString("[E]", (int)area.getCenterX() - 10, (int)area.getY() + 20);
+                        g2d.drawString("[E]", (int) area.getCenterX() - 10, (int) area.getY() + 20);
                     }
                 }
             }
         }
-
 
         ctx.restoreCamera();
     }

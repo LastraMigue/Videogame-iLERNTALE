@@ -204,8 +204,6 @@ public class MainFrame extends JFrame {
 
         // INICIAR BUCLE DE RENDERIZADO (60 FPS)
         iniciarRenderLoop();
-
-        LOG.info("MAINFRAME INICIALIZADO CORRECTAMENTE");
     }
 
     private void setupScreens() {
@@ -246,17 +244,13 @@ public class MainFrame extends JFrame {
     }
 
     private void inicializarControladores() {
-        LOG.info("INICIALIZANDO CONTROLADORES...");
-
-        // USAR PERSONAJE SELECCIONADO O "MIGUE" POR DEFECTO
+        // USAR PERSONAJE SELECCIONADO OR "MIGUE" POR DEFECTO
         String personaje = (personajeSeleccionado == null || personajeSeleccionado.isEmpty()) ? "migue"
                 : personajeSeleccionado;
 
         // CREAR MAINCONTROLLER Y OBTENER EL MANAGER DE EXPLORACIÓN
         mainController = new MainController(this, personaje);
         explorationManager = mainController.getExplorationManager();
-
-        LOG.info("CONTROLADORES INICIALIZADOS");
     }
 
     private void iniciarRenderLoop() {
@@ -612,8 +606,6 @@ public class MainFrame extends JFrame {
         mainController.startGameThread();
 
         setupScreens();
-
-        LOG.info("PERSONAJE SELECCIONADO: " + this.personajeSeleccionado);
     }
 
     public JPanel getPanelActual() {
@@ -641,8 +633,6 @@ public class MainFrame extends JFrame {
         }
         // Reiniciar variables y controladores reconstruyendo el ExplorationManager
         setPersonajeSeleccionado(getPersonajeSeleccionado());
-
-        LOG.info("JUEGO REINICIADO COMPLETAMENTE");
     }
 
     // ============ GETTERS ============

@@ -463,7 +463,7 @@ public class CombatPanel extends JPanel {
         if (imagenFondo != null) {
             g2d.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
         }
-        
+
         // Marco de la imagen del enemigo
         g2d.setColor(Color.BLACK);
         g2d.fillRect(405, 30, 180, 180);
@@ -511,8 +511,8 @@ public class CombatPanel extends JPanel {
         } else {
             long now = System.currentTimeMillis();
             if (mainFrame.getMainController() != null &&
-                mainFrame.getMainController().getGameState() == MainController.GameState.PAUSED) {
-                now = lastUpdateTime; 
+                    mainFrame.getMainController().getGameState() == MainController.GameState.PAUSED) {
+                now = lastUpdateTime;
             }
             long timeLeft = Math.max(0, minigameEndTime - now);
             timeText = String.format("%02d:%03d", timeLeft / 1000, timeLeft % 1000);
@@ -546,9 +546,11 @@ public class CombatPanel extends JPanel {
     }
 
     private void renderMensajesCentro(Graphics2D g2d) {
-        if (centerTextMessage == null || centerTextMessage.isEmpty()) return;
+        if (centerTextMessage == null || centerTextMessage.isEmpty())
+            return;
 
-        if (customFont != null) g2d.setFont(customFont);
+        if (customFont != null)
+            g2d.setFont(customFont);
         g2d.setColor(Color.WHITE);
         FontMetrics fm = g2d.getFontMetrics();
 
@@ -655,12 +657,24 @@ public class CombatPanel extends JPanel {
     private void iniciarMinijuegoAleatorio() {
         int randomIdx = new java.util.Random().nextInt(6);
         switch (randomIdx) {
-            case 0: currentRules = new ClassicDodgeRules(); break;
-            case 1: currentRules = new TargetDodgeRules(); break;
-            case 2: currentRules = new ThreeLinesRules(); break;
-            case 3: currentRules = new ShooterRules(); break;
-            case 4: currentRules = new ShieldRules(); break;
-            case 5: currentRules = new MazeRules(); break;
+            case 0:
+                currentRules = new ClassicDodgeRules();
+                break;
+            case 1:
+                currentRules = new TargetDodgeRules();
+                break;
+            case 2:
+                currentRules = new ThreeLinesRules();
+                break;
+            case 3:
+                currentRules = new ShooterRules();
+                break;
+            case 4:
+                currentRules = new ShieldRules();
+                break;
+            case 5:
+                currentRules = new MazeRules();
+                break;
         }
 
         combatController.setRules(currentRules);
@@ -672,7 +686,7 @@ public class CombatPanel extends JPanel {
 
         requestFocusInWindow();
         isMinigameActive = true;
-        
+
         long startNow = System.currentTimeMillis();
         minigameEndTime = startNow + (currentRules.getDurationInSeconds() * 1000);
         lastUpdateTime = startNow;
@@ -689,24 +703,24 @@ public class CombatPanel extends JPanel {
     private void realizarAccionActuar() {
         isInventoryActive = false;
         disableAllButtons();
-        
+
         String loreMessage;
         if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
             String[] zombieLore = {
-                "Hambre... el cafe... \nnos cambio..",
-                "iLERNA... prometio... \ninteligencia...\nsolo hay... hambre...",
-                "Donde esta... mi examen? \nNo... siento la logica...",
-                "El agua... las maquinas... \nsabian a codigo amargo...",
-                "Solo... queriamos... \naprobar..."
+                    "Hambre... el cafe... \nnos cambio..",
+                    "iLERNA... prometio... \ninteligencia...\nsolo hay... hambre...",
+                    "Donde esta... mi examen? \nNo... siento la logica...",
+                    "El agua... las maquinas... \nsabian a codigo amargo...",
+                    "Solo... queriamos... \naprobar..."
             };
             loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
         } else if (isFinalBossPhase || enemyTarget instanceof equipoilerntale.model.entity.Boss) {
             String[] bossLore = {
-                "Esto no compila \nen produccion! \nESTAIS SUSPENDIDOS!",
-                "Has revisado el tema 4 \nsobre polimorfismo? \nMUERE!",
-                "El examen final sera... \nvuestra tumba.",
-                "iLERNA era solo el principio... \nel cafe hara el resto.",
-                "Vuestro codigo es tan sucio \ncomo este instituto!"
+                    "Esto no compila \nen produccion! \nESTAIS SUSPENDIDOS!",
+                    "Has revisado el tema 4 \nsobre polimorfismo? \nMUERE!",
+                    "El examen final sera... \nvuestra tumba.",
+                    "iLERNA era solo el principio... \nel cafe hara el resto.",
+                    "Vuestro codigo es tan sucio \ncomo este instituto!"
             };
             loreMessage = bossLore[new java.util.Random().nextInt(bossLore.length)];
         } else {
@@ -741,7 +755,7 @@ public class CombatPanel extends JPanel {
     private void realizarAccionPiedad() {
         isInventoryActive = false;
         disableAllButtons();
-        
+
         if (Math.random() <= 0.10) {
             centerTextMessage = "HAS TENIDO PIEDAD";
             repaint();

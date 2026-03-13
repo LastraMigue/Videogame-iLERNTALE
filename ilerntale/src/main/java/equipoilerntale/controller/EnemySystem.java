@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Logger;
 import equipoilerntale.GameSettings;
 import equipoilerntale.model.entity.Zombie;
 import equipoilerntale.model.entity.Boss;
@@ -14,7 +13,6 @@ import equipoilerntale.model.entity.Boss;
  * SISTEMA QUE GESTIONA TODOS LOS ENEMIGOS ACTIVOS (ZOMBIES).
  */
 public class EnemySystem {
-    private static final Logger LOG = Logger.getLogger(EnemySystem.class.getName());
 
     private final List<Zombie> zombies = new CopyOnWriteArrayList<>();
     private final List<Boss> bosses = new CopyOnWriteArrayList<>();
@@ -75,12 +73,12 @@ public class EnemySystem {
 
             Rectangle spawnBounds = new Zombie(rx, ry, GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT).getHitbox(rx,
                     ry);
-            
-            // Margen de seguridad: expandir el hitbox de prueba para no nacer pegado a muros
+
+            // Margen de seguridad: expandir el hitbox de prueba para no nacer pegado a
+            // muros
             Rectangle safetyBounds = new Rectangle(
-                spawnBounds.x - 10, spawnBounds.y - 10, 
-                spawnBounds.width + 20, spawnBounds.height + 20
-            );
+                    spawnBounds.x - 10, spawnBounds.y - 10,
+                    spawnBounds.width + 20, spawnBounds.height + 20);
 
             // Verificar que no colisione con muros
             boolean hitsWall = walls.stream().anyMatch(w -> w.intersects(safetyBounds));
@@ -101,7 +99,6 @@ public class EnemySystem {
 
             return new Zombie(rx, ry, GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT);
         }
-        LOG.warning("findSafeSpawn: no se encontró posición segura tras " + maxAttempts + " intentos.");
         return null;
     }
 
@@ -134,7 +131,6 @@ public class EnemySystem {
 
                 // Intentar alejar al zombie a una posición segura (fuera de muros)
                 int pushDist = 600;
-                boolean foundSafe = false;
 
                 // Intentamos desde el alejamiento máximo hacia abajo hasta encontrar sitio
                 for (int d = pushDist; d >= 100; d -= 20) {
@@ -151,18 +147,15 @@ public class EnemySystem {
                     if (!hits) {
                         z.setX(nextX);
                         z.setY(nextY);
-                        foundSafe = true;
                         break;
                     }
                 }
 
                 z.setDetectedPlayer(false); // Olvidar al jugador momentáneamente
-                if (!foundSafe) {
-                    LOG.info("No se encontró punto de dispersión seguro para zombie en " + z.getX() + "," + z.getY());
-                }
             }
         }
-        // Los bosses no se dispersan ya que suelen ser estáticos o importantes en su sitio
+        // Los bosses no se dispersan ya que suelen ser estáticos o importantes en su
+        // sitio
     }
 
     public Object getEnemyAt(Rectangle playerHitbox) {

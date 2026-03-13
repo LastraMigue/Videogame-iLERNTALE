@@ -2,11 +2,8 @@ package equipoilerntale.controller;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.logging.Logger;
 
 public class InputHandler implements KeyListener {
-
-    private static final Logger LOG = Logger.getLogger(InputHandler.class.getName());
 
     public static final String DIR_UP = "arriba";
     public static final String DIR_DOWN = "abajo";
@@ -70,15 +67,41 @@ public class InputHandler implements KeyListener {
         }
     }
 
-    public boolean isUpPressed() { return upPressed; }
-    public boolean isDownPressed() { return downPressed; }
-    public boolean isLeftPressed() { return leftPressed; }
-    public boolean isRightPressed() { return rightPressed; }
-    public boolean isEnterPressed() { return enterPressed; }
-    public boolean isEPressed() { return ePressed; }
-    public String getLastHorizontal() { return lastHorizontal; }
-    public String getLastVertical() { return lastVertical; }
-    public boolean isPreferHorizontal() { return preferHorizontal; }
+    public boolean isUpPressed() {
+        return upPressed;
+    }
+
+    public boolean isDownPressed() {
+        return downPressed;
+    }
+
+    public boolean isLeftPressed() {
+        return leftPressed;
+    }
+
+    public boolean isRightPressed() {
+        return rightPressed;
+    }
+
+    public boolean isEnterPressed() {
+        return enterPressed;
+    }
+
+    public boolean isEPressed() {
+        return ePressed;
+    }
+
+    public String getLastHorizontal() {
+        return lastHorizontal;
+    }
+
+    public String getLastVertical() {
+        return lastVertical;
+    }
+
+    public boolean isPreferHorizontal() {
+        return preferHorizontal;
+    }
 
     /**
      * REINICIA TODOS LOS ESTADOS DE LAS TECLAS A FALSE.

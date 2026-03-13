@@ -3,7 +3,6 @@ package equipoilerntale.view.screens;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import javax.swing.*;
@@ -168,7 +167,7 @@ public class TutorialPanel extends JPanel {
                     if (is != null)
                         bgImg = ImageIO.read(is);
                 } catch (IOException e) {
-                  System.err.println("Error cargando sección " + imgPath);
+                    System.err.println("Error cargando sección " + imgPath);
                 }
             }
 
@@ -198,44 +197,5 @@ public class TutorialPanel extends JPanel {
         panel.add(lblSeccion);
 
         return panel;
-    }
-
-    private void añadirFilaTutorial(JPanel seccion, String iconoOTexto, String descripcion, int yPos) {
-        // Icono de la tecla
-        JLabel lblIcono = new JLabel("", SwingConstants.CENTER);
-        lblIcono.setForeground(Color.WHITE);
-        lblIcono.setFont(getFontDeltarune(20f));
-
-        try {
-            URL url = getClass().getResource(iconoOTexto);
-            if (url != null) {
-                ImageIcon icon = new ImageIcon(url);
-                Image img = icon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-                lblIcono.setIcon(new ImageIcon(img));
-            } else {
-                // Fallback: si no es ruta de recurso o no existe, mostrar texto con borde
-                lblIcono.setText(iconoOTexto.toUpperCase());
-                lblIcono.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-            }
-        } catch (Exception e) {
-            lblIcono.setText(iconoOTexto.toUpperCase());
-            lblIcono.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-        }
-        lblIcono.setBounds(30, yPos, 40, 40);
-        seccion.add(lblIcono);
-
-        // Dos puntos
-        JLabel lblColon = new JLabel(":", SwingConstants.CENTER);
-        lblColon.setForeground(Color.WHITE);
-        lblColon.setFont(getFontDeltarune(20f));
-        lblColon.setBounds(80, yPos, 20, 40);
-        seccion.add(lblColon);
-
-        // Descripción
-        JLabel lblDesc = new JLabel(descripcion);
-        lblDesc.setForeground(Color.WHITE);
-        lblDesc.setFont(getFontDeltarune(18f));
-        lblDesc.setBounds(110, yPos, 150, 40);
-        seccion.add(lblDesc);
     }
 }

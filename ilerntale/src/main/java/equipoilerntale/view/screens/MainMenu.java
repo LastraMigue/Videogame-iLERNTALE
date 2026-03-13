@@ -13,7 +13,6 @@ import javax.imageio.ImageIO;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import equipoilerntale.view.MainFrame;
@@ -104,34 +103,34 @@ public class MainMenu extends JPanel {
             if (is != null) {
                 BufferedImage img = ImageIO.read(is);
                 if (img != null) {
-                // 1. Imagen en estado normal
-                int anchoNormal = 200;
-                int altoNormal = 60;
-                Image normalImg = img.getScaledInstance(anchoNormal, altoNormal, Image.SCALE_SMOOTH);
-                button.setIcon(new ImageIcon(normalImg));
+                    // 1. Imagen en estado normal
+                    int anchoNormal = 200;
+                    int altoNormal = 60;
+                    Image normalImg = img.getScaledInstance(anchoNormal, altoNormal, Image.SCALE_SMOOTH);
+                    button.setIcon(new ImageIcon(normalImg));
 
-                // 2. Imagen en estado pulsado (SÍNCRONO Y CENTRADO)
-                int anchoPulsado = (int) (anchoNormal * 0.9);
-                int altoPulsado = (int) (altoNormal * 0.9);
-                
-                // Creamos lienzo transparente de tamaño completo
-                java.awt.image.BufferedImage canvas = new java.awt.image.BufferedImage(
-                    anchoNormal, altoNormal, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-                java.awt.Graphics2D g2 = canvas.createGraphics();
-                
-                // Suavizado de bordes
-                g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, 
-                                  java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                
-                // Calculamos offsets
-                int offX = (anchoNormal - anchoPulsado) / 2;
-                int offY = (altoNormal - altoPulsado) / 2;
-                
-                // Dibujamos la imagen original escalándola directamente en el canvas (SÍNCRONO)
-                g2.drawImage(img, offX, offY, anchoPulsado, altoPulsado, null);
-                g2.dispose();
-                
-                button.setPressedIcon(new ImageIcon(canvas));
+                    // 2. Imagen en estado pulsado (SÍNCRONO Y CENTRADO)
+                    int anchoPulsado = (int) (anchoNormal * 0.9);
+                    int altoPulsado = (int) (altoNormal * 0.9);
+
+                    // Creamos lienzo transparente de tamaño completo
+                    java.awt.image.BufferedImage canvas = new java.awt.image.BufferedImage(
+                            anchoNormal, altoNormal, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                    java.awt.Graphics2D g2 = canvas.createGraphics();
+
+                    // Suavizado de bordes
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                            java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+                    // Calculamos offsets
+                    int offX = (anchoNormal - anchoPulsado) / 2;
+                    int offY = (altoNormal - altoPulsado) / 2;
+
+                    // Dibujamos la imagen original escalándola directamente en el canvas (SÍNCRONO)
+                    g2.drawImage(img, offX, offY, anchoPulsado, altoPulsado, null);
+                    g2.dispose();
+
+                    button.setPressedIcon(new ImageIcon(canvas));
                 }
             }
         } catch (IOException e) {
@@ -158,18 +157,5 @@ public class MainMenu extends JPanel {
         button.setMargin(new java.awt.Insets(0, 0, 0, 0));
 
         return button;
-    }
-
-    private ImageIcon asignarImagenMenu(String ruta) {
-        try (InputStream is = getClass().getResourceAsStream(ruta)) {
-            if (is == null) {
-                System.err.println("No se encontro la imagen: " + ruta);
-                return null;
-            }
-            return new ImageIcon(ImageIO.read(is));
-        } catch (IOException e) {
-            System.err.println("Error cargando imagen para el menú: " + e.getMessage());
-            return null;
-        }
     }
 }

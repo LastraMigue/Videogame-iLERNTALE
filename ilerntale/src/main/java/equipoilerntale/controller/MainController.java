@@ -2,10 +2,7 @@ package equipoilerntale.controller;
 
 import equipoilerntale.view.MainFrame;
 import equipoilerntale.view.screens.CombatPanel;
-import equipoilerntale.view.screens.PausePanel;
 import javax.swing.JPanel;
-import equipoilerntale.service.AssetService;
-import java.util.logging.Logger;
 
 /**
  * CONTROLADOR PRINCIPAL DEL JUEGO.
@@ -13,8 +10,6 @@ import java.util.logging.Logger;
  * ESPECÍFICOS.
  */
 public class MainController implements Runnable {
-
-    private static final Logger LOG = Logger.getLogger(MainController.class.getName());
 
     private MainFrame mainFrame;
     private Thread gameThread;
@@ -40,12 +35,8 @@ public class MainController implements Runnable {
      * CREA EL EXPLORATIONMANAGER CON EL PERSONAJE SELECCIONADO.
      */
     private void inicializarControladores(String personaje) {
-        LOG.info("INICIALIZANDO CONTROLADORES PARA: " + personaje);
-
         // INICIALIZAR EXPLORATIONMANAGER CON EL PERSONAJE SELECCIONADO
         explorationManager = new ExplorationManager(mainFrame, personaje);
-
-        LOG.info("CONTROLADORES INICIALIZADOS");
     }
 
     /**
@@ -55,7 +46,6 @@ public class MainController implements Runnable {
         running = true;
         gameThread = new Thread(this);
         gameThread.start();
-        LOG.info("HILO DEL JUEGO INICIADO");
     }
 
     /**
@@ -68,7 +58,7 @@ public class MainController implements Runnable {
                 gameThread.join();
             }
         } catch (InterruptedException e) {
-            LOG.severe("ERROR AL DETENER EL HILO DEL JUEGO: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -89,8 +79,6 @@ public class MainController implements Runnable {
                 delta--;
             }
         }
-
-        LOG.info("HILO DEL JUEGO DETENIDO");
     }
 
     // Enum para los estados Jugando o en Pausa
@@ -120,7 +108,8 @@ public class MainController implements Runnable {
         }
 
         // 2. ACTUALIZAR LÓGICA DE EXPLORACIÓN
-        // (ExplorationManager ya filtra internamente si debe correr o no mediante su flag 'active')
+        // (ExplorationManager ya filtra internamente si debe correr o no mediante su
+        // flag 'active')
         if (explorationManager != null) {
             explorationManager.update();
         }
@@ -130,7 +119,6 @@ public class MainController implements Runnable {
      * PAUSA LA EJECUCIÓN DE LA LÓGICA DEL JUEGO.
      */
     public void pauseGame() {
-        LOG.info("ESTADO: PAUSADO");
         state = GameState.PAUSED;
     }
 
@@ -138,7 +126,6 @@ public class MainController implements Runnable {
      * REANUDA LA EJECUCIÓN DE LA LÓGICA DEL JUEGO.
      */
     public void resumeGame() {
-        LOG.info("ESTADO: JUGANDO");
         state = GameState.PLAYING;
     }
 
@@ -155,10 +142,6 @@ public class MainController implements Runnable {
 
     public GameState getGameState() {
         return state;
-    }
-
-    private void draw() {
-        mainFrame.repaint();
     }
 
     // ============ GETTERS ============
@@ -183,7 +166,6 @@ public class MainController implements Runnable {
      * LIBERA LOS RECURSOS DEL CONTROLADOR.
      */
     public void dispose() {
-        LOG.info("MAINCONTROLLER DISPOSE");
         stopGameThread();
 
         if (explorationManager != null) {

@@ -45,7 +45,6 @@ public class CharacterSelector extends JPanel {
             }
         } catch (FontFormatException | IOException e) {
             titleLabel.setFont(new Font("Monospaced", Font.BOLD, 32));
-            System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
         }
 
         titleLabel.setForeground(Color.WHITE);
@@ -79,16 +78,15 @@ public class CharacterSelector extends JPanel {
         button.setBorder(javax.swing.BorderFactory.createLineBorder(Color.WHITE, 2));
         button.setOpaque(true);
 
-        try (InputStream is = getClass().getResourceAsStream("/player/" + characterName + "/abajo1" + characterName + ".png")) {
+        try (InputStream is = getClass()
+                .getResourceAsStream("/player/" + characterName + "/abajo1" + characterName + ".png")) {
             if (is != null) {
                 button.setIcon(new ImageIcon(ImageIO.read(is)));
             } else {
-                System.err.println("Imagen no encontrada para: " + characterName);
                 button.setText(characterName.toUpperCase());
                 button.setForeground(Color.WHITE);
             }
         } catch (IOException e) {
-            System.err.println("Error cargando imagen de personaje: " + e.getMessage());
             button.setText(characterName.toUpperCase());
             button.setForeground(Color.WHITE);
         }
@@ -109,7 +107,6 @@ public class CharacterSelector extends JPanel {
 
         button.addActionListener(e -> {
             selectedCharacter = characterName;
-            System.out.println("Personaje seleccionado: " + selectedCharacter);
             equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
             mainFrame.setPersonajeSeleccionado(selectedCharacter);
             mainFrame.cambiarPantalla(MainFrame.SCREEN_GAME);

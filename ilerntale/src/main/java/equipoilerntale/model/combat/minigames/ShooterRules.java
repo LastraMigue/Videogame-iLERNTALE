@@ -22,7 +22,6 @@ public class ShooterRules implements MinigameRules {
 
     private int tickCounter = 0;
     private int shootCooldown = 0;
-    private int nextType = 0;
     private Random rand = new Random();
     private Font customFont;
     private Font giantFont;
@@ -34,7 +33,6 @@ public class ShooterRules implements MinigameRules {
         arena.startCombat();
         tickCounter = 0;
         shootCooldown = 0;
-        nextType = 0;
 
         MouseModel mouse = arena.getMouse();
         if (mouse != null) {
@@ -82,8 +80,10 @@ public class ShooterRules implements MinigameRules {
 
         // Movimiento solo horizontal
         int dx = 0;
-        if (input.isLeftPressed()) dx = -1;
-        if (input.isRightPressed()) dx = 1;
+        if (input.isLeftPressed())
+            dx = -1;
+        if (input.isRightPressed())
+            dx = 1;
 
         if (dx != 0) {
             arena.intentarMoverMouse(dx, 0); // dy=0
@@ -101,22 +101,24 @@ public class ShooterRules implements MinigameRules {
         if (input.isEnterPressed() && shootCooldown == 0) {
             // Bala del jugador (tipo 99)
             arena.addProjectile(new PlayerBullet(mouse.getX() + (mouse.getAncho() / 2) - 5, mouse.getY() - 10, 10, 10));
-            shootCooldown = 15; 
+            shootCooldown = 15;
         }
 
         // Projectiles
         if (arena.getProjectiles() != null) {
             arena.updateProjectiles();
-            
+
             // Chequeamos colisión entre balas del jugador y proyectiles enemigos
             checkBulletVsBullet(arena);
 
             // Check boundaries for despawning
             for (ProjectileModel p : arena.getProjectiles()) {
-                if (!p.isActive()) continue;
-                
+                if (!p.isActive())
+                    continue;
+
                 if (p.getType() == 99) {
-                    if (p.getY() <= 240) p.setActive(false);
+                    if (p.getY() <= 240)
+                        p.setActive(false);
                 } else {
                     // Si sale por los lados
                     if (p.getX() < 180 || p.getX() > 820) {
@@ -137,18 +139,20 @@ public class ShooterRules implements MinigameRules {
         List<ProjectileModel> projectiles = arena.getProjectiles();
         for (int i = 0; i < projectiles.size(); i++) {
             ProjectileModel p1 = projectiles.get(i);
-            if (!p1.isActive() || p1.getType() != 99) continue;
+            if (!p1.isActive() || p1.getType() != 99)
+                continue;
 
             Rectangle bounds1 = p1.getBounds();
 
             for (int j = 0; j < projectiles.size(); j++) {
                 ProjectileModel p2 = projectiles.get(j);
-                if (!p2.isActive() || p2.getType() == 99) continue;
+                if (!p2.isActive() || p2.getType() == 99)
+                    continue;
 
                 if (bounds1.intersects(p2.getBounds())) {
                     p1.setActive(false);
                     p2.setActive(false);
-                    
+
                     // Lógica de impacto según tipo
                     if (p2.getType() == 1) { // PUÑO VERDE -> Daño a enemigo
                         arena.addGoodCollision();
@@ -163,17 +167,17 @@ public class ShooterRules implements MinigameRules {
 
     private void spawnHorizontalProjectile(ArenaModel arena) {
         int size = 30; // Tamaño fijo para mejor visibilidad
-        
+
         // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
         int round = arena.getCurrentRound();
         double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
         int baseSpeed = rand.nextInt(2) + 4;
         int speed = (int) (baseSpeed * multiplier);
         int type = rand.nextInt(2); // 0 malas, 1 buenas
-        
+
         boolean fromLeft = rand.nextBoolean();
         int spawnX, spawnY, dx;
-        
+
         if (fromLeft) {
             spawnX = 185;
             spawnY = 270; // Carril superior

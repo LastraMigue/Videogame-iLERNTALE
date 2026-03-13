@@ -33,27 +33,27 @@ public class DerrotaScreen extends JPanel {
             if (is != null) {
                 Image btnImage = ImageIO.read(is);
                 Image scaledBtnImage = btnImage.getScaledInstance(300, 100, Image.SCALE_SMOOTH);
-            btnSalir = new JButton(new ImageIcon(scaledBtnImage));
-            btnSalir.setBorderPainted(false);
-            btnSalir.setContentAreaFilled(false);
-            btnSalir.setFocusPainted(false);
-            btnSalir.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+                btnSalir = new JButton(new ImageIcon(scaledBtnImage));
+                btnSalir.setBorderPainted(false);
+                btnSalir.setContentAreaFilled(false);
+                btnSalir.setFocusPainted(false);
+                btnSalir.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
 
-            // Posicionar el boton justo debajo del centro o donde se requiera
-            // The user said "justo debajo" which means in the lower part of the screen
-            // Standard resolution is 1000x600 based on MainFrame
-            btnSalir.setBounds(500 - (300 / 2), 400, 300, 100);
+                // Posicionar el boton justo debajo del centro o donde se requiera
+                // The user said "justo debajo" which means in the lower part of the screen
+                // Standard resolution is 1000x600 based on MainFrame
+                btnSalir.setBounds(500 - (300 / 2), 400, 300, 100);
 
-            btnSalir.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
-                    mainFrame.reiniciarJuego();
-                    mainFrame.cambiarPantalla("MENU");
-                }
-            });
-            add(btnSalir);
-        }
+                btnSalir.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
+                        mainFrame.reiniciarJuego();
+                        mainFrame.cambiarPantalla("MENU");
+                    }
+                });
+                add(btnSalir);
+            }
         } catch (Exception e) {
             System.err.println("Error al cargar la imagen del boton salir: " + e.getMessage());
         }

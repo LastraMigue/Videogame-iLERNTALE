@@ -10,9 +10,9 @@ public class PopupScare extends JWindow {
     public PopupScare(int x, int y, int width, int height) {
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.BLACK);
-        
+
         loadFont();
-        
+
         JLabel label = new JLabel("MUERE!", SwingConstants.CENTER);
         label.setForeground(Color.WHITE);
         if (customFont != null) {
@@ -20,9 +20,9 @@ public class PopupScare extends JWindow {
         } else {
             label.setFont(new Font("Monospaced", Font.BOLD, 24));
         }
-        
+
         add(label, BorderLayout.CENTER);
-        
+
         setBounds(x, y, width, height);
         setAlwaysOnTop(true);
     }

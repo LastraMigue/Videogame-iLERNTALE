@@ -51,17 +51,48 @@ public class PausePanel extends JPanel {
 
         TransparentPanel fondoOscuro = new TransparentPanel(new Color(0, 0, 0, 150));
         fondoOscuro.setLayout(new GridBagLayout());
-        
+
         // BLOQUEO DE INPUT: Consumir todos los eventos de ratón
         MouseAdapter blocker = new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) { e.consume(); }
-            @Override public void mousePressed(MouseEvent e) { e.consume(); }
-            @Override public void mouseReleased(MouseEvent e) { e.consume(); }
-            @Override public void mouseEntered(MouseEvent e) { e.consume(); }
-            @Override public void mouseExited(MouseEvent e) { e.consume(); }
-            @Override public void mouseMoved(MouseEvent e) { e.consume(); }
-            @Override public void mouseDragged(MouseEvent e) { e.consume(); }
-            @Override public void mouseWheelMoved(java.awt.event.MouseWheelEvent e) { e.consume(); }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                e.consume();
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                e.consume();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                e.consume();
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                e.consume();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                e.consume();
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                e.consume();
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                e.consume();
+            }
+
+            @Override
+            public void mouseWheelMoved(java.awt.event.MouseWheelEvent e) {
+                e.consume();
+            }
         };
         fondoOscuro.addMouseListener(blocker);
         fondoOscuro.addMouseMotionListener(blocker);
@@ -89,7 +120,6 @@ public class PausePanel extends JPanel {
             }
         } catch (FontFormatException | IOException e) {
             titulo.setFont(new Font("Monospaced", Font.BOLD, 32));
-            System.out.println("No se pudo cargar la fuente Deltarune, usando Monospaced.");
         }
 
         titulo.setForeground(Color.WHITE);
@@ -120,17 +150,18 @@ public class PausePanel extends JPanel {
         JLabel lblVolumen = new JLabel("VOLUMEN");
         lblVolumen.setForeground(Color.WHITE);
         lblVolumen.setAlignmentX(CENTER_ALIGNMENT);
-        
+
         // Intentar usar la misma fuente que el título pero más pequeña
         lblVolumen.setFont(titulo.getFont().deriveFont(24f));
-        
-        JSlider sliderVolumen = new JSlider(JSlider.HORIZONTAL, 0, 100, (int)(SoundService.getInstance().getVolume() * 100));
+
+        JSlider sliderVolumen = new JSlider(JSlider.HORIZONTAL, 0, 100,
+                (int) (SoundService.getInstance().getVolume() * 100));
         sliderVolumen.setBackground(Color.BLACK);
         sliderVolumen.setForeground(Color.WHITE);
         sliderVolumen.setPreferredSize(new Dimension(200, 40));
         sliderVolumen.setMaximumSize(new Dimension(250, 40));
         sliderVolumen.setAlignmentX(CENTER_ALIGNMENT);
-        
+
         sliderVolumen.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -189,7 +220,6 @@ public class PausePanel extends JPanel {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error cargando botón " + imagePath + ": " + e.getMessage());
         }
 
         if (button.getIcon() == null) {

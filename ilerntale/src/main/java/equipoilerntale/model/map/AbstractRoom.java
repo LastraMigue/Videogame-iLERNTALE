@@ -1,7 +1,6 @@
 package equipoilerntale.model.map;
 
 import java.awt.Rectangle;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
