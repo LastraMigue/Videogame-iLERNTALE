@@ -21,18 +21,6 @@ public class ZombieRenderer {
         if (sprite != null) {
             g2d.drawImage(sprite, zombie.getX(), zombie.getY(), zombie.getSize(), zombie.getSize(), null);
         }
-        drawHealthBar(ctx, zombie);
-    }
-
-    private void drawHealthBar(RenderContext ctx, Zombie zombie) {
-        Graphics2D g2d = ctx.getGraphics();
-        int x = zombie.getX();
-        int y = zombie.getY() - 10;
-        int width = zombie.getSize();
-        g2d.setColor(Color.BLACK);
-        g2d.fillRect(x, y, width, 5);
-        float ratio = (float) zombie.getHealth() / Zombie.MAX_HEALTH;
-        g2d.setColor(ratio > 0.5 ? Color.GREEN : Color.RED);
-        g2d.fillRect(x + 1, y + 1, (int) ((width - 2) * ratio), 3);
+        // drawHealthBar(ctx, zombie); // Eliminado a petición para que no se vea en el mapa
     }
 }

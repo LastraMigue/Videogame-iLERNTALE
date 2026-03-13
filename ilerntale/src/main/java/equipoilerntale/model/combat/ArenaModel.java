@@ -1,21 +1,25 @@
 package equipoilerntale.model.combat;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ArenaModel {
     private MouseModel mouse;
     private List<ProjectileModel> projectiles;
     private int goodCollisions = 0;
     private int badCollisions = 0;
+    private int currentRound = 1;
+
 
     public void startCombat() {
         initMouseCenter();
-        projectiles = new ArrayList<>();
+        projectiles = new CopyOnWriteArrayList<>();
         goodCollisions = 0;
         badCollisions = 0;
+        reversedControls = false;
     }
 
+    // 
     public void initMouseCenter() {
         int x = 200, y = 240, width = 600, height = 250;
         int mouseStartX = x + (width / 2) - 15;
@@ -26,6 +30,9 @@ public class ArenaModel {
     public void stopCombat() {
         mouse = null;
         projectiles = null;
+        goodCollisions = 0;
+        badCollisions = 0;
+        reversedControls = false;
     }
 
     public void addProjectile(ProjectileModel projectile) {
@@ -48,9 +55,24 @@ public class ArenaModel {
         }
     }
 
+    private boolean reversedControls = false;
+
+    public void setReversedControls(boolean reversed) {
+        this.reversedControls = reversed;
+    }
+
+    public boolean isReversedControls() {
+        return reversedControls;
+    }
+
     public void intentarMoverMouse(int dx, int dy) {
         if (mouse == null)
             return;
+        // En fase final, los controles se invierten
+        if (reversedControls) {
+            dx = -dx;
+            dy = -dy;
+        }
         int fX = mouse.getX() + (dx * 5);
         int fY = mouse.getY() + (dy * 5);
         if (fX >= 200 && fX <= 800 - mouse.getAncho())
@@ -76,9 +98,16 @@ public class ArenaModel {
                 continue;
 
             if (mouse.getBounds().intersects(proj.getBounds())) {
-                proj.setActive(false);
+                if (proj.isDeactivateOnHit()) {
+                    proj.setActive(false);
+                }
+                
                 if (proj.getType() == 1) {
                     goodCollisions++;
+                } else if (proj.getType() == 10) {
+                    // El daño de las paredes (tipo 10) lo suele gestionar MazeRules 
+                    // para el daño por contacto continuo, pero podemos sumar uno inicial aquí
+                    // si quisiéramos centralizarlo. Por ahora, dejamos que las reglas lo lleven.
                 } else {
                     badCollisions++;
                 }
@@ -94,6 +123,14 @@ public class ArenaModel {
         return badCollisions;
     }
 
+    public void addGoodCollision() {
+        this.goodCollisions++;
+    }
+
+    public void addBadCollision() {
+        this.badCollisions++;
+    }
+
     public boolean allBulletsHit() {
         if (projectiles == null || projectiles.size() < 12)
             return false;
@@ -103,5 +140,13 @@ public class ArenaModel {
             }
         }
         return true;
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
+
+    public void setCurrentRound(int round) {
+        this.currentRound = round;
     }
 }

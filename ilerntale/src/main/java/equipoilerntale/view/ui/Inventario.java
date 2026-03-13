@@ -7,23 +7,40 @@ import equipoilerntale.model.entity.ItemModel;
 
 public class Inventario {
 
+    private static Inventario instance;
     private List<ItemModel> items;
 
-    public Inventario() {
+    public static Inventario getInstance() {
+        if (instance == null) {
+            instance = new Inventario();
+        }
+        return instance;
+    }
+
+    private Inventario() {
         this.items = new ArrayList<>();
-        // Agregar objetos principales
-        this.agregarItem(new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 3, true));
-        this.agregarItem(
-                new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 2, true));
-        this.agregarItem(
-                new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 2, true));
-        this.agregarItem(new ItemModel("Llave", "Abre una puerta\ncerrada.", "/objects/llave.png", 1, false));
+        // Agregar objetos principales (Podemos comentarlos luego si queremos empezar de
+        // cero)
+        this.agregarItem(new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 0, true));
+        this.agregarItem(new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 0, true));
+        this.agregarItem(new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 0, true));
+        this.agregarItem(new ItemModel("Llave", "Abre una puerta\ncerrada.", "/objects/llave.png", 0, false));
     }
 
     public void agregarItem(ItemModel item) {
-        if (item != null) {
-            items.add(item);
+        if (item == null)
+            return;
+
+        // Si el ítem ya existe, aumentamos su cantidad
+        for (ItemModel existing : items) {
+            if (existing.getNombre().equals(item.getNombre())) {
+                existing.setCantidad(existing.getCantidad() + item.getCantidad());
+                return;
+            }
         }
+
+        // Si no existe, lo añadimos
+        items.add(item);
     }
 
     public List<ItemModel> getItems() {
@@ -35,6 +52,15 @@ public class Inventario {
             return items.get(index);
         }
         return null;
+    }
+
+    public void limpiar() {
+        this.items.clear();
+        // Agregar objetos principales nuevamente
+        this.agregarItem(new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 0, true));
+        this.agregarItem(new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 0, true));
+        this.agregarItem(new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 0, true));
+        this.agregarItem(new ItemModel("Llave", "Abre una puerta\ncerrada.", "/objects/llave.png", 0, false));
     }
 
     /**

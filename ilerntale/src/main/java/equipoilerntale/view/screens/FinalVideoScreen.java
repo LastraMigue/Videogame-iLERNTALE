@@ -73,6 +73,7 @@ public class FinalVideoScreen extends JPanel {
                 // Cuando termine el video, cambiamos a la pantalla del MENU
                 mediaPlayer.setOnEndOfMedia(() -> {
                     SwingUtilities.invokeLater(() -> {
+                        mainFrame.reiniciarJuego();
                         mainFrame.cambiarPantalla("MENU");
                     });
                 });
@@ -82,6 +83,7 @@ public class FinalVideoScreen extends JPanel {
                 ex.printStackTrace();
                 // Si el video falla, saltamos al menú
                 SwingUtilities.invokeLater(() -> {
+                    mainFrame.reiniciarJuego();
                     mainFrame.cambiarPantalla("MENU");
                 });
             }

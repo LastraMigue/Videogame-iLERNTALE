@@ -4,13 +4,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontFormatException;
-import java.awt.Image;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.awt.Cursor;
 import java.net.URL;
+import java.awt.Image;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -26,6 +27,7 @@ public class MainMenu extends JPanel {
     private JButton btnIntro;
     private JButton btnTutorial;
     private JButton btnSalir;
+    private Image imagenFondo;
 
     /**
      * CONSTRUCTOR DEL MENÚ PRINCIPAL.
@@ -36,37 +38,26 @@ public class MainMenu extends JPanel {
         setPreferredSize(new Dimension(1000, 600));
         setLayout(null); // Diseño absoluto, usamos coordenadas
 
+        cargarRecursos();
         inicializarComponentes();
-        cargarImagenMenu();
     }
 
-    private JButton crearBoton(String texto, int x, int y) {
-        JButton boton = new JButton(texto);
-
-        // Cargar fuente
-        try {
-            InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
-            if (fontStream != null) {
-                Font deltaruneFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(32f);
-                boton.setFont(deltaruneFont);
-            } else {
-                throw new IOException("No se encontró el archivo de la fuente.");
-            }
-        } catch (FontFormatException | IOException e) {
-            boton.setFont(new Font("Monospaced", Font.BOLD, 32));
-            System.out.println("No se pudo cargar la fuente Deltarune para " + texto + ", usando Monospaced.");
+    private void cargarRecursos() {
+        URL url = getClass().getResource("/title/menu1.jpg");
+        if (url != null) {
+            imagenFondo = new ImageIcon(url).getImage();
         }
+    }
 
-        // Estilo visual
-        boton.setOpaque(false);
-        boton.setContentAreaFilled(false);
-        boton.setBorderPainted(false);
-        boton.setFocusPainted(false);
-        boton.setForeground(Color.WHITE);
-        boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        boton.setBounds(x, y, 300, 60);
-
-        return boton;
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (imagenFondo != null) {
+            g.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
+        } else {
+            g.setColor(new Color(20, 20, 30));
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
     }
 
     private void inicializarComponentes() {
@@ -117,17 +108,10 @@ public class MainMenu extends JPanel {
             }
         });
 
-        // Añadir al panel
         add(btnJugar);
         add(btnIntro);
         add(btnTutorial);
         add(btnSalir);
-
-        // Asegurar que los botones estén en la capa superior, por encima del panel
-        setComponentZOrder(btnJugar, 0);
-        setComponentZOrder(btnIntro, 0);
-        setComponentZOrder(btnTutorial, 0);
-        setComponentZOrder(btnSalir, 0);
     }
 
     private JButton createImageButton(String imagePath, String fallbackText) {
@@ -135,11 +119,37 @@ public class MainMenu extends JPanel {
 
         URL imageUrl = getClass().getResource(imagePath);
         if (imageUrl != null) {
-            ImageIcon icon = new ImageIcon(imageUrl);
-            Image img = icon.getImage();
+            ImageIcon originalIcon = new ImageIcon(imageUrl);
+            Image img = originalIcon.getImage();
             if (img != null) {
-                Image scaledImg = img.getScaledInstance(200, 60, Image.SCALE_SMOOTH);
-                button.setIcon(new ImageIcon(scaledImg));
+                // 1. Imagen en estado normal
+                int anchoNormal = 200;
+                int altoNormal = 60;
+                Image normalImg = img.getScaledInstance(anchoNormal, altoNormal, Image.SCALE_SMOOTH);
+                button.setIcon(new ImageIcon(normalImg));
+
+                // 2. Imagen en estado pulsado (SÍNCRONO Y CENTRADO)
+                int anchoPulsado = (int) (anchoNormal * 0.9);
+                int altoPulsado = (int) (altoNormal * 0.9);
+                
+                // Creamos lienzo transparente de tamaño completo
+                java.awt.image.BufferedImage canvas = new java.awt.image.BufferedImage(
+                    anchoNormal, altoNormal, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                java.awt.Graphics2D g2 = canvas.createGraphics();
+                
+                // Suavizado de bordes
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, 
+                                  java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                
+                // Calculamos offsets
+                int offX = (anchoNormal - anchoPulsado) / 2;
+                int offY = (altoNormal - altoPulsado) / 2;
+                
+                // Dibujamos la imagen original escalándola directamente en el canvas (SÍNCRONO)
+                g2.drawImage(img, offX, offY, anchoPulsado, altoPulsado, null);
+                g2.dispose();
+                
+                button.setPressedIcon(new ImageIcon(canvas));
             }
         }
 
@@ -153,6 +163,14 @@ public class MainMenu extends JPanel {
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // FORZAR CENTRADO DE ICONOS: Asegura que el escalado sea simétrico
+        button.setHorizontalAlignment(JButton.CENTER);
+        button.setVerticalAlignment(JButton.CENTER);
+        button.setHorizontalTextPosition(JButton.CENTER);
+        button.setVerticalTextPosition(JButton.CENTER);
+        button.setIconTextGap(0);
+        button.setMargin(new java.awt.Insets(0, 0, 0, 0));
 
         return button;
     }

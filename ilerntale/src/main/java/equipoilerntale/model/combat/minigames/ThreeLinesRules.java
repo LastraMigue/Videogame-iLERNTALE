@@ -96,7 +96,12 @@ public class ThreeLinesRules implements MinigameRules {
 
     private void spawnLineProjectile(ArenaModel arena) {
         int size = rand.nextInt(15) + 15;
-        int speed = rand.nextInt(3) + 4;
+        
+        // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
+        int round = arena.getCurrentRound();
+        double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
+        int baseSpeed = rand.nextInt(3) + 4;
+        int speed = (int) (baseSpeed * multiplier);
         int type = nextType;
         nextType = (nextType == 0) ? 1 : 0;
 

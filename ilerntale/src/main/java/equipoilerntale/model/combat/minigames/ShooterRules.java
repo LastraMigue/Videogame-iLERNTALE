@@ -82,17 +82,15 @@ public class ShooterRules implements MinigameRules {
 
         // Movimiento solo horizontal
         int dx = 0;
-        if (input.leftPressed)
-            dx = -1;
-        if (input.rightPressed)
-            dx = 1;
+        if (input.leftPressed) dx = -1;
+        if (input.rightPressed) dx = 1;
 
         if (dx != 0) {
             arena.intentarMoverMouse(dx, 0); // dy=0
         }
 
         // Mantener abajo
-        mouse.setY(490 - mouse.getAlto() - 5);
+        mouse.setY(490 - mouse.getAlto() - 15);
 
         if (introTicks > 0) {
             introTicks--;
@@ -101,71 +99,92 @@ public class ShooterRules implements MinigameRules {
 
         // Disparar
         if (input.enterPressed && shootCooldown == 0) {
-            // Bala blanca del jugador (tipo 99)
-            arena.addProjectile(new PlayerBullet(mouse.getX() + (mouse.getAncho() / 2) - 5, mouse.getY() - 10, 10, 8));
-            shootCooldown = 20; // 20 frames cooldown
+            // Bala del jugador (tipo 99)
+            arena.addProjectile(new PlayerBullet(mouse.getX() + (mouse.getAncho() / 2) - 5, mouse.getY() - 10, 10, 10));
+            shootCooldown = 15; 
         }
 
         // Projectiles
         if (arena.getProjectiles() != null) {
             arena.updateProjectiles();
-            arena.checkCollisions(); // Chequea ratón contra balas malas
+            
+            // Chequeamos colisión entre balas del jugador y proyectiles enemigos
+            checkBulletVsBullet(arena);
 
             // Check boundaries for despawning
             for (ProjectileModel p : arena.getProjectiles()) {
-                if (!p.isActive())
-                    continue;
-                if (p.getType() == 99 && p.getY() <= 240) {
-                    p.setActive(false);
-                } else if (p.getType() != 99 && p.getY() >= 490 - p.getSize()) {
-                    p.setActive(false);
+                if (!p.isActive()) continue;
+                
+                if (p.getType() == 99) {
+                    if (p.getY() <= 240) p.setActive(false);
+                } else {
+                    // Si sale por los lados
+                    if (p.getX() < 180 || p.getX() > 820) {
+                        p.setActive(false);
+                    }
                 }
             }
 
-            // Chequeo de colisión entre balas del jugador y balas enemigas
-            checkBulletVsBullet(arena.getProjectiles());
-
             tickCounter++;
-            if (tickCounter >= 45) { // Balas enemigas cayendo
-                spawnFallingProjectile(arena);
+            if (tickCounter >= 35) { // Spawn más frecuente
+                spawnHorizontalProjectile(arena);
                 tickCounter = 0;
             }
         }
     }
 
-    private void checkBulletVsBullet(List<ProjectileModel> projectiles) {
+    private void checkBulletVsBullet(ArenaModel arena) {
+        List<ProjectileModel> projectiles = arena.getProjectiles();
         for (int i = 0; i < projectiles.size(); i++) {
             ProjectileModel p1 = projectiles.get(i);
-            if (!p1.isActive() || p1.getType() != 99)
-                continue; // Solo nos interesan las balas del jugador como p1
+            if (!p1.isActive() || p1.getType() != 99) continue;
 
             Rectangle bounds1 = p1.getBounds();
 
             for (int j = 0; j < projectiles.size(); j++) {
                 ProjectileModel p2 = projectiles.get(j);
-                if (!p2.isActive() || p2.getType() == 99)
-                    continue; // P2 son balas enemigas
+                if (!p2.isActive() || p2.getType() == 99) continue;
 
                 if (bounds1.intersects(p2.getBounds())) {
                     p1.setActive(false);
                     p2.setActive(false);
-                    break; // P1 ya destruida
+                    
+                    // Lógica de impacto según tipo
+                    if (p2.getType() == 1) { // PUÑO VERDE -> Daño a enemigo
+                        arena.addGoodCollision();
+                    } else { // CALAVERA ROJA -> Daño a jugador
+                        arena.addBadCollision();
+                    }
+                    break;
                 }
             }
         }
     }
 
-    private void spawnFallingProjectile(ArenaModel arena) {
-        int size = rand.nextInt(15) + 15;
-        int speed = rand.nextInt(3) + 3; // Más velocidad
-        int type = nextType;
-        nextType = (nextType == 0) ? 1 : 0;
+    private void spawnHorizontalProjectile(ArenaModel arena) {
+        int size = 30; // Tamaño fijo para mejor visibilidad
+        
+        // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
+        int round = arena.getCurrentRound();
+        double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
+        int baseSpeed = rand.nextInt(2) + 4;
+        int speed = (int) (baseSpeed * multiplier);
+        int type = rand.nextInt(2); // 0 malas, 1 buenas
+        
+        boolean fromLeft = rand.nextBoolean();
+        int spawnX, spawnY, dx;
+        
+        if (fromLeft) {
+            spawnX = 185;
+            spawnY = 270; // Carril superior
+            dx = speed;
+        } else {
+            spawnX = 815 - size;
+            spawnY = 350; // Carril inferior
+            dx = -speed;
+        }
 
-        int spawnX = 200 + rand.nextInt(600 - size);
-        int spawnY = 240 + size; // Por dentro de la arena superior
-
-        // Caen hacia abajo (dx = 0, dy = speed)
-        arena.addProjectile(new StraightProjectile(spawnX, spawnY, size, 0, speed, type));
+        arena.addProjectile(new StraightProjectile(spawnX, spawnY, size, dx, 0, type));
     }
 
     @Override

@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 import equipoilerntale.GameSettings;
 import equipoilerntale.model.entity.Zombie;
@@ -15,8 +16,8 @@ import equipoilerntale.model.entity.Boss;
 public class EnemySystem {
     private static final Logger LOG = Logger.getLogger(EnemySystem.class.getName());
 
-    private final List<Zombie> zombies = new ArrayList<>();
-    private final List<Boss> bosses = new ArrayList<>();
+    private final List<Zombie> zombies = new CopyOnWriteArrayList<>();
+    private final List<Boss> bosses = new CopyOnWriteArrayList<>();
     private final Random random = new Random();
     private boolean active = false;
 
@@ -74,9 +75,15 @@ public class EnemySystem {
 
             Rectangle spawnBounds = new Zombie(rx, ry, GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT).getHitbox(rx,
                     ry);
+            
+            // Margen de seguridad: expandir el hitbox de prueba para no nacer pegado a muros
+            Rectangle safetyBounds = new Rectangle(
+                spawnBounds.x - 10, spawnBounds.y - 10, 
+                spawnBounds.width + 20, spawnBounds.height + 20
+            );
 
             // Verificar que no colisione con muros
-            boolean hitsWall = walls.stream().anyMatch(w -> w.intersects(spawnBounds));
+            boolean hitsWall = walls.stream().anyMatch(w -> w.intersects(safetyBounds));
             if (hitsWall)
                 continue;
 
@@ -112,19 +119,68 @@ public class EnemySystem {
         }
     }
 
-    public boolean collidesWithPlayer(Rectangle playerHitbox) {
-        boolean hitZombie = zombies.stream().anyMatch(z -> {
-            if (!z.isAlive())
-                return false;
-            return playerHitbox.intersects(z.getHitbox(z.getX(), z.getY()));
-        });
-        boolean hitBoss = bosses.stream().anyMatch(b -> {
-            if (!b.isAlive())
-                return false;
-            return playerHitbox.intersects(b.getHitbox(b.getX(), b.getY()));
-        });
+    /**
+     * ALEJA A LOS ENEMIGOS QUE ESTÉN DEMASIADO CERCA DE UNA POSICIÓN.
+     * Se usa para dar un margen al jugador tras salir de un combate.
+     */
+    public void disperseEnemiesFrom(int px, int py, int minDistance) {
+        for (Zombie z : zombies) {
+            double dist = Math.sqrt(Math.pow(z.getX() - px, 2) + Math.pow(z.getY() - py, 2));
+            if (dist < minDistance) {
+                // Vector de alejamiento
+                double angle = Math.atan2(z.getY() - py, z.getX() - px);
+                if (dist < 1)
+                    angle = random.nextDouble() * Math.PI * 2;
 
-        return hitZombie || hitBoss;
+                // Intentar alejar al zombie a una posición segura (fuera de muros)
+                int pushDist = 600;
+                boolean foundSafe = false;
+
+                // Intentamos desde el alejamiento máximo hacia abajo hasta encontrar sitio
+                for (int d = pushDist; d >= 100; d -= 20) {
+                    int nextX = px + (int) (Math.cos(angle) * d);
+                    int nextY = py + (int) (Math.sin(angle) * d);
+
+                    // Límites del mapa (evitar salir por los bordes)
+                    nextX = Math.max(20, Math.min(nextX, GameSettings.MAP_WIDTH - Zombie.SIZE - 20));
+                    nextY = Math.max(250, Math.min(nextY, GameSettings.MAP_HEIGHT - Zombie.SIZE - 20));
+
+                    Rectangle testHitbox = z.getHitbox(nextX, nextY);
+                    boolean hits = walls.stream().anyMatch(w -> w.intersects(testHitbox));
+
+                    if (!hits) {
+                        z.setX(nextX);
+                        z.setY(nextY);
+                        foundSafe = true;
+                        break;
+                    }
+                }
+
+                z.setDetectedPlayer(false); // Olvidar al jugador momentáneamente
+                if (!foundSafe) {
+                    LOG.info("No se encontró punto de dispersión seguro para zombie en " + z.getX() + "," + z.getY());
+                }
+            }
+        }
+        // Los bosses no se dispersan ya que suelen ser estáticos o importantes en su sitio
+    }
+
+    public Object getEnemyAt(Rectangle playerHitbox) {
+        for (Zombie z : zombies) {
+            if (z.isAlive() && playerHitbox.intersects(z.getHitbox(z.getX(), z.getY()))) {
+                return z;
+            }
+        }
+        for (Boss b : bosses) {
+            if (b.isAlive() && playerHitbox.intersects(b.getHitbox(b.getX(), b.getY()))) {
+                return b;
+            }
+        }
+        return null;
+    }
+
+    public boolean collidesWithPlayer(Rectangle playerHitbox) {
+        return getEnemyAt(playerHitbox) != null;
     }
 
     /**

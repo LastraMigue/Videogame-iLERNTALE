@@ -2,7 +2,9 @@ package equipoilerntale.controller;
 
 import java.awt.Image;
 import java.awt.Rectangle;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import equipoilerntale.GameSettings;
@@ -16,6 +18,8 @@ import equipoilerntale.model.map.Room1;
 import equipoilerntale.model.map.Room2;
 import equipoilerntale.model.map.Room3;
 import equipoilerntale.model.map.RoomPasillo;
+import equipoilerntale.model.entity.WorldItem;
+import equipoilerntale.view.ui.Inventario;
 import equipoilerntale.service.AssetService;
 
 /**
@@ -33,6 +37,8 @@ public class ExplorationManager {
     private final Object mainFrame;
 
     private AbstractRoom currentRoom;
+    private final Map<String, AbstractRoom> roomCache = new HashMap<>();
+    private String lastRoomName = "";
 
     private int animationFrameIndex = 0;
     private long lastAnimationTime = 0;
@@ -56,9 +62,13 @@ public class ExplorationManager {
         AssetService.getInstance().loadCharacterSprites(characterName, Player.SIZE);
         this.player = new Player(GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT);
         this.enemySystem = new EnemySystem();
+        
+        // INICIALIZAR CACHÉ CON LA SALA INICIAL
+        AbstractRoom startRoom = new RoomPasillo();
+        roomCache.put(startRoom.getName(), startRoom);
 
         // CARGAMOS LA SALA INICIAL POR DEFECTO AL CREAR EL MANAGER
-        loadRoom(new RoomPasillo(), Player.START_X, Player.START_Y);
+        loadRoom(startRoom, Player.START_X, Player.START_Y);
     }
 
     /**
@@ -68,8 +78,9 @@ public class ExplorationManager {
     public void loadRoom(AbstractRoom room, int playerStartX, int playerStartY) {
         LOG.info("CARGANDO HABITACIÓN: " + room.getName());
         enemySystem.clear(); // Limpiar zombies
-
+        
         this.currentRoom = room;
+        this.lastRoomName = room.getName(); // Registrar sala cargada
 
         // POSICIONAMOS AL JUGADOR EN LA ENTRADA
         this.player.setX(playerStartX);
@@ -89,8 +100,25 @@ public class ExplorationManager {
     public void activate() {
         if (!active) {
             active = true;
-            enemySystem.clear(); // Limpiar zombies anteriores
-            spawnZombies();
+            // Siempre limpiar teclas al volver a EXPLORACION, evita teclas atascadas
+            if (inputHandler != null) {
+                inputHandler.reset();
+            }
+            // Solo regeneramos si hemos cambiado de sala o si no hay enemigos
+            String roomName = (currentRoom != null) ? currentRoom.getName() : null;
+            if (roomName != null && !roomName.equals(lastRoomName)) {
+                enemySystem.clear();
+                spawnZombies();
+                lastRoomName = roomName;
+            } else if (enemySystem.getZombies().isEmpty() && enemySystem.getBosses().isEmpty()) {
+                // Si la sala es la misma pero está vacía (ej: reload), spawnear
+                spawnZombies();
+                lastRoomName = (currentRoom != null) ? currentRoom.getName() : "";
+            } else {
+                // Si la sala es la misma y hay enemigos (volvemos de un combate)
+                // Dispersamos a los enemigos cercanos para dar un respiro al jugador
+                enemySystem.disperseEnemiesFrom(player.getX(), player.getY(), 450);
+            }
             LOG.info("ExplorationManager activado.");
         }
     }
@@ -184,15 +212,30 @@ public class ExplorationManager {
         if (inputHandler.ePressed && currentRoom != null) {
             for (DoorModel door : currentRoom.getDoors()) {
                 if (player.intersects(door.getArea())) {
-                    if (door.getTargetRoomName().equals("Aula 124")) {
-                        loadRoom(new Room1(), door.getTargetPlayerX(), door.getTargetPlayerY());
-                    } else if (door.getTargetRoomName().equals("Pasillo Principal")) {
-                        loadRoom(new RoomPasillo(), door.getTargetPlayerX(), door.getTargetPlayerY());
-                    } else if (door.getTargetRoomName().equals("Aula 123")) {
-                        loadRoom(new Room2(), door.getTargetPlayerX(), door.getTargetPlayerY());
-                    } else if (door.getTargetRoomName().equals("Aula 125")) {
-                        loadRoom(new Room3(), door.getTargetPlayerX(), door.getTargetPlayerY());
+                    String targetName = door.getTargetRoomName();
+                    AbstractRoom targetRoom = roomCache.get(targetName);
+
+                    // Si la sala no está en caché, la creamos
+                    if (targetRoom == null) {
+                        if (targetName.equals("Aula 124")) {
+                            targetRoom = new Room1();
+                        } else if (targetName.equals("Pasillo Principal")) {
+                            targetRoom = new RoomPasillo();
+                        } else if (targetName.equals("Aula 123")) {
+                            targetRoom = new Room2();
+                        } else if (targetName.equals("Aula 125")) {
+                            targetRoom = new Room3();
+                        }
+                        
+                        if (targetRoom != null) {
+                            roomCache.put(targetName, targetRoom);
+                        }
                     }
+
+                    if (targetRoom != null) {
+                        loadRoom(targetRoom, door.getTargetPlayerX(), door.getTargetPlayerY());
+                    }
+                    
                     inputHandler.ePressed = false; // Evitar salto doble por mantener pulsado
                     break;
                 }
@@ -200,8 +243,33 @@ public class ExplorationManager {
         }
 
         // COMPROBAR COMBATE CON ENEMIGOS
-        if (enemySystem.collidesWithPlayer(player.getHitbox(player.getX(), player.getY()))) {
-            triggerScreenChange("COMBATE");
+        Object enemy = enemySystem.getEnemyAt(player.getHitbox(player.getX(), player.getY()));
+        if (enemy != null) {
+            if (mainFrame instanceof equipoilerntale.view.MainFrame) {
+                ((equipoilerntale.view.MainFrame) mainFrame).entrarCombate(enemy);
+            }
+        }
+
+        // COMPROBAR COLISIÓN CON OBJETOS DEL MAPA
+        if (currentRoom != null) {
+            for (WorldItem item : currentRoom.getItems()) {
+                if (!item.isCollected() && player.getHitbox(player.getX(), player.getY()).intersects(item.getHitbox())) {
+                    item.setCollected(true);
+                    Inventario.getInstance().agregarItem(item.getItem());
+                    LOG.info("OBJETO RECOGIDO: " + item.getItem().getNombre());
+                }
+            }
+        }
+    }
+
+    /**
+     * ELIMINA UN ENEMIGO DEL SISTEMA TRAS EL COMBATE.
+     */
+    public void removeEnemy(Object enemy) {
+        if (enemy instanceof Zombie) {
+            enemySystem.getZombies().remove(enemy);
+        } else if (enemy instanceof Boss) {
+            enemySystem.getBosses().remove(enemy);
         }
     }
 

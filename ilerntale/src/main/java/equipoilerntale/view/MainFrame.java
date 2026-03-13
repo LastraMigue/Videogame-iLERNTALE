@@ -20,8 +20,9 @@ import equipoilerntale.view.screens.MainMenu;
 import equipoilerntale.view.screens.PausePanel;
 import equipoilerntale.view.screens.TutorialPanel;
 import equipoilerntale.view.screens.VideoScreen;
+import equipoilerntale.view.screens.TransformacionVideoScreen;
+import equipoilerntale.view.screens.FinalVideoScreen;
 import equipoilerntale.view.ui.CajaTexto;
-import equipoilerntale.controller.MainController;
 import equipoilerntale.view.ui.BarraVida;
 
 /**
@@ -42,6 +43,8 @@ public class MainFrame extends JFrame {
     private CombatPanel combate;
     private DerrotaScreen derrota;
     private VideoScreen videoScreen;
+    private TransformacionVideoScreen transformacionVideo;
+    private FinalVideoScreen finalVideoScreen;
     private ExplorationPanel exploracion;
     private GamePanel gamePanel;
     private TutorialPanel tutorial;
@@ -88,6 +91,8 @@ public class MainFrame extends JFrame {
         combate = new CombatPanel(this);
         derrota = new DerrotaScreen(this);
         videoScreen = new VideoScreen(this);
+        transformacionVideo = new TransformacionVideoScreen(this);
+        finalVideoScreen = new FinalVideoScreen(this);
         tutorial = new TutorialPanel(this);
         gamePanel = new GamePanel(this);
 
@@ -101,6 +106,8 @@ public class MainFrame extends JFrame {
         contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO"); // Útil para exclusiones
         contenedor.add(videoScreen, "VIDEO");
+        contenedor.add(transformacionVideo, "TRANSFORMACION_VIDEO");
+        contenedor.add(finalVideoScreen, "FINAL_VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
         contenedor.add(gamePanel, "GAME");
         contenedor.add(tutorial, "TUTORIAL");
@@ -210,9 +217,28 @@ public class MainFrame extends JFrame {
         this.pantallaActual = nombre;
         cardLayout.show(contenedor, nombre);
 
-        // Si vamos a la pantalla del video, iniciamos el video
+        // Si vamos a la pantalla del video intro, iniciamos el video
         if (nombre.equals("VIDEO")) {
             videoScreen.playVideo();
+        }
+        // Si vamos a la pantalla de transformación del boss
+        if (nombre.equals("TRANSFORMACION_VIDEO")) {
+            transformacionVideo.playVideo();
+        }
+        // Si vamos al video final
+        if (nombre.equals("FINAL_VIDEO")) {
+            finalVideoScreen.playVideo();
+        }
+
+        // Gestión de visibilidad del HUD y Diálogos para no bloquear el ratón
+        boolean mostrarHUD = nombre.equals("EXPLORACION") || nombre.equals("COMBATE");
+        if (hudPanel != null) {
+            hudPanel.setVisible(mostrarHUD);
+        }
+        // El diálogo solo se muestra cuando hay texto, pero aseguramos que esté oculto
+        // al cambiar
+        if (!mostrarHUD && dialogueContainer != null) {
+            dialogueContainer.setVisible(false);
         }
 
         // Al salir de EXPLORACION: desactivar (pausa) en lugar de destruir assets
@@ -224,8 +250,60 @@ public class MainFrame extends JFrame {
 
         // Dar foco y activar lógica de juego cuando se muestra EXPLORACION
         if ("EXPLORACION".equals(nombre) && exploracion != null) {
+            exploracion.reset(); // Llama a manager.activate()
             exploracion.requestFocusInWindow();
-            exploracion.reset(); // Llama a manager.activate() — genera zombies y activa updates
+        } else if ("COMBATE".equals(nombre) && combate != null) {
+            combate.requestFocusInWindow();
+        } else {
+            JPanel actual = getPanelActual();
+            if (actual != null) {
+                actual.requestFocusInWindow();
+            }
+        }
+    }
+
+    /**
+     * INICIA EL COMBATE CON UN ENEMIGO ESPECÍFICO.
+     */
+    public void entrarCombate(Object enemy) {
+        if (combate != null) {
+            combate.prepararCombate(enemy);
+            cambiarPantalla("COMBATE");
+        }
+    }
+
+    /**
+     * FINALIZA EL COMBATE Y VUELVE A LA EXPLORACIÓN.
+     * 
+     * @param victoria Indica si el jugador ganó (elimina al enemigo) o no.
+     */
+    public void finalizarCombate(boolean victoria, Object enemy) {
+        if (victoria && explorationManager != null) {
+            explorationManager.removeEnemy(enemy);
+        }
+        cambiarPantalla("EXPLORACION");
+    }
+
+    /**
+     * DERROTA AL BOSS FASE 1, LO ELIMINA DEL MAPA Y REPRODUCE EL VIDEO DE
+     * TRANSFORMACIÓN.
+     * Al terminar el video, se inicia automáticamente la Fase 2.
+     */
+    public void triggerBossDefeated(Object boss) {
+        if (explorationManager != null) {
+            explorationManager.removeEnemy(boss);
+        }
+        cambiarPantalla("TRANSFORMACION_VIDEO");
+    }
+
+    /**
+     * INICIA LA FASE 2 DEL BOSS DIRECTAMENTE en el CombatPanel.
+     * Se llama desde TransformacionVideoScreen al terminar el video.
+     */
+    public void triggerPhase2() {
+        if (combate != null) {
+            combate.prepararFinalBoss();
+            cambiarPantalla("COMBATE");
         }
     }
 
@@ -242,15 +320,15 @@ public class MainFrame extends JFrame {
             if (comp != null)
                 comp.requestFocusInWindow();
 
-            } else {
-                // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
-                pausarDialogosExistentes();
+        } else {
+            // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
+            pausarDialogosExistentes();
 
-                pause.setVisible(true);
-                if (mainController != null)
-                    mainController.pauseGame();
-                // Asegurar que el panel de pausa se redibuje
-                pause.repaint();
+            pause.setVisible(true);
+            if (mainController != null)
+                mainController.pauseGame();
+            // Asegurar que el panel de pausa se redibuje
+            pause.repaint();
         }
     }
 
@@ -295,7 +373,9 @@ public class MainFrame extends JFrame {
         // Posicionamiento dinámico: centrado horizontalmente, Y ajustable
         panel.setLocation(250, y);
         dialogueContainer.add(panel);
-        dialogueContainer.setVisible(true); // Mostrar contenedor al lanzar diálogo
+
+        // Solo mostrar si la pantalla actual lo permite o es necesario
+        dialogueContainer.setVisible(true);
         dialogueContainer.revalidate();
         dialogueContainer.repaint();
     }
@@ -348,6 +428,7 @@ public class MainFrame extends JFrame {
         contenedor.add(derrota, "DERROTA");
         videoScreen.setName("VIDEO");
         contenedor.add(videoScreen, "VIDEO");
+        contenedor.add(transformacionVideo, "TRANSFORMACION_VIDEO");
         contenedor.add(exploracion, "EXPLORACION");
         contenedor.add(gamePanel, "GAME");
         contenedor.add(tutorial, "TUTORIAL");
@@ -366,6 +447,26 @@ public class MainFrame extends JFrame {
             }
         }
         return null;
+    }
+
+    /**
+     * REINICIA EL ESTADO COMPLETO DEL JUEGO.
+     */
+    public void reiniciarJuego() {
+        // Reiniciar inventario
+        equipoilerntale.view.ui.Inventario.getInstance().limpiar();
+        // Reiniciar vida
+        if (playerHealthBar != null) {
+            playerHealthBar.setHealth(playerHealthBar.getMaxHealth());
+        }
+        // Reiniciar estados de combate (fase boss, controles, etc)
+        if (combate != null) {
+            combate.reiniciarEstado();
+        }
+        // Reiniciar variables y controladores reconstruyendo el ExplorationManager
+        setPersonajeSeleccionado(getPersonajeSeleccionado());
+
+        LOG.info("JUEGO REINICIADO COMPLETAMENTE");
     }
 
     // ============ GETTERS ============

@@ -28,6 +28,7 @@ import equipoilerntale.controller.CombatController;
 import equipoilerntale.controller.InputHandler;
 import equipoilerntale.controller.MainController;
 import equipoilerntale.model.combat.minigames.ClassicDodgeRules;
+import equipoilerntale.model.combat.minigames.MazeRules;
 import equipoilerntale.model.combat.minigames.MinigameRules;
 import equipoilerntale.model.combat.minigames.ShieldRules;
 import equipoilerntale.model.combat.minigames.ShooterRules;
@@ -45,6 +46,9 @@ public class CombatPanel extends JPanel {
     private InputHandler inputHandler;
     private CombatController combatController;
     private MinigameRules currentRules;
+    private Object enemyTarget;
+    private JPanel enemyIconPanel;
+    private Image enemyImage;
 
     // Renderers (NUEVO)
     private MouseRenderer mouseRenderer;
@@ -73,6 +77,9 @@ public class CombatPanel extends JPanel {
     private int escudoPatito = 0;
     private boolean dobleDañoRonda = false;
 
+    // Fase Final Boss (Fase 2)
+    private boolean isFinalBossPhase = false;
+
     // Vida Enemigo
     private BarraVida enemyHealthBar;
 
@@ -84,13 +91,16 @@ public class CombatPanel extends JPanel {
     private JButton btnItem;
     private JButton btnMercy;
 
+    private int damageBlinkTicks = 0;
+    private int shakeIntensity = 0;
+
     public CombatPanel(MainFrame frame) {
         this.mainFrame = frame;
 
         this.arenaModel = new ArenaModel();
         this.inputHandler = new InputHandler();
         this.combatController = new CombatController(arenaModel, inputHandler);
-        this.inventario = new Inventario();
+        this.inventario = Inventario.getInstance();
 
         // Instanciamos los pintores
         this.mouseRenderer = new MouseRenderer();
@@ -112,9 +122,107 @@ public class CombatPanel extends JPanel {
         inicializarPaneles();
     }
 
+    /**
+     * PREPARA EL COMBATE CON UN ENEMIGO ESPECÍFICO.
+     */
+    public void prepararCombate(Object enemy) {
+        this.enemyTarget = enemy;
+        this.isMinigameActive = false;
+        this.isItemMenuOpen = false;
+        this.centerTextMessage = "";
+        this.currentRound = 1;
+        if (arenaModel != null)
+            arenaModel.setCurrentRound(1);
+        this.lastGoodCollisions = 0;
+        this.lastBadCollisions = 0;
+        this.inputCooldown = 0;
+        this.escudoPatito = 0;
+        this.dobleDañoRonda = false;
+
+        if (inputHandler != null) {
+            inputHandler.reset();
+        }
+
+        // Cargar imagen del enemigo
+        equipoilerntale.service.AssetService assetService = equipoilerntale.service.AssetService.getInstance();
+        if (enemy instanceof equipoilerntale.model.entity.Zombie) {
+            equipoilerntale.model.entity.Zombie z = (equipoilerntale.model.entity.Zombie) enemy;
+            this.enemyImage = assetService.getZombieSprite(z.getType(), equipoilerntale.model.entity.Direction.DOWN, 1);
+            this.enemyHealthBar.setMaxHealth(z.getMaxHealth());
+            this.enemyHealthBar.setHealth(z.getHealth());
+        } else if (enemy instanceof equipoilerntale.model.entity.Boss) {
+            equipoilerntale.model.entity.Boss b = (equipoilerntale.model.entity.Boss) enemy;
+            this.enemyImage = assetService.getBossSprite("sergio");
+            this.enemyHealthBar.setMaxHealth(equipoilerntale.model.entity.Boss.MAX_HEALTH);
+            this.enemyHealthBar.setHealth(b.getHealth());
+        }
+
+        enableAllButtons();
+        requestFocusInWindow();
+        repaint();
+    }
+
+    /**
+     * PREPARA EL BOSS EN SU FASE FINAL (FASE 2): 200 HP, imagen sergiofinal,
+     * controles invertidos, daño doble al jugador.
+     */
+    public void prepararFinalBoss() {
+        this.isMinigameActive = false;
+        this.isItemMenuOpen = false;
+        this.centerTextMessage = "";
+        this.currentRound = 1;
+        if (arenaModel != null)
+            arenaModel.setCurrentRound(1);
+        this.lastGoodCollisions = 0;
+        this.lastBadCollisions = 0;
+        this.inputCooldown = 0;
+        this.escudoPatito = 0;
+        this.dobleDañoRonda = false;
+        this.isFinalBossPhase = true;
+        if (inputHandler != null)
+            inputHandler.reset();
+
+        // Imagen del boss final
+        java.awt.Image imgFinal = equipoilerntale.service.AssetService.getInstance()
+                .loadImage("/boss/sergio/sergiofinal.png");
+        if (imgFinal != null) {
+            this.enemyImage = equipoilerntale.service.AssetService.getInstance()
+                    .scaleImage(imgFinal,
+                            equipoilerntale.model.entity.Boss.WIDTH,
+                            equipoilerntale.model.entity.Boss.HEIGHT);
+        }
+
+        this.enemyTarget = null; // No hay entidad física en el mapa para fase 2
+        this.enemyHealthBar.setMaxHealth(200);
+        this.enemyHealthBar.setHealth(200);
+
+        // Controles invertidos en la arena
+        arenaModel.setReversedControls(true);
+
+        enableAllButtons();
+        requestFocusInWindow();
+        repaint();
+    }
+
+    /**
+     * REINICIA EL ESTADO DEL COMBATE (Para salir al menú o reiniciar juego).
+     */
+    public void reiniciarEstado() {
+        this.isFinalBossPhase = false;
+        if (arenaModel != null) {
+            arenaModel.stopCombat();
+        }
+        this.isMinigameActive = false;
+        this.centerTextMessage = "";
+        repaint();
+    }
+
     public void updateCombat() {
         if (inputCooldown > 0) {
             inputCooldown--;
+        }
+        if (damageBlinkTicks > 0) {
+            damageBlinkTicks--;
         }
 
         if (isItemMenuOpen) {
@@ -166,7 +274,7 @@ public class CombatPanel extends JPanel {
                     inputCooldown = 15;
                 }
             }
-        } else {
+        } else if (isMinigameActive) {
             combatController.update();
 
             // Damage check
@@ -183,7 +291,13 @@ public class CombatPanel extends JPanel {
                     }
 
                     if (damageRecibido > 0) {
-                        mainFrame.getPlayerHealthBar().takeDamage(damageRecibido);
+                        damageBlinkTicks = 30; // 0.5s de parpadeo
+                        shakeIntensity = 10; // Intensidad de la sacudida
+
+                        // En fase final el boss inflige daño doble
+                        int finalDamage = isFinalBossPhase ? damageRecibido * 2 : damageRecibido;
+                        mainFrame.getPlayerHealthBar().takeDamage(finalDamage);
+
                         if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
                             endMinigame();
                             mainFrame.cambiarPantalla("DERROTA");
@@ -198,6 +312,40 @@ public class CombatPanel extends JPanel {
 
                     int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
                     enemyHealthBar.takeDamage(damageHecho);
+
+                    // Sincronizar daño con el objeto real
+                    if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
+                        ((equipoilerntale.model.entity.Zombie) enemyTarget).takeDamage(damageHecho);
+                    } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                        ((equipoilerntale.model.entity.Boss) enemyTarget).takeDamage(damageHecho);
+                    }
+
+                    // Comprobar si el enemigo ha muerto (Generalizado)
+                    if (enemyHealthBar.getHealth() <= 0) {
+                        isMinigameActive = false;
+                        arenaModel.stopCombat();
+                        arenaModel.setReversedControls(false); // Limpiar controles invertidos
+                        centerTextMessage = "VICTORIA";
+                        repaint();
+
+                        javax.swing.Timer winTimer = new javax.swing.Timer(1500,
+                                new java.awt.event.ActionListener() {
+                                    @Override
+                                    public void actionPerformed(java.awt.event.ActionEvent ev) {
+                                        if (isFinalBossPhase) {
+                                            // Fase 2 superada: video final y vuelta al menú
+                                            isFinalBossPhase = false;
+                                            mainFrame.cambiarPantalla("FINAL_VIDEO");
+                                        } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                                            mainFrame.triggerBossDefeated(enemyTarget);
+                                        } else {
+                                            mainFrame.finalizarCombate(true, enemyTarget);
+                                        }
+                                    }
+                                });
+                        winTimer.setRepeats(false);
+                        winTimer.start();
+                    }
                 }
             }
 
@@ -238,6 +386,14 @@ public class CombatPanel extends JPanel {
         // 1. Fondo e interfaz
         if (imagenFondo != null) {
             g2d.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
+        }
+
+        // Efecto Screen Shake
+        if (shakeIntensity > 0) {
+            int offsetX = (int) (Math.random() * shakeIntensity * 2 - shakeIntensity);
+            int offsetY = (int) (Math.random() * shakeIntensity * 2 - shakeIntensity);
+            g2d.translate(offsetX, offsetY);
+            shakeIntensity--;
         }
 
         g2d.setColor(Color.BLACK);
@@ -316,7 +472,7 @@ public class CombatPanel extends JPanel {
                 bulletRenderer.render(g2d, arenaModel.getProjectiles());
             }
             if (arenaModel.getMouse() != null) {
-                mouseRenderer.render(g2d, arenaModel.getMouse());
+                mouseRenderer.render(g2d, arenaModel.getMouse(), damageBlinkTicks > 0);
             }
         }
 
@@ -337,14 +493,47 @@ public class CombatPanel extends JPanel {
             }
             g2d.setColor(Color.WHITE);
             FontMetrics fm = g2d.getFontMetrics();
-            int stringWidth = fm.stringWidth(centerTextMessage);
-            int x = 200 + (600 - stringWidth) / 2;
-            int y = 240 + (250 - fm.getHeight()) / 2 + fm.getAscent();
-            g2d.drawString(centerTextMessage, x, y);
+
+            // Procesar diálogos multilínea (\n)
+            String[] lines = centerTextMessage.split("\n");
+
+            // Calcular la altura total del bloque de texto
+            int linePadding = 5;
+            int totalHeight = (fm.getHeight() * lines.length) + (linePadding * (lines.length - 1));
+
+            // Punto de inicio Y para centrar el bloque verticalmente
+            int startY = 240 + (250 - totalHeight) / 2 + fm.getAscent();
+
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i].trim();
+                int stringWidth = fm.stringWidth(line);
+                int x = 200 + (600 - stringWidth) / 2;
+                int y = startY + (i * (fm.getHeight() + linePadding));
+                g2d.drawString(line, x, y);
+            }
         }
     }
 
     private void inicializarPaneles() {
+        // PANEL PEQUEÑO PARA LA IMAGEN DEL ENEMIGO (NUEVO)
+        enemyIconPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (enemyImage != null) {
+                    Graphics2D g2d = (Graphics2D) g;
+                    int drawW = getWidth() - 20;
+                    int drawH = getHeight() - 20;
+                    int x = (getWidth() - drawW) / 2;
+                    int y = (getHeight() - drawH) / 2;
+                    g2d.drawImage(enemyImage, x, y, drawW, drawH, null);
+                }
+            }
+        };
+        enemyIconPanel.setBounds(405 + 3, 30 + 3, 180 - 6, 180 - 6);
+        enemyIconPanel.setOpaque(false);
+        add(enemyIconPanel);
+
         JPanel buttonPanel = createButtonPanel();
         buttonPanel.setBounds(0, 510, 1000, 70);
         add(buttonPanel);
@@ -408,7 +597,7 @@ public class CombatPanel extends JPanel {
                         isItemMenuOpen = false;
                         disableAllButtons();
 
-                        int randomMinigame = new java.util.Random().nextInt(5);
+                        int randomMinigame = new java.util.Random().nextInt(6);
                         switch (randomMinigame) {
                             case 0:
                                 currentRules = new ClassicDodgeRules();
@@ -424,6 +613,9 @@ public class CombatPanel extends JPanel {
                                 break;
                             case 4:
                                 currentRules = new ShieldRules();
+                                break;
+                            case 5:
+                                currentRules = new MazeRules();
                                 break;
                         }
 
@@ -441,6 +633,45 @@ public class CombatPanel extends JPanel {
                         lastBadCollisions = 0;
                         break;
                     case "act":
+                        isItemMenuOpen = false;
+                        disableAllButtons();
+                        String loreMessage = "";
+
+                        if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
+                            String[] zombieLore = {
+                                    "Hambre... el cafe... \nnos cambio..",
+                                    "iLERNA... prometio... \ninteligencia...\nsolo hay... hambre...",
+                                    "Donde esta... mi examen? \nNo... siento la logica...",
+                                    "El agua... las maquinas... \nsabian a codigo amargo...",
+                                    "Solo... queriamos... \naprobar..."
+                            };
+                            loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
+                        } else if (isFinalBossPhase || enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                            String[] bossLore = {
+                                    "Esto no compila \nen produccion! \nESTAIS SUSPENDIDOS!",
+                                    "Has revisado el tema 4 \nsobre polimorfismo? \nMUERE!",
+                                    "El examen final sera... \nvuestra tumba.",
+                                    "iLERNA era solo el principio... \nel cafe hara el resto.",
+                                    "Vuestro codigo es tan sucio \ncomo este instituto!"
+                            };
+                            loreMessage = bossLore[new java.util.Random().nextInt(bossLore.length)];
+                        } else {
+                            loreMessage = "El enemigo te ignora...";
+                        }
+
+                        centerTextMessage = loreMessage;
+                        repaint();
+
+                        Timer actTimer = new Timer(2500, new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent ev) {
+                                centerTextMessage = "";
+                                enableAllButtons();
+                                repaint();
+                            }
+                        });
+                        actTimer.setRepeats(false);
+                        actTimer.start();
                         break;
                     case "item":
                         currentCombatItems = inventario.getObjetosCombate();
@@ -464,18 +695,16 @@ public class CombatPanel extends JPanel {
                         if (chance <= 0.10) {
                             centerTextMessage = "HAS TENIDO PIEDAD";
                             repaint();
-                            // Temporizador para cambio de layout en el futuro
-                            Timer transitionTimer = new Timer(2000, new ActionListener() {
+                            // Al tener piedad, finalizamos el combate como una victoria para que el enemigo
+                            // desaparezca
+                            Timer victoryTimer = new Timer(2000, new ActionListener() {
                                 @Override
                                 public void actionPerformed(ActionEvent ev) {
-                                    // TODO: Cambiar layout aquí
-                                    centerTextMessage = "";
-                                    repaint();
-                                    enableAllButtons();
+                                    mainFrame.finalizarCombate(true, enemyTarget);
                                 }
                             });
-                            transitionTimer.setRepeats(false);
-                            transitionTimer.start();
+                            victoryTimer.setRepeats(false);
+                            victoryTimer.start();
                         } else {
                             centerTextMessage = "QUIERE MORDERTE";
                             repaint();
@@ -485,7 +714,7 @@ public class CombatPanel extends JPanel {
                                 public void actionPerformed(ActionEvent ev) {
                                     centerTextMessage = "";
 
-                                    int randomMinigame = new java.util.Random().nextInt(5);
+                                    int randomMinigame = new java.util.Random().nextInt(6);
                                     switch (randomMinigame) {
                                         case 0:
                                             currentRules = new ClassicDodgeRules();
@@ -501,6 +730,9 @@ public class CombatPanel extends JPanel {
                                             break;
                                         case 4:
                                             currentRules = new ShieldRules();
+                                            break;
+                                        case 5:
+                                            currentRules = new MazeRules();
                                             break;
                                     }
 
@@ -563,17 +795,28 @@ public class CombatPanel extends JPanel {
         btnFight.setEnabled(true);
         btnAct.setEnabled(true);
         btnItem.setEnabled(true);
-        btnMercy.setEnabled(true);
+
+        // Bloquear botón MERCI si el enemigo es un Boss o estamos en Fase 2
+        if (isFinalBossPhase || enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+            btnMercy.setEnabled(false);
+        } else {
+            btnMercy.setEnabled(true);
+        }
     }
 
     private void endMinigame() {
         if (!isMinigameActive)
             return;
         isMinigameActive = false;
+        if (inputHandler != null) {
+            inputHandler.reset();
+        }
         arenaModel.stopCombat();
         currentRules = null;
         enableAllButtons();
         currentRound++;
+        if (arenaModel != null)
+            arenaModel.setCurrentRound(currentRound);
         dobleDañoRonda = false;
         repaint();
     }

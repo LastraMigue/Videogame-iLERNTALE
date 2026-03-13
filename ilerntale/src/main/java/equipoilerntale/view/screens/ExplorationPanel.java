@@ -11,6 +11,7 @@ import equipoilerntale.GameSettings;
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.model.entity.Zombie;
 import equipoilerntale.model.entity.Boss;
+import equipoilerntale.model.entity.WorldItem;
 import equipoilerntale.model.map.DoorModel;
 import equipoilerntale.service.AssetService;
 import equipoilerntale.view.MainFrame;
@@ -55,10 +56,7 @@ public class ExplorationPanel extends JPanel {
     // ==================== INICIALIZACIÓN ====================
 
     private void inicializarRecursosExploracion() {
-        // EL FONDO SE CARGARÁ DINÁMICAMENTE POR HABITACIÓN EN dibujarExploracion(),
-        // AQUÍ NO HACEMOS NADA PERO SE MANTIENE POR SI AÑADES OTROS EFECTOS GLOBALES.
-        Image backgroundExploracion = cargarFondo("/mapa/pasillo.png", GameSettings.ANCHO_PANTALLA,
-                GameSettings.ALTO_PANTALLA);
+        // EL FONDO SE CARGA DINÁMICAMENTE POR HABITACIÓN EN dibujarExploracion().
     }
 
     private void configurarCicloVida() {
@@ -80,12 +78,7 @@ public class ExplorationPanel extends JPanel {
     // ==================== CARGA DE RECURSOS ====================
 
     private Image cargarFondo(String ruta, int w, int h) {
-        java.net.URL url = getClass().getResource(ruta);
-        if (url == null) {
-            LOG.warning("NO SE ENCONTRÓ EL RECURSO: " + ruta);
-            return null;
-        }
-        return new ImageIcon(url).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+        return AssetService.getInstance().loadBackground(ruta);
     }
 
     private ImageIcon cargarImagen(String ruta, int w, int h) {
@@ -132,12 +125,50 @@ public class ExplorationPanel extends JPanel {
 
         playerRenderer.drawPlayer(ctx, manager.getPlayerCurrentSprite(), manager.getPlayer());
 
-        for (Zombie z : manager.getActiveZombies()) {
-            zombieRenderer.drawZombie(ctx, z);
-        }
+        // DIBUJAR ENTIDADES (Sincronizado para evitar ConcurrentModificationException)
+        synchronized(manager) {
+            for (Zombie z : manager.getActiveZombies()) {
+                zombieRenderer.drawZombie(ctx, z);
+            }
 
-        for (Boss b : manager.getActiveBosses()) {
-            bossRenderer.drawBoss(ctx, b);
+            for (Boss b : manager.getActiveBosses()) {
+                bossRenderer.drawBoss(ctx, b);
+            }
+
+            // DIBUJAR OBJETOS DEL MAPA
+            if (manager.getCurrentRoom() != null) {
+                g2d.setFont(new Font("Arial", Font.BOLD, 14));
+                g2d.setColor(Color.WHITE);
+                
+                for (WorldItem item : manager.getCurrentRoom().getItems()) {
+                    if (!item.isCollected()) {
+                        // Dibujar el item
+                        if (item.getItem().getSprite() != null) {
+                            ctx.getGraphics().drawImage(item.getItem().getSprite(),
+                                    item.getX(), item.getY(),
+                                    item.getSize(), item.getSize(), null);
+                        }
+
+                        // Indicador de interacción [E]
+                        double dist = Math.sqrt(Math.pow(manager.getPlayer().getX() - item.getX(), 2) 
+                                              + Math.pow(manager.getPlayer().getY() - item.getY(), 2));
+                        if (dist < 100) {
+                            g2d.drawString("[E]", item.getX() + (item.getSize() / 2) - 10, item.getY() - 10);
+                        }
+                    }
+                }
+
+                // Indicador para PUERTAS
+                for (DoorModel door : manager.getCurrentRoom().getDoors()) {
+                    Rectangle area = door.getArea();
+                    double distX = Math.abs(manager.getPlayer().getX() - area.getCenterX());
+                    double distY = Math.abs(manager.getPlayer().getY() - area.getCenterY());
+                    
+                    if (distX < 120 && distY < 120) {
+                        g2d.drawString("[E]", (int)area.getCenterX() - 10, (int)area.getY() + 20);
+                    }
+                }
+            }
         }
 
         if (manager.isDebugMurosVisibles() && manager.getCurrentRoom() != null) {
@@ -161,6 +192,14 @@ public class ExplorationPanel extends JPanel {
             }
             for (Boss b : manager.getActiveBosses()) {
                 g2d.draw(b.getHitbox(b.getX(), b.getY()));
+            }
+
+            // Hitboxes de objetos
+            g2d.setColor(Color.YELLOW);
+            for (WorldItem item : manager.getCurrentRoom().getItems()) {
+                if (!item.isCollected()) {
+                    g2d.draw(item.getHitbox());
+                }
             }
         }
 

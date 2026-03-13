@@ -138,7 +138,7 @@ public abstract class Entity {
 
         // LÍMITES DEL MAPA
         nextX = Math.max(0, Math.min(nextX, mapWidth - size));
-        nextY = Math.max(150, Math.min(nextY, mapHeight - size - 10));
+        nextY = Math.max(0, Math.min(nextY, mapHeight - size - 10));
 
         Rectangle nextHitbox = getHitbox(nextX, nextY);
 

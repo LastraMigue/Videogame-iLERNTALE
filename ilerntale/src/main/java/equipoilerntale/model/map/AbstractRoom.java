@@ -3,6 +3,9 @@ package equipoilerntale.model.map;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import equipoilerntale.model.entity.WorldItem;
 
 /**
  * CLASE BASE ABSTRACTA PARA TODAS LAS HABITACIONES DEL JUEGO.
@@ -21,14 +24,16 @@ public abstract class AbstractRoom {
     protected Rectangle zombieSpawnArea;
     // ÁREA DONDE APARECERÁ EL BOSS EN CASO DE HABER UNO
     protected Rectangle bossSpawnArea;
+    protected List<WorldItem> items;
 
     /**
      * CONSTRUCTOR BASE.
      * INSTANCIA LA LISTA DE MUROS Y LLAMA A LA INICIALIZACIÓN PROPIA DE CADA SALA.
      */
     public AbstractRoom() {
-        this.walls = new ArrayList<>();
-        this.doors = new ArrayList<>();
+        this.walls = new CopyOnWriteArrayList<>();
+        this.doors = new CopyOnWriteArrayList<>();
+        this.items = new CopyOnWriteArrayList<>();
         initializeRoom();
     }
 
@@ -87,5 +92,9 @@ public abstract class AbstractRoom {
      */
     public Rectangle getBossSpawnArea() {
         return bossSpawnArea;
+    }
+
+    public List<WorldItem> getItems() {
+        return items;
     }
 }
