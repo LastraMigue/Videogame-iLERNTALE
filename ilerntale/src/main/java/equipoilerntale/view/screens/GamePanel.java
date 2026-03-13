@@ -65,7 +65,7 @@ public class GamePanel extends JPanel {
                     "Jessica y yo sucumbimos al café. El instituto ahora está infestado de Zombies dominados por esos profesores."),
             new PasoDialogo("Soraya", "¡Acabad con ellos o estaréis TODOS SUSPENSOS! Sois nuestra última esperanza."),
             new PasoDialogo("Jesica",
-                    "Recordad: WASD o flechas para moveros, E para puertas y ESC para pausar. Hay objetos por el mapa. ¡Suerte!")
+                    "Recordad: WASD o flechas para moveros, E para puertas y ESC para pausar. Busca objetos curiosos por el mapa. ¡Suerte!")
     };
 
     private int indicePasos = 0;

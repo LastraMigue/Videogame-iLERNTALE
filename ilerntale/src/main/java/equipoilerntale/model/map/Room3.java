@@ -25,9 +25,10 @@ public class Room3 extends AbstractRoom {
                 this.zombieSpawnArea = new Rectangle(400, 380, GameSettings.MAP_WIDTH - 600,
                                 GameSettings.MAP_HEIGHT - 450);
 
-                // BOSS AL FINAL DEL AULA
-                this.bossSpawnArea = new Rectangle(GameSettings.MAP_WIDTH - 200, GameSettings.MAP_HEIGHT - 200, 100,
-                                100);
+                // OBJETO LLAVE AL FINAL DEL AULA (ABRE AULA 124)
+                this.items.add(new WorldItem(
+                                new ItemModel("Llave", "Abre una puerta", "/objects/llave.png", 1, false),
+                                GameSettings.MAP_WIDTH - 200, GameSettings.MAP_HEIGHT - 200));
 
                 // CONFIGURACIÓN DE LOS LÍMITES/MUROS
                 this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));

@@ -32,7 +32,8 @@ public class Room1 extends AbstractRoom {
         this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
         this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
 
-        // MURO SUPERIOR DERECHO (Ajustado para bloquear la esquina y los laterales de la puerta)
+        // MURO SUPERIOR DERECHO (Ajustado para bloquear la esquina y los laterales de
+        // la puerta)
         this.walls.add(new Rectangle(1550, 0, 500, 350));
 
         // LÍMITES LATERALES
