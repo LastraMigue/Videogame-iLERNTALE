@@ -28,28 +28,20 @@ public class Room2 extends AbstractRoom {
                                 GameSettings.MAP_HEIGHT - 450);
 
                 // CONFIGURACIÓN DE LOS LÍMITES/MUROS
-                // MURO SUPERIOR E INFERIOR (Ajustado a la línea del suelo del aula)
-                this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 250));
-                this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
-
-                // MURO SUPERIOR DERECHO (Esquina superior derecha bloqueada)
-                this.walls.add(new Rectangle(1550, 0, 600, 350));
-
-                // LÍMITES LATERALES
-                this.walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
-                this.walls.add(new Rectangle(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT));
+                addWall(0, 0, GameSettings.MAP_WIDTH, 250);
+                addWall(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10);
+                addWall(1550, 0, 600, 350);
+                addWall(0, 0, 10, GameSettings.MAP_HEIGHT);
+                addWall(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT);
 
                 // CONFIGURACIÓN DE LA SALIDA (VOLVER AL PASILLO)
-                this.doors.add(new DoorModel(
-                                600, 180, 130, 80,
-                                "Pasillo Principal", 905, 320 // Aparece frente a la puerta 3A
-                ));
+                addDoor(600, 180, 130, 80, "Pasillo Principal", 905, 320);
 
                 // OBJETOS DEL AULA 123
-                this.items.add(new WorldItem(
+                addWorldItem(new WorldItem(
                                 new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 1, true),
                                 1200, 450));
-                this.items.add(new WorldItem(
+                addWorldItem(new WorldItem(
                                 new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 1, true),
                                 800, 450));
         }

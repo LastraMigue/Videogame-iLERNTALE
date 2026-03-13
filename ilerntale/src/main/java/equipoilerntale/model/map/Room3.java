@@ -25,36 +25,25 @@ public class Room3 extends AbstractRoom {
                 this.zombieSpawnArea = new Rectangle(400, 380, GameSettings.MAP_WIDTH - 600,
                                 GameSettings.MAP_HEIGHT - 450);
 
-                // OBJETO LLAVE AL FINAL DEL AULA (ABRE AULA 124)
-                this.items.add(new WorldItem(
-                                new ItemModel("Llave", "Abre una puerta", "/objects/llave.png", 1, false),
-                                GameSettings.MAP_WIDTH - 200, GameSettings.MAP_HEIGHT - 200));
-
                 // CONFIGURACIÓN DE LOS LÍMITES/MUROS
-                this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
-                this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
-
-                // MURO SUPERIOR DERECHO
-                this.walls.add(new Rectangle(1550, 0, 600, 350));
-
-                // LÍMITES LATERALES
-                this.walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
-                this.walls.add(new Rectangle(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT));
+                addWall(0, 0, GameSettings.MAP_WIDTH, 230);
+                addWall(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10);
+                addWall(1550, 0, 600, 350);
+                addWall(0, 0, 10, GameSettings.MAP_HEIGHT);
+                addWall(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT);
 
                 // CONFIGURACIÓN DE LA SALIDA (VOLVER AL PASILLO)
-                this.doors.add(new DoorModel(
-                                600, 180, 130, 80,
-                                "Pasillo Principal", 1200, 320 // Aparece frente a la nueva puerta de madera
-                ));
+                addDoor(600, 180, 130, 80, "Pasillo Principal", 1200, 320);
 
                 // OBJETOS DEL AULA 125
-                this.items.add(new WorldItem(
+                addWorldItem(new WorldItem(
+                                new ItemModel("Llave", "Abre una puerta", "/objects/llave.png", 1, false),
+                                GameSettings.MAP_WIDTH - 200, GameSettings.MAP_HEIGHT - 200));
+                addWorldItem(new WorldItem(
                                 new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 1, true),
                                 800, 450));
-                this.items.add(new WorldItem(
-                                new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 1,
-                                                true),
+                addWorldItem(new WorldItem(
+                                new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 1, true),
                                 1000, 400));
-
         }
 }

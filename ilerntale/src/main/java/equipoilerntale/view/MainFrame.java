@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.InputStream;
+import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import equipoilerntale.service.SoundService;
 
@@ -65,6 +66,7 @@ public class MainFrame extends JFrame {
     private GamePanel gamePanel;
     private TutorialPanel tutorial;
     private JPanel dialogueContainer;
+    private JPanel transitionOverlay;
     private String personajeSeleccionado = "";
 
     // CONTROLADORES ACCESIBLES
@@ -113,6 +115,7 @@ public class MainFrame extends JFrame {
         setupScreens();
 
         // CARGAR ICONO DE LLAVE
+        this.keyIcon = equipoilerntale.service.AssetService.getInstance().loadImage("/objects/llave.png");
 
         // Configuramos el LayeredPane para el overlay
         layeredPane = new JLayeredPane();
@@ -167,6 +170,14 @@ public class MainFrame extends JFrame {
         pause.setBounds(0, 0, 1000, 600);
         pause.setVisible(false);
         layeredPane.add(pause, JLayeredPane.DRAG_LAYER);
+
+        // Capa para transiciones (entre HUD y Pausa)
+        transitionOverlay = new JPanel(null);
+        transitionOverlay.setBounds(0, 0, 1000, 600);
+        transitionOverlay.setOpaque(false);
+        transitionOverlay.setVisible(false);
+        transitionOverlay.setFocusable(false);
+        layeredPane.add(transitionOverlay, JLayeredPane.PALETTE_LAYER);
 
         add(layeredPane);
 
@@ -266,35 +277,110 @@ public class MainFrame extends JFrame {
      * CAMBIA LA PANTALLA VISIBLE ACTUALMENTE.
      */
     public void cambiarPantalla(String nombre) {
+        String pantallaAnterior = this.pantallaActual;
+        this.pantallaActual = nombre;
+
+        // No transicionar si es la misma pantalla (evita fallos al inicio)
+        if (pantallaAnterior.equals(nombre)) {
+            ejecutarCambioInstantaneo(nombre);
+            return;
+        }
+
+        // Determinar si se requiere transición
+        boolean deMenuATutorial = (pantallaAnterior.equals(SCREEN_MENU) && nombre.equals(SCREEN_TUTORIAL)) 
+                               || (pantallaAnterior.equals(SCREEN_TUTORIAL) && nombre.equals(SCREEN_MENU));
+        
+        // El usuario pidió omitir transiciones desde el PausePanel.
+        // Como el PausePanel no es una "pantalla" en el CardLayout per se,
+        // detectamos si el panel de pausa estaba visible antes de cambiar.
+        boolean desdePausa = (pause != null && pause.isVisible());
+
+        boolean requiereTransicion = !deMenuATutorial && !desdePausa;
+
+        if (requiereTransicion) {
+            ejecutarCambioConTransicion(nombre);
+        } else {
+            ejecutarCambioInstantaneo(nombre);
+        }
+    }
+
+    private void ejecutarCambioInstantaneo(String nombre) {
+        logicaCambioPantalla(nombre);
+        cardLayout.show(contenedor, nombre);
+        postCambioPantalla(nombre);
+    }
+
+    private void ejecutarCambioConTransicion(String nombre) {
+        // 1. Capturar pantalla actual (solo si el contenedor tiene tamaño válido)
+        final BufferedImage snapshot;
+        if (contenedor.getWidth() > 0 && contenedor.getHeight() > 0) {
+            snapshot = new BufferedImage(contenedor.getWidth(), contenedor.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = snapshot.createGraphics();
+            contenedor.paintAll(g);
+            g.dispose();
+        } else {
+            snapshot = null;
+        }
+
+        // 2. Ejecutar lógica de cambio (detener sonidos, diálogos, etc)
+        logicaCambioPantalla(nombre);
+
+        // 3. Cambiar panel en el CardLayout (invisible debajo del overlay)
+        cardLayout.show(contenedor, nombre);
+
+        // 4. Ejecutar lógica post-cambio INMEDIATAMENTE para evitar fallos de lógica
+        postCambioPantalla(nombre);
+
+        // 5. Iniciar overlay de transición
+        if (snapshot != null) {
+            transitionOverlay.removeAll();
+            FadeOverlay fade = new FadeOverlay(snapshot);
+            fade.setBounds(0, 0, 1000, 600);
+            transitionOverlay.add(fade);
+            transitionOverlay.setVisible(true);
+
+            javax.swing.Timer timer = new javax.swing.Timer(16, null);
+            timer.addActionListener(e -> {
+                fade.updateAlpha();
+                if (fade.isFinished()) {
+                    timer.stop();
+                    transitionOverlay.setVisible(false);
+                    transitionOverlay.removeAll();
+                }
+                transitionOverlay.repaint();
+            });
+            timer.start();
+        }
+    }
+
+    private void logicaCambioPantalla(String nombre) {
         // DETENER DIÁLOGOS ANTES DE CAMBIAR (HARD STOP)
         detenerDialogosExistentes();
 
-        this.pantallaActual = nombre;
-        
         // DETENER CUALQUIER MÚSICA DE FONDO ANTERIOR AL CAMBIAR DE PANTALLA
-        // (Excepto para COMBATE que lo gestiona su propio Panel en prepararCombate)
-        if (!nombre.equals("COMBATE")) {
+        if (!nombre.equals(SCREEN_COMBATE) && !nombre.equals(SCREEN_TUTORIAL) && !nombre.equals(SCREEN_PERSONAJES)
+                && !nombre.equals(SCREEN_MENU)) {
             SoundService.getInstance().stopBGM();
         }
+    }
 
-        cardLayout.show(contenedor, nombre);
-
+    private void postCambioPantalla(String nombre) {
         // Si vamos a la pantalla del video intro, iniciamos el video
         if (nombre.equals(SCREEN_VIDEO)) {
             videoScreen.playVideo();
         }
-        
+
         // GESTIÓN DE MÚSICA DE FONDO (BGM)
         switch (nombre) {
             case SCREEN_MENU:
+            case SCREEN_TUTORIAL:
+            case SCREEN_PERSONAJES:
                 SoundService.getInstance().playBGM("/sound/menu.wav");
                 break;
             case SCREEN_EXPLORACION:
                 SoundService.getInstance().playBGM("/sound/mapa.wav");
                 break;
             case SCREEN_COMBATE:
-                // La música de combate se maneja en el propio CombatPanel (prepararCombate)
-                // para distinguir entre normal y final boss.
                 break;
             case SCREEN_GAME:
                 SoundService.getInstance().playBGM("/sound/dialogo.wav");
@@ -303,36 +389,28 @@ public class MainFrame extends JFrame {
                 break;
         }
 
-        // Si vamos a la pantalla de transformación del boss
         if (nombre.equals(SCREEN_TRANSFORMACION)) {
             transformacionVideo.playVideo();
         }
-        // Si vamos al video final
         if (nombre.equals(SCREEN_FINAL_VIDEO)) {
             finalVideoScreen.playVideo();
         }
 
-        // Gestión de visibilidad del HUD y Diálogos para no bloquear el ratón
         boolean mostrarHUD = nombre.equals(SCREEN_EXPLORACION) || nombre.equals(SCREEN_COMBATE);
         if (hudPanel != null) {
             hudPanel.setVisible(mostrarHUD);
         }
-        // El diálogo solo se muestra cuando hay texto, pero aseguramos que esté oculto
-        // al cambiar
         if (!mostrarHUD && dialogueContainer != null) {
             dialogueContainer.setVisible(false);
         }
 
-        // Al salir de EXPLORACION: desactivar (pausa) en lugar de destruir assets
         if (!"EXPLORACION".equals(nombre) && exploracion != null) {
-            exploracion.dispose(); // Llama a manager.deactivate() — no destruye assets
+            exploracion.dispose();
         }
 
-        cardLayout.show(contenedor, nombre);
-
-        // Dar foco y activar lógica de juego cuando se muestra EXPLORACION
+        // Foco
         if ("EXPLORACION".equals(nombre) && exploracion != null) {
-            exploracion.reset(); // Llama a manager.activate()
+            exploracion.reset();
             exploracion.requestFocusInWindow();
         } else if ("COMBATE".equals(nombre) && combate != null) {
             combate.requestFocusInWindow();
@@ -603,5 +681,42 @@ public class MainFrame extends JFrame {
 
     public BarraVida getPlayerHealthBar() {
         return playerHealthBar;
+    }
+
+    /**
+     * CLASE INTERNA PARA EFECTO DE TRANSICIÓN (FADE OUT).
+     */
+    private static class FadeOverlay extends JPanel {
+        private final BufferedImage previousScreen;
+        private float alpha = 1.0f;
+        private boolean finished = false;
+
+        public FadeOverlay(BufferedImage previousScreen) {
+            this.previousScreen = previousScreen;
+            setOpaque(false);
+        }
+
+        public void updateAlpha() {
+            alpha -= 0.05f; // Ajustar para velocidad (aprox 400ms a 60fps)
+            if (alpha <= 0) {
+                alpha = 0;
+                finished = true;
+            }
+        }
+
+        public boolean isFinished() {
+            return finished;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (previousScreen != null && alpha > 0) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+                g2d.drawImage(previousScreen, 0, 0, null);
+                g2d.dispose();
+            }
+        }
     }
 }

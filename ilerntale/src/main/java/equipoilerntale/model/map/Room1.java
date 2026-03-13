@@ -28,22 +28,13 @@ public class Room1 extends AbstractRoom {
         this.bossSpawnArea = new Rectangle(50, GameSettings.MAP_HEIGHT / 2 - 50, 100, 100);
 
         // CONFIGURACIÓN DE LOS LÍMITES/MUROS
-        // MURO SUPERIOR E INFERIOR (Ajustado a la línea del suelo del aula)
-        this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
-        this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10));
-
-        // MURO SUPERIOR DERECHO (Ajustado para bloquear la esquina y los laterales de
-        // la puerta)
-        this.walls.add(new Rectangle(1550, 0, 500, 350));
-
-        // LÍMITES LATERALES
-        this.walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
-        this.walls.add(new Rectangle(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT));
+        addWall(0, 0, GameSettings.MAP_WIDTH, 230);
+        addWall(0, GameSettings.MAP_HEIGHT - 10, GameSettings.MAP_WIDTH, 10);
+        addWall(1550, 0, 500, 350);
+        addWall(0, 0, 10, GameSettings.MAP_HEIGHT);
+        addWall(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT);
 
         // CONFIGURACIÓN DE LA SALIDA (VOLVER AL PASILLO)
-        this.doors.add(new DoorModel(
-                1750, 220, 220, 250, // Bajamos Y a 220 para mejorar el acceso
-                "Pasillo Principal", 1750, 320 // Aparece frente a la puerta 1B
-        ));
+        addDoor(1750, 220, 220, 250, "Pasillo Principal", 1750, 320);
     }
 }

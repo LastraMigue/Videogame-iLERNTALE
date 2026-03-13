@@ -120,88 +120,85 @@ public class Zombie extends Entity {
 
     /**
      * ACTUALIZA EL MOVIMIENTO HACIA EL JUGADOR CON SEPARACIÓN DE VECINOS.
-     * La fuerza de separación evita que todos los zombies se agrupen en el mismo
-     * punto.
-     *
-     * @param allZombies Lista completa de zombies para calcular la separación
      */
     public void updateMovement(int targetX, int targetY, List<Rectangle> walls, List<? extends Object> allZombies) {
-        if (!isAlive)
-            return;
+        if (!isAlive) return;
 
         double diffX = targetX - this.x;
         double diffY = targetY - this.y;
         double distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
-        // Si ya detectó al jugador o el jugador entra en su radio, empieza el
-        // seguimiento
+        // Detección del jugador
         if (!hasDetectedPlayer && distance < detectionRadius) {
             hasDetectedPlayer = true;
         }
 
         if (hasDetectedPlayer && distance > 5) {
-            // --- Dirección base: hacia el jugador con "Wobble" (zig-zag aleatorio) ---
-            long now = System.currentTimeMillis();
-            double wobble = Math.sin((now / 500.0) + wobbleOffset) * 0.3;
+            double[] moveVector = calculateMoveVector(diffX, diffY, distance, allZombies);
+            double dx = moveVector[0];
+            double dy = moveVector[1];
 
-            // Vector al jugador
-            double baseDx = (diffX / distance);
-            double baseDy = (diffY / distance);
-
-            // Aplicar imprecisión (mezclar con wobble)
-            double targetDx = baseDx * trackingPrecision + (Math.random() * 0.4 - 0.2);
-            double targetDy = baseDy * trackingPrecision + (Math.random() * 0.4 - 0.2);
-
-            // Re-normalizar y aplicar velocidad
-            double finalDist = Math.sqrt(targetDx * targetDx + targetDy * targetDy);
-            double dx = (targetDx / finalDist) * customSpeed;
-            double dy = (targetDy / finalDist) * customSpeed;
-
-            // --- Fuerza de separación de vecinos ---
-            double sepX = 0, sepY = 0;
-            int neighborCount = 0;
-            final double SEPARATION_RADIUS = 80.0; // Reducido para grupos más densos
-
-            for (Object other : allZombies) {
-                if (other == this)
-                    continue;
-                if (other instanceof Zombie) {
-                    Zombie z = (Zombie) other;
-                    if (!z.isAlive())
-                        continue;
-                    double distToNeighbor = Math.sqrt(Math.pow(z.x - this.x, 2) + Math.pow(z.y - this.y, 2));
-                    if (distToNeighbor < SEPARATION_RADIUS) {
-                        if (distToNeighbor == 0) {
-                            // Si están exactamente en el mismo sitio, empujar en dirección aleatoria
-                            sepX += (Math.random() * 2 - 1);
-                            sepY += (Math.random() * 2 - 1);
-                        } else {
-                            // Alejarse del vecino, con fuerza inversamente proporcional a la distancia
-                            double weight = (SEPARATION_RADIUS - distToNeighbor) / SEPARATION_RADIUS;
-                            sepX += ((this.x - z.x) / distToNeighbor) * weight;
-                            sepY += ((this.y - z.y) / distToNeighbor) * weight;
-                        }
-                        neighborCount++;
-                    }
-                }
-            }
-
-            if (neighborCount > 0) {
-                // Combinar: 70% dirección al jugador + 30% separación
-                dx = dx * 0.7 + sepX * customSpeed * 0.3;
-                dy = dy * 0.7 + sepY * customSpeed * 0.3;
-            }
-
-            // Dirección del sprite según vector resultante
-            if (Math.abs(dx) > Math.abs(dy)) {
-                this.direction = (dx > 0) ? Direction.RIGHT : Direction.LEFT;
-            } else {
-                this.direction = (dy > 0) ? Direction.DOWN : Direction.UP;
-            }
-
+            updateSpriteDirection(dx, dy);
             moveIfNoCollision((int) dx, 0, walls);
             moveIfNoCollision(0, (int) dy, walls);
             updateAnimation();
+        }
+    }
+
+    private double[] calculateMoveVector(double diffX, double diffY, double distance, List<? extends Object> allZombies) {
+        // Vector base con wobble (zig-zag)
+        long now = System.currentTimeMillis();
+        double wobble = Math.sin((now / 500.0) + wobbleOffset) * 0.3;
+
+        double targetDx = (diffX / distance) * trackingPrecision + (Math.random() * 0.4 - 0.2);
+        double targetDy = (diffY / distance) * trackingPrecision + (Math.random() * 0.4 - 0.2);
+
+        // Re-normalizar y aplicar velocidad
+        double finalDist = Math.sqrt(targetDx * targetDx + targetDy * targetDy);
+        double dx = (targetDx / finalDist) * customSpeed;
+        double dy = (targetDy / finalDist) * customSpeed;
+
+        // Fuerza de separación
+        double[] separation = calculateSeparation(allZombies);
+        if (separation[2] > 0) { // neighborCount
+            dx = dx * 0.7 + separation[0] * customSpeed * 0.3;
+            dy = dy * 0.7 + separation[1] * customSpeed * 0.3;
+        }
+
+        return new double[]{dx, dy};
+    }
+
+    private double[] calculateSeparation(List<? extends Object> allZombies) {
+        double sepX = 0, sepY = 0;
+        int neighborCount = 0;
+        final double SEPARATION_RADIUS = 80.0;
+
+        for (Object other : allZombies) {
+            if (other == this || !(other instanceof Zombie)) continue;
+            Zombie z = (Zombie) other;
+            if (!z.isAlive()) continue;
+
+            double distToNeighbor = Math.sqrt(Math.pow(z.x - this.x, 2) + Math.pow(z.y - this.y, 2));
+            if (distToNeighbor < SEPARATION_RADIUS) {
+                if (distToNeighbor == 0) {
+                    sepX += (Math.random() * 2 - 1);
+                    sepY += (Math.random() * 2 - 1);
+                } else {
+                    double weight = (SEPARATION_RADIUS - distToNeighbor) / SEPARATION_RADIUS;
+                    sepX += ((this.x - z.x) / distToNeighbor) * weight;
+                    sepY += ((this.y - z.y) / distToNeighbor) * weight;
+                }
+                neighborCount++;
+            }
+        }
+        return new double[]{sepX, sepY, neighborCount};
+    }
+
+    private void updateSpriteDirection(double dx, double dy) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+            this.direction = (dx > 0) ? Direction.RIGHT : Direction.LEFT;
+        } else {
+            this.direction = (dy > 0) ? Direction.DOWN : Direction.UP;
         }
     }
 

@@ -90,28 +90,27 @@ public class ArenaModel {
     }
 
     public void checkCollisions() {
-        if (mouse == null || projectiles == null)
-            return;
+        if (mouse == null || projectiles == null) return;
 
         for (ProjectileModel proj : projectiles) {
-            if (!proj.isActive())
-                continue;
+            if (!proj.isActive()) continue;
 
             if (mouse.getBounds().intersects(proj.getBounds())) {
-                if (proj.isDeactivateOnHit()) {
-                    proj.setActive(false);
-                }
-                
-                if (proj.getType() == 1) {
-                    goodCollisions++;
-                } else if (proj.getType() == 10) {
-                    // El daño de las paredes (tipo 10) lo suele gestionar MazeRules 
-                    // para el daño por contacto continuo, pero podemos sumar uno inicial aquí
-                    // si quisiéramos centralizarlo. Por ahora, dejamos que las reglas lo lleven.
-                } else {
-                    badCollisions++;
-                }
+                handleCollision(proj);
             }
+        }
+    }
+
+    private void handleCollision(ProjectileModel proj) {
+        if (proj.isDeactivateOnHit()) {
+            proj.setActive(false);
+        }
+        
+        if (proj.getType() == 1) {
+            goodCollisions++;
+        } else if (proj.getType() != 10) {
+            // No sumamos daño aquí si es tipo 10 (muro/veneno continuo)
+            badCollisions++;
         }
     }
 

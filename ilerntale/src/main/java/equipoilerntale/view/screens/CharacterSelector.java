@@ -110,6 +110,7 @@ public class CharacterSelector extends JPanel {
         button.addActionListener(e -> {
             selectedCharacter = characterName;
             System.out.println("Personaje seleccionado: " + selectedCharacter);
+            equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
             mainFrame.setPersonajeSeleccionado(selectedCharacter);
             mainFrame.cambiarPantalla(MainFrame.SCREEN_GAME);
         });

@@ -37,6 +37,18 @@ public abstract class AbstractRoom {
         initializeRoom();
     }
 
+    protected void addWall(int x, int y, int w, int h) {
+        walls.add(new Rectangle(x, y, w, h));
+    }
+
+    protected void addDoor(int x, int y, int w, int h, String targetRoom, int targetX, int targetY) {
+        doors.add(new DoorModel(x, y, w, h, targetRoom, targetX, targetY));
+    }
+
+    protected void addWorldItem(WorldItem item) {
+        items.add(item);
+    }
+
     /**
      * MÉTODO ABSTRACTO QUE CADA HABITACIÓN DEBE IMPLEMENTAR.
      * AQUÍ SE DEBEN DEFINIR LOS VALORES DE NOMBRE, FONDO, MUROS, PUERTAS Y ZOMBIES.

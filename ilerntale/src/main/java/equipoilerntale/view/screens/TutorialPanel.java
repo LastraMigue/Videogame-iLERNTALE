@@ -90,7 +90,10 @@ public class TutorialPanel extends JPanel {
         btnSalir = createImageButton("/title/salir.png", "SALIR");
         btnSalir.setBounds(400, 500, 200, 60);
 
-        btnSalir.addActionListener(e -> mainFrame.cambiarPantalla("MENU"));
+        btnSalir.addActionListener(e -> {
+            equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
+            mainFrame.cambiarPantalla("MENU");
+        });
         add(btnSalir);
     }
 

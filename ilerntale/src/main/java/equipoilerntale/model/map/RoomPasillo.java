@@ -27,42 +27,22 @@ public class RoomPasillo extends AbstractRoom {
                                 GameSettings.MAP_HEIGHT - 450);
 
                 // CONFIGURACIÓN DE LOS LÍMITES/MUROS DEL MAPA PASILLO
-                // MURO SUPERIOR E INFERIOR
-                this.walls.add(new Rectangle(0, 0, GameSettings.MAP_WIDTH, 230));
-                this.walls.add(new Rectangle(0, GameSettings.MAP_HEIGHT - 5, GameSettings.MAP_WIDTH, 5));
-
-                // MURO SUPERIOR DERECHO (Esquina superior derecha bloqueada)
-                this.walls.add(new Rectangle(1550, 0, 600, 350));
-
-                // LÍMITES LATERALES
-                this.walls.add(new Rectangle(0, 0, 10, GameSettings.MAP_HEIGHT));
-                this.walls.add(new Rectangle(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT));
+                addWall(0, 0, GameSettings.MAP_WIDTH, 230);
+                addWall(0, GameSettings.MAP_HEIGHT - 5, GameSettings.MAP_WIDTH, 5);
+                addWall(1550, 0, 600, 350);
+                addWall(0, 0, 10, GameSettings.MAP_HEIGHT);
+                addWall(GameSettings.MAP_WIDTH - 10, 0, 10, GameSettings.MAP_HEIGHT);
 
                 // CONFIGURACIÓN DEL ÁREA DE TRANSICIÓN (PUERTAS)
-                // Puerta Metálica al final (Aula 124)
-                this.doors.add(new DoorModel(
-                                1750, 220, 220, 250, // Bajamos Y a 220 para emparejar con el aula
-                                "Aula 124", 1750, 320 // Aparece en el aula frente a la puerta metálica
-                ));
-
-                // Puerta 3A (Aula 123)
-                this.doors.add(new DoorModel(
-                                840, 200, 130, 80, // Aumentada altura para facilitar detección
-                                "Aula 123", 600, 320 // Aparece en el aula fuera del muro (Y=320)
-                ));
-
-                // NUEVA: Puerta de Madera (Aula 125)
-                this.doors.add(new DoorModel(
-                                1200, 200, 130, 80, // Posición central en el pasillo
-                                "Aula 125", 600, 320 // Aparece en el aula fuera del muro (Y=320)
-                ));
+                addDoor(1750, 220, 220, 250, "Aula 124", 1750, 320);
+                addDoor(840, 200, 130, 80, "Aula 123", 600, 320);
+                addDoor(1200, 200, 130, 80, "Aula 125", 600, 320);
 
                 // OBJETOS DEL PASILLO
-                this.items.add(new WorldItem(
-                                new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 1,
-                                                true),
+                addWorldItem(new WorldItem(
+                                new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 1, true),
                                 1000, 400));
-                this.items.add(new WorldItem(
+                addWorldItem(new WorldItem(
                                 new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 1, true),
                                 1200, 450));
         }

@@ -102,10 +102,12 @@ public class PausePanel extends JPanel {
         btnSalir.setAlignmentX(CENTER_ALIGNMENT);
 
         btnReanudar.addActionListener(e -> {
+            equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
             mainFrame.togglePause(); // Usa el nuevo método togglePause de MainFrame
         });
 
         btnSalir.addActionListener(e -> {
+            equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
             mainFrame.togglePause(); // Ocultar el overlay
             mainFrame.reiniciarJuego();
             mainFrame.cambiarPantalla(MainFrame.SCREEN_MENU);

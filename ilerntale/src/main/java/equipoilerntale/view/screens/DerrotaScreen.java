@@ -47,6 +47,7 @@ public class DerrotaScreen extends JPanel {
             btnSalir.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
                     mainFrame.reiniciarJuego();
                     mainFrame.cambiarPantalla("MENU");
                 }

@@ -65,19 +65,31 @@ public class MainMenu extends JPanel {
         // Botones situados en la mitad inferior
         btnJugar = createImageButton("/title/jugar.png", "JUGAR");
         btnJugar.setBounds(400, 300, 200, 60);
-        btnJugar.addActionListener(e -> mainFrame.cambiarPantalla(MainFrame.SCREEN_PERSONAJES));
+        btnJugar.addActionListener(e -> {
+            equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
+            mainFrame.cambiarPantalla(MainFrame.SCREEN_PERSONAJES);
+        });
 
         btnIntro = createImageButton("/title/intro.png", "INTRO");
         btnIntro.setBounds(400, 370, 200, 60);
-        btnIntro.addActionListener(e -> mainFrame.cambiarPantalla(MainFrame.SCREEN_VIDEO));
+        btnIntro.addActionListener(e -> {
+            equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
+            mainFrame.cambiarPantalla(MainFrame.SCREEN_VIDEO);
+        });
 
         btnTutorial = createImageButton("/title/tutorial.png", "TUTORIAL");
         btnTutorial.setBounds(400, 440, 200, 60);
-        btnTutorial.addActionListener(e -> mainFrame.cambiarPantalla(MainFrame.SCREEN_TUTORIAL));
+        btnTutorial.addActionListener(e -> {
+            equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
+            mainFrame.cambiarPantalla(MainFrame.SCREEN_TUTORIAL);
+        });
 
         btnSalir = createImageButton("/title/salir.png", "SALIR");
         btnSalir.setBounds(400, 510, 200, 60);
-        btnSalir.addActionListener(e -> System.exit(0));
+        btnSalir.addActionListener(e -> {
+            equipoilerntale.service.SoundService.getInstance().playSFX("/sound/mouse_click.wav");
+            System.exit(0);
+        });
 
         add(btnJugar);
         add(btnIntro);
