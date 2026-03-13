@@ -34,6 +34,7 @@ public class DerrotaScreen extends JPanel {
             btnSalir.setBorderPainted(false);
             btnSalir.setContentAreaFilled(false);
             btnSalir.setFocusPainted(false);
+            btnSalir.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
 
             // Posicionar el boton justo debajo del centro o donde se requiera
             // The user said "justo debajo" which means in the lower part of the screen

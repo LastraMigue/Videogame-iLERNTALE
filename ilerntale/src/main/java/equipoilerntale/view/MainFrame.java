@@ -230,6 +230,16 @@ public class MainFrame extends JFrame {
             finalVideoScreen.playVideo();
         }
 
+        // Gestión de visibilidad del HUD y Diálogos para no bloquear el ratón
+        boolean mostrarHUD = nombre.equals("EXPLORACION") || nombre.equals("COMBATE");
+        if (hudPanel != null) {
+            hudPanel.setVisible(mostrarHUD);
+        }
+        // El diálogo solo se muestra cuando hay texto, pero aseguramos que esté oculto al cambiar
+        if (!mostrarHUD && dialogueContainer != null) {
+            dialogueContainer.setVisible(false);
+        }
+
         // Al salir de EXPLORACION: desactivar (pausa) en lugar de destruir assets
         if (!"EXPLORACION".equals(nombre) && exploracion != null) {
             exploracion.dispose(); // Llama a manager.deactivate() — no destruye assets
@@ -361,7 +371,9 @@ public class MainFrame extends JFrame {
         // Posicionamiento dinámico: centrado horizontalmente, Y ajustable
         panel.setLocation(250, y);
         dialogueContainer.add(panel);
-        dialogueContainer.setVisible(true); // Mostrar contenedor al lanzar diálogo
+        
+        // Solo mostrar si la pantalla actual lo permite o es necesario
+        dialogueContainer.setVisible(true); 
         dialogueContainer.revalidate();
         dialogueContainer.repaint();
     }
