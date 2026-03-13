@@ -100,11 +100,16 @@ public class ExplorationManager {
     public void activate() {
         if (!active) {
             active = true;
+            // Siempre limpiar teclas al volver a EXPLORACION, evita teclas atascadas
+            if (inputHandler != null) {
+                inputHandler.reset();
+            }
             // Solo regeneramos si hemos cambiado de sala o si no hay enemigos
-            if (currentRoom != null && !currentRoom.getName().equals(lastRoomName)) {
+            String roomName = (currentRoom != null) ? currentRoom.getName() : null;
+            if (roomName != null && !roomName.equals(lastRoomName)) {
                 enemySystem.clear();
                 spawnZombies();
-                lastRoomName = currentRoom.getName();
+                lastRoomName = roomName;
             } else if (enemySystem.getZombies().isEmpty() && enemySystem.getBosses().isEmpty()) {
                 // Si la sala es la misma pero está vacía (ej: reload), spawnear
                 spawnZombies();
@@ -113,10 +118,6 @@ public class ExplorationManager {
                 // Si la sala es la misma y hay enemigos (volvemos de un combate)
                 // Dispersamos a los enemigos cercanos para dar un respiro al jugador
                 enemySystem.disperseEnemiesFrom(player.getX(), player.getY(), 450);
-                // Aseguramos que el input esté limpio al volver
-                if (inputHandler != null) {
-                    inputHandler.reset();
-                }
             }
             LOG.info("ExplorationManager activado.");
         }

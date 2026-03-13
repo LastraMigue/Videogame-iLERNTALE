@@ -179,7 +179,7 @@ public class AssetService {
         Image img = loadImage(path);
 
         if (img != null) {
-            Image scaled = scaleImage(img, 120, 120); // Tamaño estático para el boss (SIZE=120)
+            Image scaled = scaleImage(img, equipoilerntale.model.entity.Boss.WIDTH, equipoilerntale.model.entity.Boss.HEIGHT);
             imageCache.put(cacheKey, scaled);
             return scaled;
         }

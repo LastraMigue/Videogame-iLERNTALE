@@ -77,6 +77,9 @@ public class CombatPanel extends JPanel {
     private int escudoPatito = 0;
     private boolean dobleDañoRonda = false;
 
+    // Fase Final Boss (Fase 2)
+    private boolean isFinalBossPhase = false;
+
     // Vida Enemigo
     private BarraVida enemyHealthBar;
 
@@ -154,6 +157,59 @@ public class CombatPanel extends JPanel {
         repaint();
     }
 
+    /**
+     * PREPARA EL BOSS EN SU FASE FINAL (FASE 2): 200 HP, imagen sergiofinal,
+     * controles invertidos, daño doble al jugador.
+     */
+    public void prepararFinalBoss() {
+        this.isMinigameActive = false;
+        this.isItemMenuOpen = false;
+        this.centerTextMessage = "";
+        this.currentRound = 1;
+        this.lastGoodCollisions = 0;
+        this.lastBadCollisions = 0;
+        this.inputCooldown = 0;
+        this.escudoPatito = 0;
+        this.dobleDañoRonda = false;
+        this.isFinalBossPhase = true;
+        if (inputHandler != null)
+            inputHandler.reset();
+
+        // Imagen del boss final
+        java.awt.Image imgFinal = equipoilerntale.service.AssetService.getInstance()
+                .loadImage("/boss/sergio/sergiofinal.png");
+        if (imgFinal != null) {
+            this.enemyImage = equipoilerntale.service.AssetService.getInstance()
+                    .scaleImage(imgFinal,
+                            equipoilerntale.model.entity.Boss.WIDTH,
+                            equipoilerntale.model.entity.Boss.HEIGHT);
+        }
+
+        this.enemyTarget = null; // No hay entidad física en el mapa para fase 2
+        this.enemyHealthBar.setMaxHealth(200);
+        this.enemyHealthBar.setHealth(200);
+
+        // Controles invertidos en la arena
+        arenaModel.setReversedControls(true);
+
+        enableAllButtons();
+        requestFocusInWindow();
+        repaint();
+    }
+
+    /**
+     * REINICIA EL ESTADO DEL COMBATE (Para salir al menú o reiniciar juego).
+     */
+    public void reiniciarEstado() {
+        this.isFinalBossPhase = false;
+        if (arenaModel != null) {
+            arenaModel.stopCombat();
+        }
+        this.isMinigameActive = false;
+        this.centerTextMessage = "";
+        repaint();
+    }
+
     public void updateCombat() {
         if (inputCooldown > 0) {
             inputCooldown--;
@@ -225,7 +281,9 @@ public class CombatPanel extends JPanel {
                     }
 
                     if (damageRecibido > 0) {
-                        mainFrame.getPlayerHealthBar().takeDamage(damageRecibido);
+                        // En fase final el boss inflige daño doble
+                        int finalDamage = isFinalBossPhase ? damageRecibido * 2 : damageRecibido;
+                        mainFrame.getPlayerHealthBar().takeDamage(finalDamage);
                         if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
                             endMinigame();
                             mainFrame.cambiarPantalla("DERROTA");
@@ -248,18 +306,29 @@ public class CombatPanel extends JPanel {
                         ((equipoilerntale.model.entity.Boss) enemyTarget).takeDamage(damageHecho);
                     }
 
-                    // Comprobar si el enemigo ha muerto
+                    // Comprobar si el enemigo ha muerto (Generalizado)
                     if (enemyHealthBar.getHealth() <= 0) {
                         isMinigameActive = false;
-                        arenaModel.stopCombat(); // Importante limpiar aquí también
-                        centerTextMessage = "VICTORIA!";
+                        arenaModel.stopCombat();
+                        arenaModel.setReversedControls(false); // Limpiar controles invertidos
+                        centerTextMessage = "¡VICTORIA!";
                         repaint();
-                        javax.swing.Timer winTimer = new javax.swing.Timer(1500, new java.awt.event.ActionListener() {
-                            @Override
-                            public void actionPerformed(java.awt.event.ActionEvent ev) {
-                                mainFrame.finalizarCombate(true, enemyTarget);
-                            }
-                        });
+
+                        javax.swing.Timer winTimer = new javax.swing.Timer(1500,
+                                new java.awt.event.ActionListener() {
+                                    @Override
+                                    public void actionPerformed(java.awt.event.ActionEvent ev) {
+                                        if (isFinalBossPhase) {
+                                            // Fase 2 superada: video final y vuelta al menú
+                                            isFinalBossPhase = false;
+                                            mainFrame.cambiarPantalla("FINAL_VIDEO");
+                                        } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+                                            mainFrame.triggerBossDefeated(enemyTarget);
+                                        } else {
+                                            mainFrame.finalizarCombate(true, enemyTarget);
+                                        }
+                                    }
+                                });
                         winTimer.setRepeats(false);
                         winTimer.start();
                     }
@@ -705,8 +774,8 @@ public class CombatPanel extends JPanel {
         btnAct.setEnabled(true);
         btnItem.setEnabled(true);
 
-        // Bloquear botón MERCI si el enemigo es un Boss
-        if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+        // Bloquear botón MERCI si el enemigo es un Boss o estamos en Fase 2
+        if (isFinalBossPhase || enemyTarget instanceof equipoilerntale.model.entity.Boss) {
             btnMercy.setEnabled(false);
         } else {
             btnMercy.setEnabled(true);

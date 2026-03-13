@@ -15,6 +15,7 @@ public class ArenaModel {
         projectiles = new CopyOnWriteArrayList<>();
         goodCollisions = 0;
         badCollisions = 0;
+        reversedControls = false;
     }
 
     // 
@@ -28,6 +29,9 @@ public class ArenaModel {
     public void stopCombat() {
         mouse = null;
         projectiles = null;
+        goodCollisions = 0;
+        badCollisions = 0;
+        reversedControls = false;
     }
 
     public void addProjectile(ProjectileModel projectile) {
@@ -50,9 +54,24 @@ public class ArenaModel {
         }
     }
 
+    private boolean reversedControls = false;
+
+    public void setReversedControls(boolean reversed) {
+        this.reversedControls = reversed;
+    }
+
+    public boolean isReversedControls() {
+        return reversedControls;
+    }
+
     public void intentarMoverMouse(int dx, int dy) {
         if (mouse == null)
             return;
+        // En fase final, los controles se invierten
+        if (reversedControls) {
+            dx = -dx;
+            dy = -dy;
+        }
         int fX = mouse.getX() + (dx * 5);
         int fY = mouse.getY() + (dy * 5);
         if (fX >= 200 && fX <= 800 - mouse.getAncho())

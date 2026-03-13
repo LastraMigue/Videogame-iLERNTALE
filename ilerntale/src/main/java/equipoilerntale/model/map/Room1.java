@@ -12,6 +12,7 @@ public class Room1 extends AbstractRoom {
 
     @Override
     protected void initializeRoom() {
+
         this.name = "Aula 124";
 
         // CUIDADO: EXTENSIÓN JPG EN EL PASILLO
@@ -23,8 +24,8 @@ public class Room1 extends AbstractRoom {
         // EL ÁREA DE GENERACIÓN DE ZOMBIES (Ajustada para máxima seguridad)
         this.zombieSpawnArea = new Rectangle(400, 380, GameSettings.MAP_WIDTH - 600, GameSettings.MAP_HEIGHT - 450);
 
-        // BOSS AL FINAL DEL AULA
-        this.bossSpawnArea = new Rectangle(GameSettings.MAP_WIDTH - 200, GameSettings.MAP_HEIGHT - 200, 100, 100);
+        // BOSS A LA IZQUIERDA DEL AULA
+        this.bossSpawnArea = new Rectangle(50, GameSettings.MAP_HEIGHT / 2 - 50, 100, 100);
 
         // CONFIGURACIÓN DE LOS LÍMITES/MUROS
         // MURO SUPERIOR E INFERIOR (Ajustado a la línea del suelo del aula)
