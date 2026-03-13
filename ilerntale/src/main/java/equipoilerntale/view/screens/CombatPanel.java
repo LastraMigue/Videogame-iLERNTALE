@@ -218,6 +218,7 @@ public class CombatPanel extends JPanel {
         this.isFinalBossPhase = false;
         if (arenaModel != null) {
             arenaModel.stopCombat();
+            arenaModel.setReversedControls(false);
         }
         this.isMinigameActive = false;
         this.centerTextMessage = "";
@@ -635,6 +636,11 @@ public class CombatPanel extends JPanel {
                         combatController.setRules(currentRules);
                         combatController.startMinigame();
 
+                        // Sergio Boss Phase 2 inversion
+                        if (isFinalBossPhase) {
+                            arenaModel.setReversedControls(true);
+                        }
+
                         requestFocusInWindow();
 
                         isMinigameActive = true;
@@ -751,6 +757,11 @@ public class CombatPanel extends JPanel {
 
                                     combatController.setRules(currentRules);
                                     combatController.startMinigame();
+
+                                    // Sergio Boss Phase 2 inversion
+                                    if (isFinalBossPhase) {
+                                        arenaModel.setReversedControls(true);
+                                    }
 
                                     requestFocusInWindow();
 
