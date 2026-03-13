@@ -17,7 +17,8 @@ public class SoundService {
     private String currentBGMPath;
     private float volume = 0.5f; // Volumen predeterminado al 50%
 
-    private SoundService() {}
+    private SoundService() {
+    }
 
     public static SoundService getInstance() {
         if (instance == null) {
@@ -43,7 +44,8 @@ public class SoundService {
     private void applyVolume(Clip clip) {
         try {
             if (clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-                FloatControl gainControl = (FloatControl.Type.MASTER_GAIN).equals(null) ? null : (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+                FloatControl gainControl = (FloatControl.Type.MASTER_GAIN).equals(null) ? null
+                        : (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
                 if (gainControl != null) {
                     // Mapeo lineal de 0.0-1.0 a decibelios (-80dB a 6dB aprox)
                     float dB = (float) (Math.log(volume <= 0.0001 ? 0.0001 : volume) / Math.log(10.0) * 20.0);
@@ -74,16 +76,17 @@ public class SoundService {
                 return;
             }
 
-            // Usar BufferedInputStream para soporte de mark/reset requerido por AudioInputStream
+            // Usar BufferedInputStream para soporte de mark/reset requerido por
+            // AudioInputStream
             InputStream bufferedIn = new BufferedInputStream(is);
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
-            
+
             bgmClip = AudioSystem.getClip();
             bgmClip.open(audioStream);
             applyVolume(bgmClip); // Aplicar volumen actual
             bgmClip.loop(Clip.LOOP_CONTINUOUSLY);
             bgmClip.start();
-            
+
             currentBGMPath = path;
             LOG.info("Reproduciendo BGM: " + path);
         } catch (Exception e) {
@@ -120,7 +123,7 @@ public class SoundService {
             sfxClip.open(audioStream);
             applyVolume(sfxClip); // Aplicar volumen actual
             sfxClip.start();
-            
+
             // Cerrar el clip automáticamente cuando termine
             sfxClip.addLineListener(event -> {
                 if (event.getType() == LineEvent.Type.STOP) {

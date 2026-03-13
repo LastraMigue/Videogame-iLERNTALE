@@ -126,7 +126,7 @@ public class CombatPanel extends JPanel {
 
         cargarImagenCombate();
         cargarFuente();
-        inicializarPaneles();
+        inicializarUI();
     }
 
     /**
@@ -429,41 +429,63 @@ public class CombatPanel extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        // 1. Fondo e interfaz
-        if (imagenFondo != null) {
-            g2d.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
-        }
+        // 1. Efecto Screen Shake y Fondo
+        aplicarEfectoShake(g2d);
+        renderFondo(g2d);
 
-        // Efecto Screen Shake
+        // 2. HUD y Estadísticas (Enemigo, Ronda, Tiempo)
+        renderHUDEnemigo(g2d);
+        renderStats(g2d);
+
+        // 3. Área de Juego (Arena)
+        renderArena(g2d);
+
+        // 4. Elementos de Juego (Proyectiles, Ratón, Reglas)
+        renderElementosJuego(g2d);
+
+        // 5. Menú de Objetos y Mensajes
+        if (isInventoryActive) {
+            itemRenderer.renderMenu(g2d, currentCombatItems, selectedItemIndex, customFont);
+        }
+        renderMensajesCentro(g2d);
+    }
+
+    private void aplicarEfectoShake(Graphics2D g2d) {
         if (shakeIntensity > 0) {
             int offsetX = (int) (Math.random() * shakeIntensity * 2 - shakeIntensity);
             int offsetY = (int) (Math.random() * shakeIntensity * 2 - shakeIntensity);
             g2d.translate(offsetX, offsetY);
             shakeIntensity--;
         }
+    }
 
+    private void renderFondo(Graphics2D g2d) {
+        if (imagenFondo != null) {
+            g2d.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
+        }
+        
+        // Marco de la imagen del enemigo
         g2d.setColor(Color.BLACK);
         g2d.fillRect(405, 30, 180, 180);
         g2d.setColor(Color.WHITE);
         g2d.setStroke(new BasicStroke(3));
         g2d.drawRect(405, 30, 180, 180);
+    }
 
-        // UI Vida Enemigo Arriba a la Izquierda
+    private void renderHUDEnemigo(Graphics2D g2d) {
         if (enemyHealthBar != null) {
             enemyHealthBar.draw(g2d, 20, 35);
         }
+    }
 
-        // Recuadros para RONDA y TIEMPO "a ras" del central (Y=95, Alto=50)
-        // Cuadro central: X=405 a 585
-
-        // Recuadro RONDA (Izquierda: X=245, Ancho=150) -> termina en 395 (a 10px del
-        // central)
+    private void renderStats(Graphics2D g2d) {
+        // Recuadro RONDA
         g2d.setColor(Color.BLACK);
         g2d.fillRect(235, 160, 150, 50);
         g2d.setColor(Color.WHITE);
         g2d.drawRect(235, 160, 150, 50);
 
-        // Recuadro TIEMPO (Derecha: X=595, Ancho=150) -> empieza a 10px del central
+        // Recuadro TIEMPO (si aplica)
         if (isMinigameActive) {
             g2d.setColor(Color.BLACK);
             g2d.fillRect(605, 160, 150, 50);
@@ -471,47 +493,43 @@ public class CombatPanel extends JPanel {
             g2d.drawRect(605, 160, 150, 50);
         }
 
-        // Draw round and timer text inside their new squares
         if (customFont != null) {
             g2d.setFont(customFont.deriveFont(24f));
             g2d.setColor(Color.WHITE);
-            // Centrado aproximado en el recuadro izquierdo (Y=128)
             g2d.drawString("RONDA: " + currentRound, 255, 192);
 
             if (isMinigameActive) {
-                if (currentRules != null && currentRules.isIntroActive()) {
-                    long seconds = currentRules.getDurationInSeconds();
-                    String timeText = String.format("%02d:000", seconds);
-                    g2d.drawString(timeText, 645, 192);
-                } else {
-                    long nowForTimer = System.currentTimeMillis();
-                    if (mainFrame.getMainController() != null &&
-                            mainFrame.getMainController().getGameState() == MainController.GameState.PAUSED) {
-                        nowForTimer = lastUpdateTime; // Congela el tiempo visualmente
-                    }
-
-                    long timeLeft = minigameEndTime - nowForTimer;
-                    if (timeLeft < 0)
-                        timeLeft = 0;
-                    long seconds = timeLeft / 1000;
-                    long millis = timeLeft % 1000;
-                    String timeText = String.format("%02d:%03d", seconds, millis);
-                    g2d.drawString(timeText, 645, 192);
-                }
+                renderTemporizador(g2d);
             }
         }
+    }
 
+    private void renderTemporizador(Graphics2D g2d) {
+        String timeText;
+        if (currentRules != null && currentRules.isIntroActive()) {
+            timeText = String.format("%02d:000", currentRules.getDurationInSeconds());
+        } else {
+            long now = System.currentTimeMillis();
+            if (mainFrame.getMainController() != null &&
+                mainFrame.getMainController().getGameState() == MainController.GameState.PAUSED) {
+                now = lastUpdateTime; 
+            }
+            long timeLeft = Math.max(0, minigameEndTime - now);
+            timeText = String.format("%02d:%03d", timeLeft / 1000, timeLeft % 1000);
+        }
+        g2d.drawString(timeText, 645, 192);
+    }
+
+    private void renderArena(Graphics2D g2d) {
         g2d.setColor(Color.BLACK);
         g2d.fillRect(200, 240, 600, 250);
         g2d.setColor(Color.WHITE);
         g2d.setStroke(new BasicStroke(3));
         g2d.drawRect(200, 240, 600, 250);
+    }
 
-        // 2. DIBUJAR LOS ELEMENTOS CON LOS RENDERERS
-        boolean drawEntities = true;
-        if (isMinigameActive && currentRules != null && currentRules.isIntroActive()) {
-            drawEntities = false;
-        }
+    private void renderElementosJuego(Graphics2D g2d) {
+        boolean drawEntities = !(isMinigameActive && currentRules != null && currentRules.isIntroActive());
 
         if (arenaModel != null && drawEntities) {
             if (arenaModel.getProjectiles() != null) {
@@ -522,46 +540,33 @@ public class CombatPanel extends JPanel {
             }
         }
 
-        // Extras of current minigame
         if (isMinigameActive && currentRules != null) {
             currentRules.render(g2d, arenaModel);
         }
+    }
 
-        // 3. MENÚ DE OBJETOS
-        if (isInventoryActive) {
-            itemRenderer.renderMenu(g2d, currentCombatItems, selectedItemIndex, customFont);
-        }
+    private void renderMensajesCentro(Graphics2D g2d) {
+        if (centerTextMessage == null || centerTextMessage.isEmpty()) return;
 
-        // 3. MENSAJE EN EL CENTRO
-        if (centerTextMessage != null && !centerTextMessage.isEmpty()) {
-            if (customFont != null) {
-                g2d.setFont(customFont);
-            }
-            g2d.setColor(Color.WHITE);
-            FontMetrics fm = g2d.getFontMetrics();
+        if (customFont != null) g2d.setFont(customFont);
+        g2d.setColor(Color.WHITE);
+        FontMetrics fm = g2d.getFontMetrics();
 
-            // Procesar diálogos multilínea (\n)
-            String[] lines = centerTextMessage.split("\n");
+        String[] lines = centerTextMessage.split("\n");
+        int linePadding = 5;
+        int totalHeight = (fm.getHeight() * lines.length) + (linePadding * (lines.length - 1));
+        int startY = 240 + (250 - totalHeight) / 2 + fm.getAscent();
 
-            // Calcular la altura total del bloque de texto
-            int linePadding = 5;
-            int totalHeight = (fm.getHeight() * lines.length) + (linePadding * (lines.length - 1));
-
-            // Punto de inicio Y para centrar el bloque verticalmente
-            int startY = 240 + (250 - totalHeight) / 2 + fm.getAscent();
-
-            for (int i = 0; i < lines.length; i++) {
-                String line = lines[i].trim();
-                int stringWidth = fm.stringWidth(line);
-                int x = 200 + (600 - stringWidth) / 2;
-                int y = startY + (i * (fm.getHeight() + linePadding));
-                g2d.drawString(line, x, y);
-            }
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i].trim();
+            int x = 200 + (600 - fm.stringWidth(line)) / 2;
+            int y = startY + (i * (fm.getHeight() + linePadding));
+            g2d.drawString(line, x, y);
         }
     }
 
-    private void inicializarPaneles() {
-        // PANEL PEQUEÑO PARA LA IMAGEN DEL ENEMIGO (NUEVO)
+    private void inicializarUI() {
+        // PANEL PEQUEÑO PARA LA IMAGEN DEL ENEMIGO
         enemyIconPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -576,253 +581,183 @@ public class CombatPanel extends JPanel {
                 }
             }
         };
-        enemyIconPanel.setBounds(405 + 3, 30 + 3, 180 - 6, 180 - 6);
+        enemyIconPanel.setBounds(408, 33, 174, 174);
         enemyIconPanel.setOpaque(false);
         add(enemyIconPanel);
 
-        JPanel buttonPanel = createButtonPanel();
+        // BOTONES DE ACCIÓN
+        JPanel buttonPanel = new JPanel(null);
         buttonPanel.setBounds(0, 510, 1000, 70);
-        add(buttonPanel);
-    }
-
-    private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(null);
         buttonPanel.setOpaque(false);
 
-        btnFight = createButton("fight");
-        btnAct = createButton("act");
-        btnItem = createButton("item");
-        btnMercy = createButton("mercy");
-
-        btnFight.setBounds(40, 10, 200, 60);
-        btnAct.setBounds(280, 10, 200, 60);
-        btnItem.setBounds(520, 10, 200, 60);
-        btnMercy.setBounds(760, 10, 200, 60);
+        btnFight = createButton("fight", 40, 10);
+        btnAct = createButton("act", 280, 10);
+        btnItem = createButton("item", 520, 10);
+        btnMercy = createButton("mercy", 760, 10);
 
         buttonPanel.add(btnFight);
         buttonPanel.add(btnAct);
         buttonPanel.add(btnItem);
         buttonPanel.add(btnMercy);
 
-        return buttonPanel;
+        add(buttonPanel);
     }
 
-    private JButton createButton(String accion) {
+    private JButton createButton(String accion, int x, int y) {
         JButton button = new JButton();
-        button.setPreferredSize(new Dimension(200, 60));
-        button.setMaximumSize(new Dimension(200, 60));
-        button.setMinimumSize(new Dimension(200, 60));
+        button.setBounds(x, y, 200, 60);
         button.setOpaque(false);
         button.setContentAreaFilled(false);
         button.setBorderPainted(false);
-        button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
-        button.setIconTextGap(0);
-        button.setText("");
-
-        try (InputStream is = getClass().getResourceAsStream("/attack/" + accion + "1.png")) {
-            if (is != null) {
-                BufferedImage img = ImageIO.read(is);
-                button.setIcon(new ImageIcon(img.getScaledInstance(200, 60, Image.SCALE_SMOOTH)));
-            }
-        } catch (IOException e) {
-            System.err.println("Error cargando botón " + accion + ": " + e.getMessage());
-        }
-
-        try (InputStream is = getClass().getResourceAsStream("/attack/" + accion + "2.png")) {
-            if (is != null) {
-                BufferedImage img = ImageIO.read(is);
-                button.setPressedIcon(new ImageIcon(img.getScaledInstance(200, 60, Image.SCALE_SMOOTH)));
-            }
-        } catch (IOException e) {
-            System.err.println("Error cargando botón presionado " + accion + ": " + e.getMessage());
-        }
-
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SoundService.getInstance().playSFX("/sound/mouse_click.wav");
-                switch (accion) {
-                    case "fight":
-                        isInventoryActive = false;
-                        disableAllButtons();
+        // Cargar iconos (Normal y Presionado)
+        button.setIcon(loadButtonIcon(accion, 1));
+        button.setPressedIcon(loadButtonIcon(accion, 2));
 
-                        int randomMinigame = new java.util.Random().nextInt(6);
-                        switch (randomMinigame) {
-                            case 0:
-                                currentRules = new ClassicDodgeRules();
-                                break;
-                            case 1:
-                                currentRules = new TargetDodgeRules();
-                                break;
-                            case 2:
-                                currentRules = new ThreeLinesRules();
-                                break;
-                            case 3:
-                                currentRules = new ShooterRules();
-                                break;
-                            case 4:
-                                currentRules = new ShieldRules();
-                                break;
-                            case 5:
-                                currentRules = new MazeRules();
-                                break;
-                        }
-
-                        combatController.setRules(currentRules);
-                        combatController.startMinigame();
-
-                        // Sergio Boss Phase 2 inversion
-                        if (isFinalBossPhase) {
-                            arenaModel.setReversedControls(true);
-                        }
-
-                        requestFocusInWindow();
-
-                        isMinigameActive = true;
-                        int duration = currentRules.getDurationInSeconds() * 1000;
-                        long startNow = System.currentTimeMillis();
-                        minigameEndTime = startNow + duration;
-                        lastUpdateTime = startNow;
-                        lastGoodCollisions = 0;
-                        lastBadCollisions = 0;
-                        break;
-                    case "act":
-                        isInventoryActive = false;
-                        disableAllButtons();
-                        String loreMessage = "";
-
-                        if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
-                            String[] zombieLore = {
-                                    "Hambre... el cafe... \nnos cambio..",
-                                    "iLERNA... prometio... \ninteligencia...\nsolo hay... hambre...",
-                                    "Donde esta... mi examen? \nNo... siento la logica...",
-                                    "El agua... las maquinas... \nsabian a codigo amargo...",
-                                    "Solo... queriamos... \naprobar..."
-                            };
-                            loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
-                        } else if (isFinalBossPhase || enemyTarget instanceof equipoilerntale.model.entity.Boss) {
-                            String[] bossLore = {
-                                    "Esto no compila \nen produccion! \nESTAIS SUSPENDIDOS!",
-                                    "Has revisado el tema 4 \nsobre polimorfismo? \nMUERE!",
-                                    "El examen final sera... \nvuestra tumba.",
-                                    "iLERNA era solo el principio... \nel cafe hara el resto.",
-                                    "Vuestro codigo es tan sucio \ncomo este instituto!"
-                            };
-                            loreMessage = bossLore[new java.util.Random().nextInt(bossLore.length)];
-                        } else {
-                            loreMessage = "El enemigo te ignora...";
-                        }
-
-                        centerTextMessage = loreMessage;
-                        repaint();
-
-                        Timer actTimer = new Timer(2500, new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent ev) {
-                                centerTextMessage = "";
-                                enableAllButtons();
-                                repaint();
-                            }
-                        });
-                        actTimer.setRepeats(false);
-                        actTimer.start();
-                        break;
-                    case "item":
-                        currentCombatItems = inventario.getObjetosCombate();
-                        if (currentCombatItems != null && !currentCombatItems.isEmpty()) {
-                            // Se cambia de true a un toggle y no se bloquean los botones
-                            isInventoryActive = !isInventoryActive;
-                            selectedItemIndex = 0;
-                            centerTextMessage = ""; // Limpiar cualquier texto de combate
-                            requestFocusInWindow();
-                            repaint();
-                        } else {
-                            // Si no hay objetos usables en combate y con cantidad > 0, ciérralo.
-                            isInventoryActive = false;
-                            repaint();
-                        }
-                        break;
-                    case "mercy":
-                        isInventoryActive = false;
-                        disableAllButtons();
-                        double chance = Math.random();
-                        if (chance <= 0.10) {
-                            centerTextMessage = "HAS TENIDO PIEDAD";
-                            repaint();
-                            // Al tener piedad, finalizamos el combate como una victoria para que el enemigo
-                            // desaparezca
-                            Timer victoryTimer = new Timer(2000, new ActionListener() {
-                                @Override
-                                public void actionPerformed(ActionEvent ev) {
-                                    mainFrame.finalizarCombate(true, enemyTarget);
-                                }
-                            });
-                            victoryTimer.setRepeats(false);
-                            victoryTimer.start();
-                        } else {
-                            centerTextMessage = "QUIERE MORDERTE";
-                            repaint();
-                            // Pausa para leer el texto, luego inicio de combate
-                            Timer minigameTimer = new Timer(1500, new ActionListener() {
-                                @Override
-                                public void actionPerformed(ActionEvent ev) {
-                                    centerTextMessage = "";
-
-                                    int randomMinigame = new java.util.Random().nextInt(6);
-                                    switch (randomMinigame) {
-                                        case 0:
-                                            currentRules = new ClassicDodgeRules();
-                                            break;
-                                        case 1:
-                                            currentRules = new TargetDodgeRules();
-                                            break;
-                                        case 2:
-                                            currentRules = new ThreeLinesRules();
-                                            break;
-                                        case 3:
-                                            currentRules = new ShooterRules();
-                                            break;
-                                        case 4:
-                                            currentRules = new ShieldRules();
-                                            break;
-                                        case 5:
-                                            currentRules = new MazeRules();
-                                            break;
-                                    }
-
-                                    combatController.setRules(currentRules);
-                                    combatController.startMinigame();
-
-                                    // Sergio Boss Phase 2 inversion
-                                    if (isFinalBossPhase) {
-                                        arenaModel.setReversedControls(true);
-                                    }
-
-                                    requestFocusInWindow();
-
-                                    isMinigameActive = true;
-                                    int duration = currentRules.getDurationInSeconds() * 1000;
-                                    long startNow = System.currentTimeMillis();
-                                    minigameEndTime = startNow + duration;
-                                    lastUpdateTime = startNow;
-                                    lastGoodCollisions = 0;
-                                    lastBadCollisions = 0;
-                                    repaint();
-                                }
-                            });
-                            minigameTimer.setRepeats(false);
-                            minigameTimer.start();
-                        }
-                        break;
-                }
-            }
-        });
+        button.addActionListener(e -> handleButtonAction(accion));
 
         return button;
+    }
+
+    private ImageIcon loadButtonIcon(String action, int variant) {
+        String path = "/attack/" + action + variant + ".png";
+        try (InputStream is = getClass().getResourceAsStream(path)) {
+            if (is != null) {
+                BufferedImage img = ImageIO.read(is);
+                return new ImageIcon(img.getScaledInstance(200, 60, Image.SCALE_SMOOTH));
+            }
+        } catch (IOException e) {
+            System.err.println("Error cargando icono de botón [" + path + "]: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private void handleButtonAction(String action) {
+        SoundService.getInstance().playSFX("/sound/mouse_click.wav");
+        switch (action) {
+            case "fight":
+                realizarAccionLuchar();
+                break;
+            case "act":
+                realizarAccionActuar();
+                break;
+            case "item":
+                realizarAccionObjeto();
+                break;
+            case "mercy":
+                realizarAccionPiedad();
+                break;
+        }
+    }
+
+    private void iniciarMinijuegoAleatorio() {
+        int randomIdx = new java.util.Random().nextInt(6);
+        switch (randomIdx) {
+            case 0: currentRules = new ClassicDodgeRules(); break;
+            case 1: currentRules = new TargetDodgeRules(); break;
+            case 2: currentRules = new ThreeLinesRules(); break;
+            case 3: currentRules = new ShooterRules(); break;
+            case 4: currentRules = new ShieldRules(); break;
+            case 5: currentRules = new MazeRules(); break;
+        }
+
+        combatController.setRules(currentRules);
+        combatController.startMinigame();
+
+        if (isFinalBossPhase) {
+            arenaModel.setReversedControls(true);
+        }
+
+        requestFocusInWindow();
+        isMinigameActive = true;
+        
+        long startNow = System.currentTimeMillis();
+        minigameEndTime = startNow + (currentRules.getDurationInSeconds() * 1000);
+        lastUpdateTime = startNow;
+        lastGoodCollisions = 0;
+        lastBadCollisions = 0;
+    }
+
+    private void realizarAccionLuchar() {
+        isInventoryActive = false;
+        disableAllButtons();
+        iniciarMinijuegoAleatorio();
+    }
+
+    private void realizarAccionActuar() {
+        isInventoryActive = false;
+        disableAllButtons();
+        
+        String loreMessage;
+        if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
+            String[] zombieLore = {
+                "Hambre... el cafe... \nnos cambio..",
+                "iLERNA... prometio... \ninteligencia...\nsolo hay... hambre...",
+                "Donde esta... mi examen? \nNo... siento la logica...",
+                "El agua... las maquinas... \nsabian a codigo amargo...",
+                "Solo... queriamos... \naprobar..."
+            };
+            loreMessage = zombieLore[new java.util.Random().nextInt(zombieLore.length)];
+        } else if (isFinalBossPhase || enemyTarget instanceof equipoilerntale.model.entity.Boss) {
+            String[] bossLore = {
+                "Esto no compila \nen produccion! \nESTAIS SUSPENDIDOS!",
+                "Has revisado el tema 4 \nsobre polimorfismo? \nMUERE!",
+                "El examen final sera... \nvuestra tumba.",
+                "iLERNA era solo el principio... \nel cafe hara el resto.",
+                "Vuestro codigo es tan sucio \ncomo este instituto!"
+            };
+            loreMessage = bossLore[new java.util.Random().nextInt(bossLore.length)];
+        } else {
+            loreMessage = "El enemigo te ignora...";
+        }
+
+        centerTextMessage = loreMessage;
+        repaint();
+
+        Timer actTimer = new Timer(2500, ev -> {
+            centerTextMessage = "";
+            enableAllButtons();
+            repaint();
+        });
+        actTimer.setRepeats(false);
+        actTimer.start();
+    }
+
+    private void realizarAccionObjeto() {
+        currentCombatItems = inventario.getObjetosCombate();
+        if (currentCombatItems != null && !currentCombatItems.isEmpty()) {
+            isInventoryActive = !isInventoryActive;
+            selectedItemIndex = 0;
+            centerTextMessage = "";
+            requestFocusInWindow();
+        } else {
+            isInventoryActive = false;
+        }
+        repaint();
+    }
+
+    private void realizarAccionPiedad() {
+        isInventoryActive = false;
+        disableAllButtons();
+        
+        if (Math.random() <= 0.10) {
+            centerTextMessage = "HAS TENIDO PIEDAD";
+            repaint();
+            Timer victoryTimer = new Timer(2000, ev -> mainFrame.finalizarCombate(true, enemyTarget));
+            victoryTimer.setRepeats(false);
+            victoryTimer.start();
+        } else {
+            centerTextMessage = "QUIERE MORDERTE";
+            repaint();
+            Timer minigameTimer = new Timer(1500, ev -> {
+                centerTextMessage = "";
+                iniciarMinijuegoAleatorio();
+            });
+            minigameTimer.setRepeats(false);
+            minigameTimer.start();
+        }
     }
 
     private void cargarFuente() {

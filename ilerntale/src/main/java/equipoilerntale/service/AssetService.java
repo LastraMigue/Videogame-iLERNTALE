@@ -179,7 +179,8 @@ public class AssetService {
         Image img = loadImage(path);
 
         if (img != null) {
-            Image scaled = scaleImage(img, equipoilerntale.model.entity.Boss.WIDTH, equipoilerntale.model.entity.Boss.HEIGHT);
+            Image scaled = scaleImage(img, equipoilerntale.model.entity.Boss.WIDTH,
+                    equipoilerntale.model.entity.Boss.HEIGHT);
             imageCache.put(cacheKey, scaled);
             return scaled;
         }

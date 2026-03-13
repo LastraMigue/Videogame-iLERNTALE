@@ -4,8 +4,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.awt.Cursor;
@@ -64,52 +62,22 @@ public class MainMenu extends JPanel {
     }
 
     private void inicializarComponentes() {
-        // Inicializar botones con el helper - Situados en la mitad inferior (Total
-        // alto: 600)
-        // Usamos un intervalo de 55px (altura botón 60px) para compactarlos un poco más
-
-        // Botones con Imagen para cada funcionalidad (JUGAR, INTRO, TUTORIAL Y SALIR)
+        // Botones situados en la mitad inferior
         btnJugar = createImageButton("/title/jugar.png", "JUGAR");
         btnJugar.setBounds(400, 300, 200, 60);
+        btnJugar.addActionListener(e -> mainFrame.cambiarPantalla(MainFrame.SCREEN_PERSONAJES));
 
         btnIntro = createImageButton("/title/intro.png", "INTRO");
         btnIntro.setBounds(400, 370, 200, 60);
+        btnIntro.addActionListener(e -> mainFrame.cambiarPantalla(MainFrame.SCREEN_VIDEO));
 
         btnTutorial = createImageButton("/title/tutorial.png", "TUTORIAL");
         btnTutorial.setBounds(400, 440, 200, 60);
+        btnTutorial.addActionListener(e -> mainFrame.cambiarPantalla(MainFrame.SCREEN_TUTORIAL));
 
         btnSalir = createImageButton("/title/salir.png", "SALIR");
         btnSalir.setBounds(400, 510, 200, 60);
-
-        // Añadir funcionalidades existentes
-        btnJugar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mainFrame.cambiarPantalla("PERSONAJES");
-            }
-        });
-
-        btnTutorial.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mainFrame.cambiarPantalla("TUTORIAL");
-            }
-        });
-
-        btnIntro.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Trasladado desde btnJugar: Reproducir vídeo de intro
-                mainFrame.cambiarPantalla("VIDEO");
-            }
-        });
-
-        btnSalir.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
+        btnSalir.addActionListener(e -> System.exit(0));
 
         add(btnJugar);
         add(btnIntro);

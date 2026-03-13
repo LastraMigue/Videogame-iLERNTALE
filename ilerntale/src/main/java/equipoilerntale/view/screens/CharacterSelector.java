@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Cursor;
@@ -109,14 +107,11 @@ public class CharacterSelector extends JPanel {
             }
         });
 
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectedCharacter = characterName;
-                System.out.println("Personaje seleccionado: " + selectedCharacter);
-                mainFrame.setPersonajeSeleccionado(selectedCharacter);
-                mainFrame.cambiarPantalla("GAME");
-            }
+        button.addActionListener(e -> {
+            selectedCharacter = characterName;
+            System.out.println("Personaje seleccionado: " + selectedCharacter);
+            mainFrame.setPersonajeSeleccionado(selectedCharacter);
+            mainFrame.cambiarPantalla(MainFrame.SCREEN_GAME);
         });
 
         return button;

@@ -108,7 +108,7 @@ public class PausePanel extends JPanel {
         btnSalir.addActionListener(e -> {
             mainFrame.togglePause(); // Ocultar el overlay
             mainFrame.reiniciarJuego();
-            mainFrame.cambiarPantalla("MENU");
+            mainFrame.cambiarPantalla(MainFrame.SCREEN_MENU);
         });
 
         menuContainer.add(titulo);

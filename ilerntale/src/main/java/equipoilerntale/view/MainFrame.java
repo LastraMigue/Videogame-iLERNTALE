@@ -37,10 +37,22 @@ public class MainFrame extends JFrame {
 
     private static final Logger LOG = Logger.getLogger(MainFrame.class.getName());
 
+    // CONSTANTES DE PANTALLAS
+    public static final String SCREEN_MENU = "MENU";
+    public static final String SCREEN_PERSONAJES = "PERSONAJES";
+    public static final String SCREEN_COMBATE = "COMBATE";
+    public static final String SCREEN_DERROTA = "DERROTA";
+    public static final String SCREEN_VIDEO = "VIDEO";
+    public static final String SCREEN_TRANSFORMACION = "TRANSFORMACION_VIDEO";
+    public static final String SCREEN_FINAL_VIDEO = "FINAL_VIDEO";
+    public static final String SCREEN_EXPLORACION = "EXPLORACION";
+    public static final String SCREEN_GAME = "GAME";
+    public static final String SCREEN_TUTORIAL = "TUTORIAL";
+
     private CardLayout cardLayout;
     private JLayeredPane layeredPane;
     private JPanel contenedor;
-    private String pantallaActual = "MENU";
+    private String pantallaActual = SCREEN_MENU;
     private MainMenu menu;
     private CharacterSelector personajes;
     private PausePanel pause;
@@ -98,41 +110,9 @@ public class MainFrame extends JFrame {
         playerHealthBar = new BarraVida(50, "JUGADOR");
 
         // INICIALIZAR PANELES DE LAS PANTALLAS
-        menu = new MainMenu(this);
-        personajes = new CharacterSelector(this);
-        pause = new PausePanel(this);
-        combate = new CombatPanel(this);
-        derrota = new DerrotaScreen(this);
-        videoScreen = new VideoScreen(this);
-        transformacionVideo = new TransformacionVideoScreen(this);
-        finalVideoScreen = new FinalVideoScreen(this);
-        tutorial = new TutorialPanel(this);
-        gamePanel = new GamePanel(this);
+        setupScreens();
 
         // CARGAR ICONO DE LLAVE
-        try (InputStream is = getClass().getResourceAsStream("/objects/llave.png")) {
-            if (is != null) {
-                keyIcon = ImageIO.read(is);
-            }
-        } catch (IOException e) {
-            LOG.warning("No se pudo cargar el icono de la llave: " + e.getMessage());
-        }
-
-        // CREAR EXPLORATIONPANEL CON EL MANAGER LÓGICO
-        exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
-
-        // AÑADIR PANELES AL CONTENEDOR DE CARDLAYOUT
-        contenedor.add(menu, "MENU");
-        contenedor.add(personajes, "PERSONAJES");
-        contenedor.add(combate, "COMBATE");
-        contenedor.add(derrota, "DERROTA");
-        videoScreen.setName("VIDEO"); // Útil para exclusiones
-        contenedor.add(videoScreen, "VIDEO");
-        contenedor.add(transformacionVideo, "TRANSFORMACION_VIDEO");
-        contenedor.add(finalVideoScreen, "FINAL_VIDEO");
-        contenedor.add(exploracion, "EXPLORACION");
-        contenedor.add(gamePanel, "GAME");
-        contenedor.add(tutorial, "TUTORIAL");
 
         // Configuramos el LayeredPane para el overlay
         layeredPane = new JLayeredPane();
@@ -206,7 +186,7 @@ public class MainFrame extends JFrame {
         setVisible(true);
 
         // Cambiar a la pantalla inicial del MENU
-        cambiarPantalla("MENU");
+        cambiarPantalla(SCREEN_MENU);
 
         // INICIAR EL HILO LÓGICO DEL JUEGO (GAME LOOP)
         mainController.startGameThread();
@@ -215,6 +195,43 @@ public class MainFrame extends JFrame {
         iniciarRenderLoop();
 
         LOG.info("MAINFRAME INICIALIZADO CORRECTAMENTE");
+    }
+
+    private void setupScreens() {
+        // Solo instanciamos los paneles que son estáticos (no cambian con el personaje)
+        // si no han sido creados ya.
+        if (menu == null) menu = new MainMenu(this);
+        if (personajes == null) personajes = new CharacterSelector(this);
+        if (pause == null) pause = new PausePanel(this);
+        if (combate == null) combate = new CombatPanel(this);
+        if (derrota == null) derrota = new DerrotaScreen(this);
+        if (videoScreen == null) {
+            videoScreen = new VideoScreen(this);
+            videoScreen.setName(SCREEN_VIDEO);
+        }
+        if (transformacionVideo == null) transformacionVideo = new TransformacionVideoScreen(this);
+        if (finalVideoScreen == null) finalVideoScreen = new FinalVideoScreen(this);
+        if (tutorial == null) tutorial = new TutorialPanel(this);
+
+        // Los paneles que dependen del personaje se recrean siempre
+        exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
+        gamePanel = new GamePanel(this);
+
+        // Refrescar el contenedor
+        contenedor.removeAll();
+        contenedor.add(menu, SCREEN_MENU);
+        contenedor.add(personajes, SCREEN_PERSONAJES);
+        contenedor.add(combate, SCREEN_COMBATE);
+        contenedor.add(derrota, SCREEN_DERROTA);
+        contenedor.add(videoScreen, SCREEN_VIDEO);
+        contenedor.add(transformacionVideo, SCREEN_TRANSFORMACION);
+        contenedor.add(finalVideoScreen, SCREEN_FINAL_VIDEO);
+        contenedor.add(exploracion, SCREEN_EXPLORACION);
+        contenedor.add(gamePanel, SCREEN_GAME);
+        contenedor.add(tutorial, SCREEN_TUTORIAL);
+        
+        contenedor.revalidate();
+        contenedor.repaint();
     }
 
     private void inicializarControladores() {
@@ -263,23 +280,23 @@ public class MainFrame extends JFrame {
         cardLayout.show(contenedor, nombre);
 
         // Si vamos a la pantalla del video intro, iniciamos el video
-        if (nombre.equals("VIDEO")) {
+        if (nombre.equals(SCREEN_VIDEO)) {
             videoScreen.playVideo();
         }
         
         // GESTIÓN DE MÚSICA DE FONDO (BGM)
         switch (nombre) {
-            case "MENU":
+            case SCREEN_MENU:
                 SoundService.getInstance().playBGM("/sound/menu.wav");
                 break;
-            case "EXPLORACION":
+            case SCREEN_EXPLORACION:
                 SoundService.getInstance().playBGM("/sound/mapa.wav");
                 break;
-            case "COMBATE":
+            case SCREEN_COMBATE:
                 // La música de combate se maneja en el propio CombatPanel (prepararCombate)
                 // para distinguir entre normal y final boss.
                 break;
-            case "GAME":
+            case SCREEN_GAME:
                 SoundService.getInstance().playBGM("/sound/dialogo.wav");
                 break;
             default:
@@ -287,16 +304,16 @@ public class MainFrame extends JFrame {
         }
 
         // Si vamos a la pantalla de transformación del boss
-        if (nombre.equals("TRANSFORMACION_VIDEO")) {
+        if (nombre.equals(SCREEN_TRANSFORMACION)) {
             transformacionVideo.playVideo();
         }
         // Si vamos al video final
-        if (nombre.equals("FINAL_VIDEO")) {
+        if (nombre.equals(SCREEN_FINAL_VIDEO)) {
             finalVideoScreen.playVideo();
         }
 
         // Gestión de visibilidad del HUD y Diálogos para no bloquear el ratón
-        boolean mostrarHUD = nombre.equals("EXPLORACION") || nombre.equals("COMBATE");
+        boolean mostrarHUD = nombre.equals(SCREEN_EXPLORACION) || nombre.equals(SCREEN_COMBATE);
         if (hudPanel != null) {
             hudPanel.setVisible(mostrarHUD);
         }
@@ -488,10 +505,10 @@ public class MainFrame extends JFrame {
 
     private boolean puedePausar() {
         // No permitir pausa en ciertas pantallas
-        return !pantallaActual.equals("MENU") &&
-                !pantallaActual.equals("VIDEO") &&
-                !pantallaActual.equals("TUTORIAL") &&
-                !pantallaActual.equals("PERSONAJES");
+        return !pantallaActual.equals(SCREEN_MENU) &&
+                !pantallaActual.equals(SCREEN_VIDEO) &&
+                !pantallaActual.equals(SCREEN_TUTORIAL) &&
+                !pantallaActual.equals(SCREEN_PERSONAJES);
     }
 
     public void setMainController(MainController controller) {
@@ -516,26 +533,7 @@ public class MainFrame extends JFrame {
         inicializarControladores();
         mainController.startGameThread();
 
-        exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
-        gamePanel = new GamePanel(this);
-
-        // Refrescar el contenedor de pantallas
-        contenedor.removeAll();
-        contenedor.add(menu, "MENU");
-        contenedor.add(personajes, "PERSONAJES");
-        contenedor.add(combate, "COMBATE");
-        contenedor.add(derrota, "DERROTA");
-        videoScreen.setName("VIDEO");
-        contenedor.add(videoScreen, "VIDEO");
-        contenedor.add(transformacionVideo, "TRANSFORMACION_VIDEO");
-        contenedor.add(finalVideoScreen, "FINAL_VIDEO");
-        contenedor.add(exploracion, "EXPLORACION");
-        contenedor.add(gamePanel, "GAME");
-        contenedor.add(tutorial, "TUTORIAL");
-
-        // CRÍTICO: sin esto el CardLayout no muestra los paneles nuevos
-        contenedor.revalidate();
-        contenedor.repaint();
+        setupScreens();
 
         LOG.info("PERSONAJE SELECCIONADO: " + this.personajeSeleccionado);
     }
