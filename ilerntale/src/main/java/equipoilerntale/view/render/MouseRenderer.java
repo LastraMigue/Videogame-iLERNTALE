@@ -18,8 +18,12 @@ public class MouseRenderer {
         }
     }
 
-    public void render(Graphics2D g2d, MouseModel raton) {
+    public void render(Graphics2D g2d, MouseModel raton, boolean standsForDamage) {
         if (raton != null && imagenMouse != null) {
+            // Si está en modo daño, parpadea (visible 100ms, invisible 100ms)
+            if (standsForDamage && (System.currentTimeMillis() % 200 < 100)) {
+                return;
+            }
             g2d.drawImage(imagenMouse, raton.getX(), raton.getY(), raton.getAncho(), raton.getAlto(), null);
         }
     }

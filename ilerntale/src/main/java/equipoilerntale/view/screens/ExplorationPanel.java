@@ -137,11 +137,35 @@ public class ExplorationPanel extends JPanel {
 
             // DIBUJAR OBJETOS DEL MAPA
             if (manager.getCurrentRoom() != null) {
+                g2d.setFont(new Font("Arial", Font.BOLD, 14));
+                g2d.setColor(Color.WHITE);
+                
                 for (WorldItem item : manager.getCurrentRoom().getItems()) {
-                    if (!item.isCollected() && item.getItem().getSprite() != null) {
-                        ctx.getGraphics().drawImage(item.getItem().getSprite(), 
-                            item.getX(), item.getY(), 
-                            item.getSize(), item.getSize(), null);
+                    if (!item.isCollected()) {
+                        // Dibujar el item
+                        if (item.getItem().getSprite() != null) {
+                            ctx.getGraphics().drawImage(item.getItem().getSprite(),
+                                    item.getX(), item.getY(),
+                                    item.getSize(), item.getSize(), null);
+                        }
+
+                        // Indicador de interacción [E]
+                        double dist = Math.sqrt(Math.pow(manager.getPlayer().getX() - item.getX(), 2) 
+                                              + Math.pow(manager.getPlayer().getY() - item.getY(), 2));
+                        if (dist < 100) {
+                            g2d.drawString("[E]", item.getX() + (item.getSize() / 2) - 10, item.getY() - 10);
+                        }
+                    }
+                }
+
+                // Indicador para PUERTAS
+                for (DoorModel door : manager.getCurrentRoom().getDoors()) {
+                    Rectangle area = door.getArea();
+                    double distX = Math.abs(manager.getPlayer().getX() - area.getCenterX());
+                    double distY = Math.abs(manager.getPlayer().getY() - area.getCenterY());
+                    
+                    if (distX < 120 && distY < 120) {
+                        g2d.drawString("[E]", (int)area.getCenterX() - 10, (int)area.getY() + 20);
                     }
                 }
             }

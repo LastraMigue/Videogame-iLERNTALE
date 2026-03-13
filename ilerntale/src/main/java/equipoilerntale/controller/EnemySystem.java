@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 import equipoilerntale.GameSettings;
 import equipoilerntale.model.entity.Zombie;
@@ -15,8 +16,8 @@ import equipoilerntale.model.entity.Boss;
 public class EnemySystem {
     private static final Logger LOG = Logger.getLogger(EnemySystem.class.getName());
 
-    private final List<Zombie> zombies = new ArrayList<>();
-    private final List<Boss> bosses = new ArrayList<>();
+    private final List<Zombie> zombies = new CopyOnWriteArrayList<>();
+    private final List<Boss> bosses = new CopyOnWriteArrayList<>();
     private final Random random = new Random();
     private boolean active = false;
 

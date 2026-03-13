@@ -136,9 +136,6 @@ public class MazeRules implements MinigameRules {
         g2d.fillRect(goal.x, goal.y, goal.width, goal.height);
         g2d.setColor(Color.GREEN);
         g2d.drawRect(goal.x, goal.y, goal.width, goal.height);
-        
-        g2d.setColor(Color.WHITE);
-        g2d.drawString("META", goal.x + 5, goal.y + 30);
     }
 
     @Override

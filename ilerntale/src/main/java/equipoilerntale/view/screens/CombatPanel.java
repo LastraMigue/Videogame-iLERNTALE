@@ -88,6 +88,9 @@ public class CombatPanel extends JPanel {
     private JButton btnItem;
     private JButton btnMercy;
 
+    private int damageBlinkTicks = 0;
+    private int shakeIntensity = 0;
+
     public CombatPanel(MainFrame frame) {
         this.mainFrame = frame;
 
@@ -158,6 +161,9 @@ public class CombatPanel extends JPanel {
         if (inputCooldown > 0) {
             inputCooldown--;
         }
+        if (damageBlinkTicks > 0) {
+            damageBlinkTicks--;
+        }
 
         if (isItemMenuOpen) {
             if (inputCooldown == 0 && currentCombatItems != null && !currentCombatItems.isEmpty()) {
@@ -225,6 +231,8 @@ public class CombatPanel extends JPanel {
                     }
 
                     if (damageRecibido > 0) {
+                        damageBlinkTicks = 30; // 0.5s de parpadeo
+                        shakeIntensity = 10;   // Intensidad de la sacudida
                         mainFrame.getPlayerHealthBar().takeDamage(damageRecibido);
                         if (mainFrame.getPlayerHealthBar().getHealth() <= 0) {
                             endMinigame();
@@ -305,6 +313,14 @@ public class CombatPanel extends JPanel {
             g2d.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
         }
 
+        // Efecto Screen Shake
+        if (shakeIntensity > 0) {
+            int offsetX = (int) (Math.random() * shakeIntensity * 2 - shakeIntensity);
+            int offsetY = (int) (Math.random() * shakeIntensity * 2 - shakeIntensity);
+            g2d.translate(offsetX, offsetY);
+            shakeIntensity--;
+        }
+
         g2d.setColor(Color.BLACK);
         g2d.fillRect(405, 30, 180, 180);
         g2d.setColor(Color.WHITE);
@@ -381,7 +397,7 @@ public class CombatPanel extends JPanel {
                 bulletRenderer.render(g2d, arenaModel.getProjectiles());
             }
             if (arenaModel.getMouse() != null) {
-                mouseRenderer.render(g2d, arenaModel.getMouse());
+                mouseRenderer.render(g2d, arenaModel.getMouse(), damageBlinkTicks > 0);
             }
         }
 
