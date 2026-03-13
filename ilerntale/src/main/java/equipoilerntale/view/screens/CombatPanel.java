@@ -185,7 +185,7 @@ public class CombatPanel extends JPanel {
         this.lastBadCollisions = 0;
         this.inputCooldown = 0;
         this.escudoPatito = 0;
-        this.dobleDañoRonda = false;
+        this.isDoubleDamageActive = false;
         this.isFinalBossPhase = true;
         this.popupCooldown = 0;
         if (inputHandler != null)
@@ -315,7 +315,8 @@ public class CombatPanel extends JPanel {
     }
 
     private void procesarDanyRecibido() {
-        if (arenaModel == null) return;
+        if (arenaModel == null)
+            return;
 
         int currentBad = arenaModel.getBadCollisions();
         if (currentBad > lastBadCollisions) {
@@ -346,7 +347,8 @@ public class CombatPanel extends JPanel {
     }
 
     private void procesarDanyHecho() {
-        if (arenaModel == null) return;
+        if (arenaModel == null)
+            return;
 
         int currentGood = arenaModel.getGoodCollisions();
         if (currentGood > lastGoodCollisions) {
