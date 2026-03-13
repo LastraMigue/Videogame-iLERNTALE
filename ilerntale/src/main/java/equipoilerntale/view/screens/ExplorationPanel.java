@@ -150,12 +150,6 @@ public class ExplorationPanel extends JPanel {
                                     item.getSize(), item.getSize(), null);
                         }
 
-                        // Indicador de interacción [E]
-                        double dist = Math.sqrt(Math.pow(manager.getPlayer().getX() - item.getX(), 2) 
-                                              + Math.pow(manager.getPlayer().getY() - item.getY(), 2));
-                        if (dist < 100) {
-                            g2d.drawString("[E]", item.getX() + (item.getSize() / 2) - 10, item.getY() - 10);
-                        }
                     }
                 }
 
