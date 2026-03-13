@@ -40,6 +40,7 @@ import equipoilerntale.model.combat.minigames.ThreeLinesRules;
 import equipoilerntale.view.ui.Inventario;
 import equipoilerntale.model.entity.ItemModel;
 import equipoilerntale.view.ui.BarraVida;
+import equipoilerntale.service.SoundService;
 
 public class CombatPanel extends JPanel {
     private MainFrame mainFrame;
@@ -161,6 +162,7 @@ public class CombatPanel extends JPanel {
         }
 
         enableAllButtons();
+        SoundService.getInstance().playBGM("/sound/combate.wav");
         requestFocusInWindow();
         repaint();
     }
@@ -207,6 +209,7 @@ public class CombatPanel extends JPanel {
         arenaModel.setReversedControls(true);
 
         enableAllButtons();
+        SoundService.getInstance().playBGM("/sound/combatefinal.wav");
         requestFocusInWindow();
         repaint();
     }
@@ -301,6 +304,7 @@ public class CombatPanel extends JPanel {
                     if (damageRecibido > 0) {
                         damageBlinkTicks = 30; // 0.5s de parpadeo
                         shakeIntensity = 10; // Intensidad de la sacudida
+                        SoundService.getInstance().playSFX("/sound/hitmalo.wav");
 
                         // En fase final el boss inflige daño doble
                         int finalDamage = isFinalBossPhase ? damageRecibido * 2 : damageRecibido;
@@ -320,6 +324,7 @@ public class CombatPanel extends JPanel {
 
                     int damageHecho = dobleDañoRonda ? (hits * 2) : hits;
                     enemyHealthBar.takeDamage(damageHecho);
+                    SoundService.getInstance().playSFX("/sound/hitbueno.wav");
 
                     // Sincronizar daño con el objeto real
                     if (enemyTarget instanceof equipoilerntale.model.entity.Zombie) {
@@ -606,6 +611,7 @@ public class CombatPanel extends JPanel {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                SoundService.getInstance().playSFX("/sound/mouse_click.wav");
                 switch (accion) {
                     case "fight":
                         isItemMenuOpen = false;

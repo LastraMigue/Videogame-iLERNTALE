@@ -11,6 +11,7 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
+import equipoilerntale.service.SoundService;
 
 import equipoilerntale.controller.ExplorationManager;
 import equipoilerntale.controller.MainController;
@@ -252,12 +253,39 @@ public class MainFrame extends JFrame {
         detenerDialogosExistentes();
 
         this.pantallaActual = nombre;
+        
+        // DETENER CUALQUIER MÚSICA DE FONDO ANTERIOR AL CAMBIAR DE PANTALLA
+        // (Excepto para COMBATE que lo gestiona su propio Panel en prepararCombate)
+        if (!nombre.equals("COMBATE")) {
+            SoundService.getInstance().stopBGM();
+        }
+
         cardLayout.show(contenedor, nombre);
 
         // Si vamos a la pantalla del video intro, iniciamos el video
         if (nombre.equals("VIDEO")) {
             videoScreen.playVideo();
         }
+        
+        // GESTIÓN DE MÚSICA DE FONDO (BGM)
+        switch (nombre) {
+            case "MENU":
+                SoundService.getInstance().playBGM("/sound/menu.wav");
+                break;
+            case "EXPLORACION":
+                SoundService.getInstance().playBGM("/sound/mapa.wav");
+                break;
+            case "COMBATE":
+                // La música de combate se maneja en el propio CombatPanel (prepararCombate)
+                // para distinguir entre normal y final boss.
+                break;
+            case "GAME":
+                SoundService.getInstance().playBGM("/sound/dialogo.wav");
+                break;
+            default:
+                break;
+        }
+
         // Si vamos a la pantalla de transformación del boss
         if (nombre.equals("TRANSFORMACION_VIDEO")) {
             transformacionVideo.playVideo();
