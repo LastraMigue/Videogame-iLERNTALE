@@ -163,7 +163,12 @@ public class ShooterRules implements MinigameRules {
 
     private void spawnHorizontalProjectile(ArenaModel arena) {
         int size = 30; // Tamaño fijo para mejor visibilidad
-        int speed = rand.nextInt(2) + 4; 
+        
+        // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
+        int round = arena.getCurrentRound();
+        double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
+        int baseSpeed = rand.nextInt(2) + 4;
+        int speed = (int) (baseSpeed * multiplier);
         int type = rand.nextInt(2); // 0 malas, 1 buenas
         
         boolean fromLeft = rand.nextBoolean();

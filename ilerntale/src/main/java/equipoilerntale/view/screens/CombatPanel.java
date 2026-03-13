@@ -131,6 +131,7 @@ public class CombatPanel extends JPanel {
         this.isItemMenuOpen = false;
         this.centerTextMessage = "";
         this.currentRound = 1;
+        if (arenaModel != null) arenaModel.setCurrentRound(1);
         this.lastGoodCollisions = 0;
         this.lastBadCollisions = 0;
         this.inputCooldown = 0;
@@ -169,6 +170,7 @@ public class CombatPanel extends JPanel {
         this.isItemMenuOpen = false;
         this.centerTextMessage = "";
         this.currentRound = 1;
+        if (arenaModel != null) arenaModel.setCurrentRound(1);
         this.lastGoodCollisions = 0;
         this.lastBadCollisions = 0;
         this.inputCooldown = 0;
@@ -810,6 +812,7 @@ public class CombatPanel extends JPanel {
         currentRules = null;
         enableAllButtons();
         currentRound++;
+        if (arenaModel != null) arenaModel.setCurrentRound(currentRound);
         dobleDañoRonda = false;
         repaint();
     }

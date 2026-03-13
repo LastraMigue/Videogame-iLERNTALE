@@ -109,7 +109,12 @@ public class ShieldRules implements MinigameRules {
 
     private void spawnShieldProjectile(ArenaModel arena) {
         int size = rand.nextInt(11) + 15;
-        int speed = rand.nextInt(2) + 2;
+        
+        // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
+        int round = arena.getCurrentRound();
+        double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
+        int baseSpeed = rand.nextInt(2) + 2;
+        int speed = (int) (baseSpeed * multiplier);
         int type = nextType;
         nextType = (nextType == 0) ? 1 : 0;
 

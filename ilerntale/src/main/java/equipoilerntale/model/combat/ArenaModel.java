@@ -8,6 +8,7 @@ public class ArenaModel {
     private List<ProjectileModel> projectiles;
     private int goodCollisions = 0;
     private int badCollisions = 0;
+    private int currentRound = 1;
 
 
     public void startCombat() {
@@ -139,5 +140,13 @@ public class ArenaModel {
             }
         }
         return true;
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
+
+    public void setCurrentRound(int round) {
+        this.currentRound = round;
     }
 }
