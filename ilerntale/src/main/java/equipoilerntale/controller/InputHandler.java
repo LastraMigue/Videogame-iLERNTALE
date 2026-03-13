@@ -14,7 +14,6 @@ public class InputHandler implements KeyListener {
     public boolean rightPressed;
     public boolean enterPressed;
     public boolean ePressed;
-    public boolean mPressed;
     public String lastHorizontal = "derecha";
     public String lastVertical = "abajo";
     public boolean preferHorizontal = true;
@@ -63,9 +62,6 @@ public class InputHandler implements KeyListener {
             case KeyEvent.VK_E:
                 ePressed = pressed;
                 break;
-            case KeyEvent.VK_M:
-                mPressed = pressed;
-                break;
         }
     }
 
@@ -79,7 +75,6 @@ public class InputHandler implements KeyListener {
         rightPressed = false;
         enterPressed = false;
         ePressed = false;
-        mPressed = false;
     }
 
     @Override

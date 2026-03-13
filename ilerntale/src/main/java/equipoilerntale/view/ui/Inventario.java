@@ -43,6 +43,21 @@ public class Inventario {
         items.add(item);
     }
 
+    /**
+     * Elimina un ítem del inventario por su nombre (reduce cantidad o elimina si es necesario).
+     */
+    public void eliminarItem(String nombre) {
+        if (nombre == null) return;
+        for (ItemModel item : items) {
+            if (item.getNombre().equals(nombre)) {
+                if (item.getCantidad() > 0) {
+                    item.setCantidad(item.getCantidad() - 1);
+                }
+                return;
+            }
+        }
+    }
+
     public List<ItemModel> getItems() {
         return items;
     }

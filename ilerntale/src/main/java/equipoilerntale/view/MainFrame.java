@@ -58,9 +58,15 @@ public class MainFrame extends JFrame {
     private MainController mainController;
     private ExplorationManager explorationManager;
 
-    // HUD Y VIDA
     private BarraVida playerHealthBar;
     private JPanel hudPanel;
+    private Image keyIcon;
+
+    // TEMPORIZADOR DE DIÁLOGOS
+    private javax.swing.Timer dialogueTimer;
+    private long dialogueEndTime;
+    private int remainingDialogueTime = 0;
+    private String currentTimedText = "";
 
     /**
      * CONSTRUCTOR DEL MARCO PRINCIPAL.
@@ -102,6 +108,15 @@ public class MainFrame extends JFrame {
         tutorial = new TutorialPanel(this);
         gamePanel = new GamePanel(this);
 
+        // CARGAR ICONO DE LLAVE
+        try (InputStream is = getClass().getResourceAsStream("/objects/llave.png")) {
+            if (is != null) {
+                keyIcon = ImageIO.read(is);
+            }
+        } catch (IOException e) {
+            LOG.warning("No se pudo cargar el icono de la llave: " + e.getMessage());
+        }
+
         // CREAR EXPLORATIONPANEL CON EL MANAGER LÓGICO
         exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
 
@@ -141,8 +156,24 @@ public class MainFrame extends JFrame {
                 super.paintComponent(g);
                 if ((pantallaActual.equals("EXPLORACION") || pantallaActual.equals("COMBATE"))
                         && !dialogueContainer.isVisible()) {
-                    // Dibujar arriba a la derecha
-                    playerHealthBar.draw(g, getWidth() - 220, 35);
+                    // Dibujar arriba a la derecha (Barra de vida)
+                    int healhX = getWidth() - 220;
+                    int healthY = 35;
+                    playerHealthBar.draw(g, healhX, healthY);
+
+                    // Dibujar icono de llave si la tiene
+                    if (keyIcon != null) {
+                        boolean tieneLlave = false;
+                        for (equipoilerntale.model.entity.ItemModel item : equipoilerntale.view.ui.Inventario.getInstance().getItems()) {
+                            if ("Llave".equals(item.getNombre()) && item.getCantidad() > 0) {
+                                tieneLlave = true;
+                                break;
+                            }
+                        }
+                        if (tieneLlave) {
+                            g.drawImage(keyIcon, healhX - 55, healthY - 5, 40, 40, null);
+                        }
+                    }
                 }
             }
         };
@@ -322,6 +353,12 @@ public class MainFrame extends JFrame {
             // REANUDAR DIÁLOGOS SI ES NECESARIO
             reanudarDialogosExistentes();
 
+            // REANUDAR TEMPORIZADOR DE DIÁLOGO
+            if (remainingDialogueTime > 0) {
+                showTimedDialogue(currentTimedText, remainingDialogueTime);
+                remainingDialogueTime = 0;
+            }
+
             Component comp = getPanelActual();
             if (comp != null)
                 comp.requestFocusInWindow();
@@ -329,6 +366,14 @@ public class MainFrame extends JFrame {
         } else {
             // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
             pausarDialogosExistentes();
+
+            // PAUSAR TEMPORIZADOR DE DIÁLOGO
+            if (dialogueTimer != null && dialogueTimer.isRunning()) {
+                remainingDialogueTime = (int) (dialogueEndTime - System.currentTimeMillis());
+                if (remainingDialogueTime < 0)
+                    remainingDialogueTime = 0;
+                dialogueTimer.stop();
+            }
 
             pause.setVisible(true);
             if (mainController != null)
@@ -386,7 +431,27 @@ public class MainFrame extends JFrame {
         dialogueContainer.repaint();
     }
 
+    /**
+     * Muestra un diálogo que desaparece automáticamente tras el tiempo indicado.
+     */
+    public void showTimedDialogue(String text, int delay) {
+        if (dialogueTimer != null) {
+            dialogueTimer.stop();
+        }
+        currentTimedText = text;
+        dialogueEndTime = System.currentTimeMillis() + delay;
+        showDialogue(text);
+        dialogueTimer = new javax.swing.Timer(delay, e -> hideDialogue());
+        dialogueTimer.setRepeats(false);
+        dialogueTimer.start();
+    }
+
     public void hideDialogue() {
+        if (dialogueTimer != null) {
+            dialogueTimer.stop();
+        }
+        remainingDialogueTime = 0;
+        currentTimedText = "";
         dialogueContainer.removeAll();
         dialogueContainer.setVisible(false); // Ocultar al cerrar diálogo
         dialogueContainer.revalidate();

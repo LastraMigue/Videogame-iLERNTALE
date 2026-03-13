@@ -123,11 +123,6 @@ public class ExplorationPanel extends JPanel {
             mapRenderer.drawBackground(ctx, currentBackground);
         }
 
-        if (manager.isDebugMurosVisibles() && manager.getCurrentRoom() != null) {
-            for (DoorModel door : manager.getCurrentRoom().getDoors()) {
-                mapRenderer.drawZoneLabel(ctx, door.getArea(), door.getTargetRoomName());
-            }
-        }
 
         playerRenderer.drawPlayer(ctx, manager.getPlayerCurrentSprite(), manager.getPlayer());
 
@@ -155,12 +150,6 @@ public class ExplorationPanel extends JPanel {
                                     item.getSize(), item.getSize(), null);
                         }
 
-                        // Indicador de interacción [E]
-                        double dist = Math.sqrt(Math.pow(manager.getPlayer().getX() - item.getX(), 2) 
-                                              + Math.pow(manager.getPlayer().getY() - item.getY(), 2));
-                        if (dist < 100) {
-                            g2d.drawString("[E]", item.getX() + (item.getSize() / 2) - 10, item.getY() - 10);
-                        }
                     }
                 }
 
@@ -177,37 +166,6 @@ public class ExplorationPanel extends JPanel {
             }
         }
 
-        if (manager.isDebugMurosVisibles() && manager.getCurrentRoom() != null) {
-            g2d.setStroke(new BasicStroke(2));
-
-            // Dibujar muros y puerta
-            g2d.setColor(Color.RED);
-            for (Rectangle wall : manager.getCurrentRoom().getWalls()) {
-                g2d.draw(wall);
-            }
-            g2d.setColor(Color.GREEN);
-            for (DoorModel door : manager.getCurrentRoom().getDoors()) {
-                g2d.draw(door.getArea());
-            }
-
-            // Dibujar hitboxes
-            g2d.setColor(Color.BLUE);
-            g2d.draw(manager.getPlayer().getHitbox(manager.getPlayer().getX(), manager.getPlayer().getY()));
-            for (Zombie z : manager.getActiveZombies()) {
-                g2d.draw(z.getHitbox(z.getX(), z.getY()));
-            }
-            for (Boss b : manager.getActiveBosses()) {
-                g2d.draw(b.getHitbox(b.getX(), b.getY()));
-            }
-
-            // Hitboxes de objetos
-            g2d.setColor(Color.YELLOW);
-            for (WorldItem item : manager.getCurrentRoom().getItems()) {
-                if (!item.isCollected()) {
-                    g2d.draw(item.getHitbox());
-                }
-            }
-        }
 
         ctx.restoreCamera();
     }

@@ -47,8 +47,6 @@ public class ExplorationManager {
     // pantalla visible
     private boolean active = false;
 
-    // FLAG PARA VISUALIZAR LOS MUROS EN MODO DEBUG
-    private boolean debugMurosVisibles = true;
 
     /**
      * CONSTRUCTOR DEL GESTOR DE EXPLORACIÓN.
@@ -202,17 +200,36 @@ public class ExplorationManager {
     }
 
     private void checkInteractions() {
-        // TOGGLE DE VISIBILIDAD DE MUROS CON LA TECLA M
-        if (inputHandler.mPressed) {
-            debugMurosVisibles = !debugMurosVisibles;
-            inputHandler.mPressed = false; // PREVENIR MULTIPLES CAMBIOS
-        }
 
         // COMPROBAR COLISIÓN CON PUERTAS
         if (inputHandler.ePressed && currentRoom != null) {
             for (DoorModel door : currentRoom.getDoors()) {
                 if (player.intersects(door.getArea())) {
                     String targetName = door.getTargetRoomName();
+
+                    // VALIDACIÓN DE LLAVE PARA EL AULA 124
+                    if (targetName.equals("Aula 124")) {
+                        boolean tieneLlave = false;
+                        for (equipoilerntale.model.entity.ItemModel im : Inventario.getInstance().getItems()) {
+                            if ("Llave".equals(im.getNombre()) && im.getCantidad() > 0) {
+                                tieneLlave = true;
+                                break;
+                            }
+                        }
+
+                        if (!tieneLlave) {
+                            if (mainFrame instanceof equipoilerntale.view.MainFrame) {
+                                ((equipoilerntale.view.MainFrame) mainFrame).showTimedDialogue("Está cerrada. Necesitas una llave.", 2000);
+                            }
+                            inputHandler.ePressed = false;
+                            return; // CANCELAR TRANSICIÓN
+                        } else {
+                            // CONSUMIR LLAVE
+                            Inventario.getInstance().eliminarItem("Llave");
+                            LOG.info("LLAVE CONSUMIDA PARA ABRIR AULA 125");
+                        }
+                    }
+
                     AbstractRoom targetRoom = roomCache.get(targetName);
 
                     // Si la sala no está en caché, la creamos
@@ -318,19 +335,6 @@ public class ExplorationManager {
         return inputHandler;
     }
 
-    /**
-     * ESTABLECE SI LOS MUROS SON VISIBLES EN MODO DEBUG.
-     */
-    public void setDebugMurosVisibles(boolean visible) {
-        this.debugMurosVisibles = visible;
-    }
-
-    /**
-     * INDICA SI LOS MUROS SON VISIBLES ACTUALMENTE.
-     */
-    public boolean isDebugMurosVisibles() {
-        return debugMurosVisibles;
-    }
 
     /**
      * LIMPIA LOS RECURSOS DEL GESTOR DE EXPLORACIÓN.
