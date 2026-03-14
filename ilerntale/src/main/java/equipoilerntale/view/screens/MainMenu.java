@@ -17,17 +17,34 @@ import javax.swing.JPanel;
 
 import equipoilerntale.view.MainFrame;
 
+/**
+ * Pantalla principal del menú de inicio del juego.
+ * Proporciona acceso a las funciones principales como jugar, ver el tutorial,
+ * ver el video introductorio o salir del juego.
+ */
 public class MainMenu extends JPanel {
 
+    /** Referencia al marco principal para gestionar la navegación. */
     private MainFrame mainFrame;
+    /** Botón para iniciar la selección de personajes y jugar. */
     private JButton btnJugar;
+    /** Botón para reproducir el vídeo introductorio. */
     private JButton btnIntro;
+    /** Botón para acceder al panel de tutorial. */
     private JButton btnTutorial;
+    /** Botón para cerrar la aplicación. */
     private JButton btnSalir;
+    /** Imagen de fondo del menú principal. */
     private Image imagenFondo;
 
     /**
      * CONSTRUCTOR DEL MENÚ PRINCIPAL.
+     */
+    /**
+     * Constructor del Menú Principal.
+     * Configura el diseño, carga recursos gráficos e inicializa los botones.
+     * 
+     * @param frame Referencia al marco principal de la aplicación.
      */
     public MainMenu(MainFrame frame) {
         this.mainFrame = frame;
@@ -39,6 +56,9 @@ public class MainMenu extends JPanel {
         inicializarComponentes();
     }
 
+    /**
+     * Carga la imagen de fondo del menú desde los recursos del sistema.
+     */
     private void cargarRecursos() {
         try (InputStream is = getClass().getResourceAsStream("/title/menu1.jpg")) {
             if (is != null) {
@@ -49,6 +69,11 @@ public class MainMenu extends JPanel {
         }
     }
 
+    /**
+     * Dibuja el fondo del menú, escalándolo al tamaño actual del panel.
+     * 
+     * @param g El contexto gráfico.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -60,6 +85,9 @@ public class MainMenu extends JPanel {
         }
     }
 
+    /**
+     * Inicializa y configura los botones del menú, estableciendo sus posiciones y acciones.
+     */
     private void inicializarComponentes() {
         // Botones situados en la mitad inferior
         btnJugar = createImageButton("/title/jugar.png", "JUGAR");
@@ -96,6 +124,13 @@ public class MainMenu extends JPanel {
         add(btnSalir);
     }
 
+    /**
+     * Crea un botón personalizado con una imagen de fondo y un efecto de escala al ser pulsado.
+     * 
+     * @param imagePath Ruta a la imagen del botón.
+     * @param fallbackText Texto alternativo si la imagen no se puede cargar.
+     * @return El botón configurado.
+     */
     private JButton createImageButton(String imagePath, String fallbackText) {
         JButton button = new JButton();
 

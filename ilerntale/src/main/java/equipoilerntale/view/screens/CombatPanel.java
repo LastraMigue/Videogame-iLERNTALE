@@ -44,63 +44,98 @@ import equipoilerntale.view.ui.PopupScare;
 import java.awt.Toolkit;
 import equipoilerntale.service.SoundService;
 
+/**
+ * Panel que gestiona toda la lógica visual y de interacción del sistema de combate.
+ * Maneja minijuegos, renderizado coordinado de balas, ratón y HUD de combate.
+ */
 public class CombatPanel extends JPanel {
+    /** Referencia al MainFrame para transiciones y estados globales. */
     private MainFrame mainFrame;
+    /** Imagen de fondo del combate. */
     private Image imagenFondo;
 
+    /** Modelo de la arena de combate. */
     private ArenaModel arenaModel;
+    /** Manejador de entrada de teclado. */
     private InputHandler inputHandler;
+    /** Controlador principal de la lógica de combate. */
     private CombatController combatController;
+    /** Reglas del minijuego actual. */
     private MinigameRules currentRules;
+    /** Referencia al objeto enemigo (Zombie o Boss). */
     private Object enemyTarget;
+    /** Panel para el icono del enemigo. */
     private JPanel enemyIconPanel;
+    /** Imagen visual del enemigo. */
     private Image enemyImage;
 
-    // Renderers (NUEVO)
     private MouseRenderer mouseRenderer;
+    /** Renderizador de proyectiles. */
     private BulletRenderer bulletRenderer;
+    /** Renderizador de objetos en el menú. */
     private ItemRenderer itemRenderer;
 
-    // Inventario
     private Inventario inventario;
+    /** Lista de objetos disponibles en el combate actual. */
     private List<ItemModel> currentCombatItems;
+    /** Indica si el menú de objetos está abierto. */
     private boolean isInventoryActive = false;
+    /** Índice del objeto seleccionado en el menú. */
     private int selectedItemIndex = 0;
+    /** Tiempo de espera entre entradas de menú. */
     private int inputCooldown = 0;
 
-    // Minigame & Round state
     private int currentRound = 1;
-    // Timer del combate
+    /** Momento en que debe finalizar el minijuego actual (ms). */
     private long minigameEndTime = 0;
+    /** Última marca de tiempo de actualización para control de pausas. */
     private long lastUpdateTime = 0;
+    /** Indica si hay un minijuego en curso. */
     private boolean isMinigameActive = false;
 
-    // Collisions Tracking para daño
+    // Seguimiento de colisiones para cálculo de daño
+    /** Último número de colisiones beneficiosas registradas. */
     private int lastGoodCollisions = 0;
+    /** Último número de colisiones dañinas registradas. */
     private int lastBadCollisions = 0;
 
-    // Buffos de Objetos
     private int escudoPatito = 0;
+    /** Indica si está activo el potenciador de daño doble. */
     private boolean isDoubleDamageActive = false;
 
-    // Fase Final Boss (Fase 2)
     private boolean isFinalBossPhase = false;
 
     // Vida Enemigo
+    /** Componente visual de la barra de vida del enemigo. */
     private BarraVida enemyHealthBar;
 
+    /** Mensaje de texto que se muestra en el centro del área de combate. */
     private String centerTextMessage = "";
+    /** Fuente personalizada del juego (tipo Deltarune). */
     private Font customFont;
 
+    /** Botón de acción: LUCHAR. */
     private JButton btnFight;
+    /** Botón de acción: ACTUAR. */
     private JButton btnAct;
+    /** Botón de acción: OBJETO. */
     private JButton btnItem;
+    /** Botón de acción: PIEDAD. */
     private JButton btnMercy;
 
+    /** Ticks restantes para el efecto visual de parpadeo por daño. */
     private int damageFlashTicks = 0;
+    /** Intensidad actual del efecto de sacudida de pantalla. */
     private int shakeIntensity = 0;
+    /** Contador para el lanzamiento de popups en la fase final. */
     private int popupCooldown = 0;
 
+    /**
+     * Constructor del panel de combate.
+     * Inicializa modelos, controladores, renderizadores y la interfaz de usuario.
+     * 
+     * @param frame Referencia al MainFrame.
+     */
     public CombatPanel(MainFrame frame) {
         this.mainFrame = frame;
 
@@ -130,7 +165,9 @@ public class CombatPanel extends JPanel {
     }
 
     /**
-     * PREPARA EL COMBATE CON UN ENEMIGO ESPECÍFICO.
+     * Prepara un nuevo combate estableciendo el objetivo, reseteando estados y cargando recursos.
+     * 
+     * @param enemy El objeto del enemigo a enfrentar (Zombie o Boss).
      */
     public void prepararCombate(Object enemy) {
         this.enemyTarget = enemy;
@@ -171,8 +208,8 @@ public class CombatPanel extends JPanel {
     }
 
     /**
-     * PREPARA EL BOSS EN SU FASE FINAL (FASE 2): 200 HP, imagen sergiofinal,
-     * controles invertidos, daño doble al jugador.
+     * Configura el combate para la fase final del jefe (Fase 2).
+     * Establece 200 HP, controles invertidos y daño incrementado.
      */
     public void prepararFinalBoss() {
         this.isMinigameActive = false;
@@ -219,7 +256,8 @@ public class CombatPanel extends JPanel {
     }
 
     /**
-     * REINICIA EL ESTADO DEL COMBATE (Para salir al menú o reiniciar juego).
+     * Reinicia el estado del combate para permitir una salida limpia al menú 
+     * o un reinicio de la partida.
      */
     public void reiniciarEstado() {
         this.isFinalBossPhase = false;
@@ -233,6 +271,10 @@ public class CombatPanel extends JPanel {
         repaint();
     }
 
+    /**
+     * Actualiza la lógica del combate en cada tick del juego.
+     * Gestiona enfriamientos, entrada de menús y ejecución de minijuegos.
+     */
     public void updateCombat() {
         actualizarEnfriamientos();
 
@@ -246,6 +288,10 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Actualiza los contadores de enfriamiento y efectos temporales.
+     * Incluye parpadeos, sacudidas y temporizadores de popups en fase final.
+     */
     private void actualizarEnfriamientos() {
         if (inputCooldown > 0) {
             inputCooldown--;
@@ -256,13 +302,16 @@ public class CombatPanel extends JPanel {
 
         if (isFinalBossPhase) {
             popupCooldown++;
-            if (popupCooldown >= 900) { // 15 segundos (15 * 60 fps)
+            if (popupCooldown >= 900) {
                 spawnScarePopups();
                 popupCooldown = 0;
             }
         }
     }
 
+    /**
+     * Gestiona la navegación y selección de objetos dentro del menú de inventario en combate.
+     */
     private void gestionarEntradaMenuObjetos() {
         if (inputCooldown == 0 && currentCombatItems != null && !currentCombatItems.isEmpty()) {
             if (inputHandler.isUpPressed()) {
@@ -280,10 +329,9 @@ public class CombatPanel extends JPanel {
                 inputCooldown = 10;
                 repaint();
             } else if (inputHandler.isEnterPressed()) {
-                // Consumir objeto
                 ItemModel selected = currentCombatItems.get(selectedItemIndex);
                 if (selected != null) {
-                    selected.consumir(); // Disminuye la cantidad
+                    selected.consumir();
 
                     String itemName = selected.getNombre();
                     if (itemName.equals("Botella Vida")) {
@@ -314,6 +362,10 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Comprueba si el jugador ha recibido impactos dañinos y descuenta vida.
+     * También activa el efecto visual de daño y comprueba la derrota.
+     */
     private void procesarDanyRecibido() {
         if (arenaModel == null)
             return;
@@ -330,11 +382,10 @@ public class CombatPanel extends JPanel {
             }
 
             if (damageRecibido > 0) {
-                damageFlashTicks = 30; // 0.5s de parpadeo
-                shakeIntensity = 10; // Intensidad de la sacudida
+                damageFlashTicks = 30;
+                shakeIntensity = 10;
                 SoundService.getInstance().playSFX("/sound/hitmalo.wav");
 
-                // En fase final el boss inflige daño doble
                 int finalDamage = isFinalBossPhase ? damageRecibido * 2 : damageRecibido;
                 mainFrame.getPlayerHealthBar().takeDamage(finalDamage);
 
@@ -346,6 +397,10 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Comprueba si el jugador ha infligido daño al enemigo y actualiza su vida.
+     * Gestiona efectos de sonido y comprueba la victoria en el combate o fase.
+     */
     private void procesarDanyHecho() {
         if (arenaModel == null)
             return;
@@ -366,7 +421,6 @@ public class CombatPanel extends JPanel {
                 ((equipoilerntale.model.entity.Boss) enemyTarget).takeDamage(damageHecho);
             }
 
-            // Comprobar si el enemigo ha muerto (Generalizado)
             if (enemyHealthBar.getHealth() <= 0) {
                 isMinigameActive = false;
                 arenaModel.stopCombat();
@@ -379,7 +433,6 @@ public class CombatPanel extends JPanel {
                             @Override
                             public void actionPerformed(java.awt.event.ActionEvent ev) {
                                 if (isFinalBossPhase) {
-                                    // Fase 2 superada: video final y vuelta al menú
                                     isFinalBossPhase = false;
                                     mainFrame.cambiarPantalla("FINAL_VIDEO");
                                 } else if (enemyTarget instanceof equipoilerntale.model.entity.Boss) {
@@ -395,21 +448,23 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Actualiza el tiempo restante del minijuego actual.
+     * Controla las pausas y finaliza el minijuego si el tiempo se agota.
+     */
     private void actualizarTemporizadorMinijuego() {
         if (currentRules != null) {
             long now = System.currentTimeMillis();
 
-            // Si la diferencia de tiempo es muy grande, asumimos que hubo una pausa
             if (lastUpdateTime > 0) {
                 long delta = now - lastUpdateTime;
-                if (delta > 50) { // Si pasan más de 50ms (por pausa o lag), congelamos el tiempo
+                if (delta > 50) {
                     minigameEndTime += delta;
                 }
             }
             lastUpdateTime = now;
 
             if (currentRules.isIntroActive()) {
-                // Pausa el minijuego empujando el tiempo final hacia adelante
                 minigameEndTime = now + (currentRules.getDurationInSeconds() * 1000);
             } else {
                 if (now >= minigameEndTime) {
@@ -450,6 +505,11 @@ public class CombatPanel extends JPanel {
         renderMensajesCentro(g2d);
     }
 
+    /**
+     * Aplica un efecto de sacudida visual a la pantalla.
+     * 
+     * @param g2d Contexto gráfico 2D.
+     */
     private void aplicarEfectoShake(Graphics2D g2d) {
         if (shakeIntensity > 0) {
             int offsetX = (int) (Math.random() * shakeIntensity * 2 - shakeIntensity);
@@ -459,6 +519,11 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Dibuja la imagen de fondo y el marco del enemigo.
+     * 
+     * @param g2d Contexto gráfico 2D.
+     */
     private void renderFondo(Graphics2D g2d) {
         if (imagenFondo != null) {
             g2d.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
@@ -472,12 +537,22 @@ public class CombatPanel extends JPanel {
         g2d.drawRect(405, 30, 180, 180);
     }
 
+    /**
+     * Dibuja el HUD de la barra de vida del enemigo.
+     * 
+     * @param g2d Contexto gráfico 2D.
+     */
     private void renderHUDEnemigo(Graphics2D g2d) {
         if (enemyHealthBar != null) {
             enemyHealthBar.draw(g2d, 20, 35);
         }
     }
 
+    /**
+     * Dibuja los recuadros de estadísticas de ronda y tiempo.
+     * 
+     * @param g2d Contexto gráfico 2D.
+     */
     private void renderStats(Graphics2D g2d) {
         // Recuadro RONDA
         g2d.setColor(Color.BLACK);
@@ -504,6 +579,11 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Calcula y dibuja el texto del tiempo restante en formato MM:mmm.
+     * 
+     * @param g2d Contexto gráfico 2D.
+     */
     private void renderTemporizador(Graphics2D g2d) {
         String timeText;
         if (currentRules != null && currentRules.isIntroActive()) {
@@ -520,6 +600,11 @@ public class CombatPanel extends JPanel {
         g2d.drawString(timeText, 645, 192);
     }
 
+    /**
+     * Dibuja el área rectangular negra central donde ocurre el combate.
+     * 
+     * @param g2d Contexto gráfico 2D.
+     */
     private void renderArena(Graphics2D g2d) {
         g2d.setColor(Color.BLACK);
         g2d.fillRect(200, 240, 600, 250);
@@ -528,6 +613,11 @@ public class CombatPanel extends JPanel {
         g2d.drawRect(200, 240, 600, 250);
     }
 
+    /**
+     * Renderiza los proyectiles, el ratón y los elementos visuales de las reglas del minijuego.
+     * 
+     * @param g2d Contexto gráfico 2D.
+     */
     private void renderElementosJuego(Graphics2D g2d) {
         boolean drawEntities = !(isMinigameActive && currentRules != null && currentRules.isIntroActive());
 
@@ -545,6 +635,11 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Dibuja los mensajes de texto multilínea en el centro de la pantalla.
+     * 
+     * @param g2d Contexto gráfico 2D.
+     */
     private void renderMensajesCentro(Graphics2D g2d) {
         if (centerTextMessage == null || centerTextMessage.isEmpty())
             return;
@@ -567,6 +662,10 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Inicializa los componentes de la interfaz de usuario, como los botones de acción
+     * y el panel del icono del enemigo.
+     */
     private void inicializarUI() {
         // PANEL PEQUEÑO PARA LA IMAGEN DEL ENEMIGO
         enemyIconPanel = new JPanel() {
@@ -605,6 +704,14 @@ public class CombatPanel extends JPanel {
         add(buttonPanel);
     }
 
+    /**
+     * Crea un botón de acción configurado con un icono escalado y un escuchador de eventos.
+     * 
+     * @param accion Identificador de la acción.
+     * @param x Posición X.
+     * @param y Posición Y.
+     * @return El botón configurado.
+     */
     private JButton createButton(String accion, int x, int y) {
         JButton button = new JButton();
         button.setBounds(x, y, 200, 60);
@@ -623,6 +730,13 @@ public class CombatPanel extends JPanel {
         return button;
     }
 
+    /**
+     * Carga el icono de un botón desde los recursos del proyecto.
+     * 
+     * @param action Identificador del botón.
+     * @param variant Variante del icono (ej. normal o presionado).
+     * @return Un objeto ImageIcon con la imagen cargada y escalada.
+     */
     private ImageIcon loadButtonIcon(String action, int variant) {
         String path = "/attack/" + action + variant + ".png";
         try (InputStream is = getClass().getResourceAsStream(path)) {
@@ -636,6 +750,11 @@ public class CombatPanel extends JPanel {
         return null;
     }
 
+    /**
+     * Maneja la ejecución de una acción tras pulsar un botón del menú de combate.
+     * 
+     * @param action El identificador de la acción (fight, act, item, mercy).
+     */
     private void handleButtonAction(String action) {
         SoundService.getInstance().playSFX("/sound/mouse_click.wav");
         switch (action) {
@@ -654,6 +773,10 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /**
+     * Selecciona y comienza un minijuego aleatorio de la lista disponible.
+     * Configura las reglas, el estado de la arena y el temporizador.
+     */
     private void iniciarMinijuegoAleatorio() {
         int randomIdx = new java.util.Random().nextInt(6);
         switch (randomIdx) {
@@ -694,12 +817,14 @@ public class CombatPanel extends JPanel {
         lastBadCollisions = 0;
     }
 
+    /** Ejecuta la acción de luchar iniciando un minijuego. */
     private void realizarAccionLuchar() {
         isInventoryActive = false;
         disableAllButtons();
         iniciarMinijuegoAleatorio();
     }
 
+    /** Muestra un mensaje de lore aleatorio basado en el enemigo actual. */
     private void realizarAccionActuar() {
         isInventoryActive = false;
         disableAllButtons();
@@ -739,6 +864,7 @@ public class CombatPanel extends JPanel {
         actTimer.start();
     }
 
+    /** Activa o desactiva el menú de selección de objetos del inventario. */
     private void realizarAccionObjeto() {
         currentCombatItems = inventario.getObjetosCombate();
         if (currentCombatItems != null && !currentCombatItems.isEmpty()) {
@@ -752,6 +878,7 @@ public class CombatPanel extends JPanel {
         repaint();
     }
 
+    /** Intenta realizar una acción de piedad con una probabilidad de éxito baja. */
     private void realizarAccionPiedad() {
         isInventoryActive = false;
         disableAllButtons();
@@ -774,6 +901,7 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /** Carga la fuente personalizada Deltarune desde los recursos. */
     private void cargarFuente() {
         try (InputStream is = getClass().getResourceAsStream("/font/deltarune.ttf")) {
             if (is != null) {
@@ -788,6 +916,7 @@ public class CombatPanel extends JPanel {
         }
     }
 
+    /** Carga la imagen de fondo utilizada durante las secuencias de combate. */
     private void cargarImagenCombate() {
         try (InputStream is = getClass().getResourceAsStream("/attack/ataque.jpg")) {
             if (is != null) {

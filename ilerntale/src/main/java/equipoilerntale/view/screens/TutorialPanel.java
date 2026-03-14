@@ -9,13 +9,26 @@ import javax.swing.*;
 
 import equipoilerntale.view.MainFrame;
 
+/**
+ * Panel que muestra las instrucciones y mecánicas básicas del juego al usuario.
+ * Dividido en secciones visuales que explican el movimiento, el combate y otras funciones.
+ */
 public class TutorialPanel extends JPanel {
 
+    /** Referencia al marco principal para gestionar el regreso al menú. */
     private MainFrame mainFrame;
+    /** Botón para volver al menú principal. */
     private JButton btnSalir;
+    /** Imagen de fondo decorativa para el panel de tutorial. */
     private Image imagenFondo;
+    /** Fuente personalizada "Deltarune" utilizada en el panel. */
     private Font deltaruneFont;
 
+    /**
+     * Constructor del Panel de Tutorial.
+     * 
+     * @param frame Referencia al marco principal de la aplicación.
+     */
     public TutorialPanel(MainFrame frame) {
         this.mainFrame = frame;
         setPreferredSize(new Dimension(1000, 600));
@@ -24,8 +37,10 @@ public class TutorialPanel extends JPanel {
         inicializarComponentes();
     }
 
+    /**
+     * Carga los recursos gráficos y la fuente personalizada desde el sistema de archivos.
+     */
     private void cargarRecursos() {
-        // Cargar Fondo
         try (InputStream is = getClass().getResourceAsStream("/title/menu1.jpg")) {
             if (is != null) {
                 imagenFondo = ImageIO.read(is);
@@ -34,7 +49,6 @@ public class TutorialPanel extends JPanel {
             System.err.println("No se pudo cargar el fondo del tutorial: " + e.getMessage());
         }
 
-        // Cargar Fuente
         try {
             InputStream fontStream = getClass().getResourceAsStream("/font/deltarune.ttf");
             if (fontStream != null) {
@@ -45,6 +59,12 @@ public class TutorialPanel extends JPanel {
         }
     }
 
+    /**
+     * Obtiene una instancia de la fuente Deltarune con el tamaño especificado.
+     * 
+     * @param size Tamaño de la fuente.
+     * @return Font configurada.
+     */
     private Font getFontDeltarune(float size) {
         if (deltaruneFont != null) {
             return deltaruneFont.deriveFont(size);
@@ -52,6 +72,12 @@ public class TutorialPanel extends JPanel {
         return new Font("Monospaced", Font.BOLD, (int) size);
     }
 
+    /**
+     * Dibuja los componentes visuales del tutorial, aplicando un overlay oscuro 
+     * para mejorar la legibilidad de los textos.
+     * 
+     * @param g El contexto gráfico.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -67,15 +93,16 @@ public class TutorialPanel extends JPanel {
         }
     }
 
+    /**
+     * Inicializa y configura los elementos de la interfaz: título, secciones y botón de salida.
+     */
     private void inicializarComponentes() {
-        // --- Título ---
         JLabel lblTitulo = new JLabel("TUTORIAL", SwingConstants.CENTER);
         lblTitulo.setForeground(Color.WHITE);
         lblTitulo.setBounds(0, 25, 1000, 60);
         lblTitulo.setFont(getFontDeltarune(56f));
         add(lblTitulo);
 
-        // --- Secciones (Rectángulos con Fondos Personalizados) ---
         JPanel pnlMov = crearSeccion("", 50, 120, 280, 350, "/title/movimiento.jpg");
         add(pnlMov);
 
@@ -85,7 +112,6 @@ public class TutorialPanel extends JPanel {
         JPanel pnlFunc = crearSeccion("", 670, 120, 280, 350, "/title/funciones.jpg");
         add(pnlFunc);
 
-        // --- Botón Salir (Imagen) ---
         btnSalir = createImageButton("/title/salir.png", "SALIR");
         btnSalir.setBounds(400, 500, 200, 60);
 
@@ -96,6 +122,13 @@ public class TutorialPanel extends JPanel {
         add(btnSalir);
     }
 
+    /**
+     * Crea un botón gráfico con imagen y efectos visuales de interacción.
+     * 
+     * @param imagePath Ruta a la imagen del botón.
+     * @param fallbackText Texto de respaldo si falla la carga de imagen.
+     * @return JButton configurado.
+     */
     private JButton createImageButton(String imagePath, String fallbackText) {
         JButton button = new JButton();
 
@@ -159,6 +192,17 @@ public class TutorialPanel extends JPanel {
         return button;
     }
 
+    /**
+     * Crea una sección visual informativa dentro del tutorial.
+     * 
+     * @param titulo Título de la sección.
+     * @param x Posición X.
+     * @param y Posición Y.
+     * @param w Ancho.
+     * @param h Alto.
+     * @param imgPath Ruta a la imagen descriptiva de la sección.
+     * @return JPanel configurado como sección.
+     */
     private JPanel crearSeccion(String titulo, int x, int y, int w, int h, String imgPath) {
         JPanel panel = new JPanel(null) {
             private Image bgImg;

@@ -11,17 +11,25 @@ import equipoilerntale.model.combat.MouseModel;
 import equipoilerntale.model.combat.ProjectileModel;
 import equipoilerntale.model.combat.projectiles.StraightProjectile;
 
+/**
+ * Implementación de las reglas para el minijuego de tres líneas (vial).
+ * El ratón se mueve suavemente entre tres carriles horizontales predefinidos.
+ */
 public class ThreeLinesRules implements MinigameRules {
 
+    /** Contador de ticks para la generación de proyectiles. */
     private int tickCounter = 0;
+    /** Tipo del próximo proyectil (alterna entre 0 y 1). */
     private int nextType = 0;
+    /** Generador de números aleatorios. */
     private Random rand = new Random();
 
-    // Las posiciones Y centrales de las 3 líneas
+    /** Coordenadas Y que representan el centro de cada una de las 3 líneas. */
     private final int[] lineHeights = { 280, 365, 450 };
-    private int currentLineIndex = 1; // Empieza en la línea del medio
+    /** Índice de la línea en la que se encuentra el jugador (0, 1 o 2). */
+    private int currentLineIndex = 1;
 
-    // Cooldown para evitar que el ratón salte múltiples líneas con un solo toque
+    /** Tiempo de espera para evitar cambios de línea demasiado rápidos. */
     private int verticalCooldown = 0;
 
     @Override
@@ -31,7 +39,6 @@ public class ThreeLinesRules implements MinigameRules {
         nextType = 0;
         currentLineIndex = 1;
 
-        // Forzar al ratón a la línea inicial
         MouseModel mouse = arena.getMouse();
         if (mouse != null) {
             mouse.setY(lineHeights[currentLineIndex] - (mouse.getAlto() / 2));
@@ -48,7 +55,6 @@ public class ThreeLinesRules implements MinigameRules {
             verticalCooldown--;
         }
 
-        // Movimiento Horizontal Normal
         int dx = 0;
         if (input.isLeftPressed())
             dx = -1;
@@ -56,27 +62,24 @@ public class ThreeLinesRules implements MinigameRules {
             dx = 1;
 
         if (dx != 0) {
-            arena.intentarMoverMouse(dx, 0); // No dy
+            arena.intentarMoverMouse(dx, 0);
         }
 
-        // Cambio de línea (Vertical)
         if (verticalCooldown == 0) {
             if (input.isUpPressed() && currentLineIndex > 0) {
                 currentLineIndex--;
-                verticalCooldown = 15; // 15 frames lock
+                verticalCooldown = 15;
             } else if (input.isDownPressed() && currentLineIndex < 2) {
                 currentLineIndex++;
-                verticalCooldown = 15; // 15 frames lock
+                verticalCooldown = 15;
             }
         }
 
-        // Forzar snap Y
         mouse.setY(lineHeights[currentLineIndex] - (mouse.getAlto() / 2));
 
-        // Proyectiles
         if (arena.getProjectiles() != null) {
             arena.updateProjectiles();
-            arena.checkCollisions(); // Chequea ratón contra balas
+            arena.checkCollisions();
 
             for (ProjectileModel p : arena.getProjectiles()) {
                 if (!p.isActive())
@@ -87,17 +90,21 @@ public class ThreeLinesRules implements MinigameRules {
             }
 
             tickCounter++;
-            if (tickCounter >= 40) { // Un poco más frecuente
+            if (tickCounter >= 40) {
                 spawnLineProjectile(arena);
                 tickCounter = 0;
             }
         }
     }
 
+    /**
+     * Genera un proyectil en una de las tres líneas de forma aleatoria, moviéndose horizontalmente.
+     * 
+     * @param arena Modelo donde añadir el proyectil.
+     */
     private void spawnLineProjectile(ArenaModel arena) {
         int size = rand.nextInt(15) + 15;
         
-        // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
         int round = arena.getCurrentRound();
         double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
         int baseSpeed = rand.nextInt(3) + 4;
@@ -105,19 +112,17 @@ public class ThreeLinesRules implements MinigameRules {
         int type = nextType;
         nextType = (nextType == 0) ? 1 : 0;
 
-        // Escoger una de las 3 líneas
         int targetLine = rand.nextInt(3);
         int spawnY = lineHeights[targetLine] - (size / 2);
 
         int spawnX;
         int dx;
 
-        // Izquierda a Derecha o Derecha a Izquierda
         if (rand.nextBoolean()) {
-            spawnX = 200; // Justo en el borde izquierdo (el recuadro empieza en 200)
+            spawnX = 200;
             dx = speed;
         } else {
-            spawnX = 800 - size; // Justo en el borde derecho (el recuadro acaba en 800)
+            spawnX = 800 - size;
             dx = -speed;
         }
 
@@ -126,8 +131,7 @@ public class ThreeLinesRules implements MinigameRules {
 
     @Override
     public void render(Graphics2D g2d, ArenaModel arena) {
-        // Pintar las 3 líneas en el recuadro (x=200, w=600)
-        g2d.setColor(new Color(255, 255, 255, 100)); // Blanco semi-transparente
+        g2d.setColor(new Color(255, 255, 255, 100));
         g2d.setStroke(new BasicStroke(2));
 
         for (int y : lineHeights) {
@@ -142,7 +146,7 @@ public class ThreeLinesRules implements MinigameRules {
 
     @Override
     public boolean isFinished(ArenaModel arena) {
-        return false; // Termina por tiempo
+        return false;
     }
 
     @Override

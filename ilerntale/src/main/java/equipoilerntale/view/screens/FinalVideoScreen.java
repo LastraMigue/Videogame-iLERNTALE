@@ -16,12 +16,24 @@ import javafx.scene.media.MediaView;
 
 import equipoilerntale.view.MainFrame;
 
+/**
+ * Pantalla que reproduce el vídeo final del juego tras la victoria.
+ * Utiliza JavaFX para la reproducción multimedia dentro de un entorno Swing.
+ */
 public class FinalVideoScreen extends JPanel {
 
+    /** Referencia al marco principal para navegación tras el vídeo. */
     private MainFrame mainFrame;
+    /** Panel puente para integrar contenido de JavaFX en Swing. */
     private JFXPanel jfxPanel;
+    /** Reproductor de medios para el vídeo final. */
     private MediaPlayer mediaPlayer;
 
+    /**
+     * Constructor de la pantalla de vídeo final.
+     * 
+     * @param frame Referencia al marco principal.
+     */
     public FinalVideoScreen(MainFrame frame) {
         this.mainFrame = frame;
 
@@ -38,6 +50,10 @@ public class FinalVideoScreen extends JPanel {
     }
 
     // Este método es llamado por el MainFrame o donde se necesite
+    /**
+     * Inicia la reproducción del vídeo final en el hilo de JavaFX.
+     * Configura la finalización para reiniciar el juego y volver al menú.
+     */
     public void playVideo() {
         Platform.runLater(() -> {
             try {
@@ -46,7 +62,6 @@ public class FinalVideoScreen extends JPanel {
                     mediaPlayer.dispose();
                 }
 
-                // Ruta del video final (JAR compatible)
                 java.net.URL resource = getClass().getResource("/vid/final.mp4");
                 if (resource == null) {
                     throw new java.io.FileNotFoundException("No se encontró el video final en resources");
@@ -59,7 +74,7 @@ public class FinalVideoScreen extends JPanel {
 
                 // Creamos la Escena
                 StackPane root = new StackPane();
-                root.setStyle("-fx-background-color: black;"); // Fondo negro con CSS integrado
+                root.setStyle("-fx-background-color: black;");
                 root.getChildren().add(mediaView);
 
                 Scene scene = new Scene(root);
@@ -72,7 +87,6 @@ public class FinalVideoScreen extends JPanel {
 
                 mediaPlayer.play();
 
-                // Cuando termine el video, cambiamos a la pantalla del MENU
                 mediaPlayer.setOnEndOfMedia(() -> {
                     SwingUtilities.invokeLater(() -> {
                         mainFrame.reiniciarJuego();
@@ -83,7 +97,6 @@ public class FinalVideoScreen extends JPanel {
             } catch (Exception ex) {
                 System.err.println("Error al cargar el video final: " + ex.getMessage());
                 ex.printStackTrace();
-                // Si el video falla, saltamos al menú
                 SwingUtilities.invokeLater(() -> {
                     mainFrame.reiniciarJuego();
                     mainFrame.cambiarPantalla("MENU");

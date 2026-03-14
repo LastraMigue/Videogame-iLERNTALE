@@ -4,22 +4,36 @@ import java.awt.Rectangle;
 import java.util.List;
 
 /**
- * CLASE BASE ABSTRACTA PARA TODAS LAS ENTIDADES DEL JUEGO (JUGADOR, ZOMBIE).
- * CONTIENE PROPIEDADES COMUNES Y LÓGICA COMPARTIDA DE MOVIMIENTO Y COLISIONES.
+ * Clase base abstracta para todas las entidades del juego.
+ * Gestiona propiedades comunes como posición, tamaño, dirección y lógica básica de movimiento/colisión.
  */
 public abstract class Entity {
+    /** Coordenada X actual. */
     protected int x;
+    /** Coordenada Y actual. */
     protected int y;
+    /** Tamaño base de la entidad. */
     protected int size;
+    /** Nombre identificador de la entidad. */
     protected String name;
+    /** Dirección actual de movimiento o vista. */
     protected Direction direction;
+    /** Indica si la entidad se está desplazando. */
     protected boolean isMoving;
+    /** Ancho del mapa para límites de movimiento. */
     protected int mapWidth;
+    /** Alto del mapa para límites de movimiento. */
     protected int mapHeight;
 
     /**
-     * CONSTRUCTOR BASE PARA TODAS LAS ENTIDADES.
-     * INICIALIZA LA POSICIÓN, TAMAÑO, NOMBRE Y LÍMITES DEL MAPA.
+     * Constructor base para entidades.
+     * 
+     * @param x Posición X inicial.
+     * @param y Posición Y inicial.
+     * @param size Tamaño inicial.
+     * @param name Nombre de la entidad.
+     * @param mapWidth Límite horizontal del mapa.
+     * @param mapHeight Límite vertical del mapa.
      */
     public Entity(int x, int y, int size, String name, int mapWidth, int mapHeight) {
         this.x = x;
@@ -32,111 +46,138 @@ public abstract class Entity {
         this.mapHeight = mapHeight;
     }
 
-    // ============ GETTERS Y SETTERS ============
-
     /**
-     * OBTIENE LA COORDENADA X DE LA ENTIDAD.
+     * Obtiene la coordenada X de la entidad.
+     * 
+     * @return Coordenada X.
      */
     public int getX() {
         return x;
     }
 
     /**
-     * ESTABLECE LA COORDENADA X DE LA ENTIDAD.
+     * Establece la coordenada X de la entidad.
+     * 
+     * @param x Nueva coordenada X.
      */
     public void setX(int x) {
         this.x = x;
     }
 
     /**
-     * OBTIENE LA COORDENADA Y DE LA ENTIDAD.
+     * Obtiene la coordenada Y de la entidad.
+     * 
+     * @return Coordenada Y.
      */
     public int getY() {
         return y;
     }
 
     /**
-     * ESTABLECE LA COORDENADA Y DE LA ENTIDAD.
+     * Establece la coordenada Y de la entidad.
+     * 
+     * @param y Nueva coordenada Y.
      */
     public void setY(int y) {
         this.y = y;
     }
 
     /**
-     * OBTIENE EL TAMAÑO DE LA ENTIDAD.
+     * Obtiene el tamaño de la entidad.
+     * 
+     * @return Tamaño en píxeles.
      */
     public int getSize() {
         return size;
     }
 
     /**
-     * OBTIENE EL NOMBRE DE LA ENTIDAD.
+     * Obtiene el nombre de la entidad.
+     * 
+     * @return Nombre.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * OBTIENE LA DIRECCIÓN ACTUAL DE LA ENTIDAD.
+     * Obtiene la dirección actual de la entidad.
+     * 
+     * @return Valor de {@link Direction}.
      */
     public Direction getDirection() {
         return direction;
     }
 
     /**
-     * ESTABLECE LA DIRECCIÓN DE LA ENTIDAD.
+     * Establece la dirección de la entidad.
+     * 
+     * @param direction Nueva dirección.
      */
     public void setDirection(Direction direction) {
         this.direction = direction;
     }
 
     /**
-     * INDICA SI LA ENTIDAD SE ESTÁ MOVIENDO ACTUALMENTE.
+     * Indica si la entidad está en movimiento.
+     * 
+     * @return true si se está moviendo.
      */
     public boolean isMoving() {
         return isMoving;
     }
 
     /**
-     * ESTABLECE EL ESTADO DE MOVIMIENTO DE LA ENTIDAD.
+     * Establece el estado de movimiento.
+     * 
+     * @param moving true para activar el estado de movimiento.
      */
     public void setMoving(boolean moving) {
         isMoving = moving;
     }
 
     /**
-     * OBTIENE EL RECTÁNGULO DE COLISIÓN DE LA ENTIDAD CON SU TAMAÑO COMPLETO.
+     * Obtiene el rectángulo delimitador completo de la entidad.
+     * 
+     * @return Rectángulo de tamaño (size x size).
      */
     public Rectangle getBounds() {
         return new Rectangle(x, y, size, size);
     }
 
     /**
-     * OBTIENE EL HITBOX DE LA ENTIDAD EN UNA POSICIÓN ESPECÍFICA.
-     * POR DEFECTO ES IGUAL A getBounds(), PERO PUEDE SER SOBRESCRITO PARA
-     * COLISIONES MÁS PRECISAS.
+     * Obtiene el hitbox preciso para colisiones en una posición dada.
+     * 
+     * @param currentX Coordenada X a evaluar.
+     * @param currentY Coordenada Y a evaluar.
+     * @return Rectángulo de colisión.
      */
     public Rectangle getHitbox(int currentX, int currentY) {
         return new Rectangle(currentX, currentY, size, size);
     }
 
     /**
-     * VERIFICA SI ESTA ENTIDAD INTERSECTA CON UN RECTÁNGULO DADO USANDO SU HITBOX.
+     * Verifica si el hitbox de la entidad colisiona con otro rectángulo.
+     * 
+     * @param other Rectángulo externo.
+     * @return true si hay intersección.
      */
     public boolean intersects(Rectangle other) {
         return getHitbox(x, y).intersects(other);
     }
 
     /**
-     * LÓGICA CENTRALIZADA DE COLISIONES PARA CUALQUIER ENTIDAD.
+     * Intenta mover la entidad aplicando detección de colisiones con muros y límites del mapa.
      * 
-     * @return TRUE SI EL MOVIMIENTO FUE EXITOSO (SIN COLISIÓN).
+     * @param dx Desplazamiento en X.
+     * @param dy Desplazamiento en Y.
+     * @param walls Lista de rectángulos que representan obstáculos.
+     * @return true si el movimiento fue permitido y se actualizó la posición.
      */
     public boolean moveIfNoCollision(int dx, int dy, List<Rectangle> walls) {
         int nextX = x + dx;
         int nextY = y + dy;
 
-        // LÍMITES DEL MAPA
         nextX = Math.max(0, Math.min(nextX, mapWidth - size));
         nextY = Math.max(0, Math.min(nextY, mapHeight - size - 10));
 

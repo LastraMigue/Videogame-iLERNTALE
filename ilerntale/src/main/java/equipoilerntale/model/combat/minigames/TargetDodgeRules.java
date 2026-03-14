@@ -8,10 +8,17 @@ import equipoilerntale.model.combat.ArenaModel;
 import equipoilerntale.model.combat.MouseModel;
 import equipoilerntale.model.combat.projectiles.TargetingProjectile;
 
+/**
+ * Implementación de las reglas para el minijuego de esquive con apuntado (Target Dodge).
+ * Los proyectiles se generan fuera de la arena y apuntan directamente a la posición actual del ratón.
+ */
 public class TargetDodgeRules implements MinigameRules {
 
+    /** Contador de ticks para gestionar la frecuencia de aparición de proyectiles. */
     private int tickCounter = 0;
+    /** Tipo del próximo proyectil (alterna entre 0 y 1). */
     private int nextType = 0;
+    /** Generador de números aleatorios. */
     private Random rand = new Random();
 
     @Override
@@ -23,7 +30,6 @@ public class TargetDodgeRules implements MinigameRules {
 
     @Override
     public void update(ArenaModel arena, InputHandler input) {
-        // Mover ratón
         int dx = 0;
         int dy = 0;
         if (input.isUpPressed())
@@ -39,14 +45,11 @@ public class TargetDodgeRules implements MinigameRules {
             arena.intentarMoverMouse(dx, dy);
         }
 
-        // Projectiles
         if (arena.getProjectiles() != null) {
             arena.updateProjectiles();
             arena.checkCollisions();
 
             tickCounter++;
-            // 60 ticks per second assuming 60 UPS. The user said "cada segundo aparezca un
-            // bullet"
             if (tickCounter >= 60) {
                 spawnTargetingProjectile(arena);
                 tickCounter = 0;
@@ -54,6 +57,11 @@ public class TargetDodgeRules implements MinigameRules {
         }
     }
 
+    /**
+     * Genera un proyectil que apunta a la posición actual del ratón desde un borde aleatorio de la pantalla.
+     * 
+     * @param arena Modelo de la arena.
+     */
     private void spawnTargetingProjectile(ArenaModel arena) {
         MouseModel mouse = arena.getMouse();
         if (mouse == null)
@@ -61,7 +69,6 @@ public class TargetDodgeRules implements MinigameRules {
 
         int size = rand.nextInt(21) + 15;
         
-        // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
         int round = arena.getCurrentRound();
         double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
         int baseSpeed = rand.nextInt(2) + 12;
@@ -69,26 +76,28 @@ public class TargetDodgeRules implements MinigameRules {
         int type = nextType;
         nextType = (nextType == 0) ? 1 : 0;
 
-        // Generar a una distancia segura fuera de la arena o en los bordes
-        int spawnX = 0, spawnY = 0;
+        int spawnX = 0;
+        int spawnY = 0;
         int borde = rand.nextInt(4);
 
         switch (borde) {
-            case 0: // Top
+            case 0: // Superior
                 spawnX = rand.nextInt(1000);
                 spawnY = -50;
                 break;
-            case 1: // Bottom
+            case 1: // Inferior
                 spawnX = rand.nextInt(1000);
                 spawnY = 650;
                 break;
-            case 2: // Left
+            case 2: // Izquierdo
                 spawnX = -50;
                 spawnY = rand.nextInt(600);
                 break;
-            case 3: // Right
+            case 3: // Derecho
                 spawnX = 1050;
                 spawnY = rand.nextInt(600);
+                break;
+            default:
                 break;
         }
 
@@ -109,7 +118,7 @@ public class TargetDodgeRules implements MinigameRules {
 
     @Override
     public boolean isFinished(ArenaModel arena) {
-        return false; // Termina por tiempo, no por balas
+        return false;
     }
 
     @Override

@@ -1,33 +1,46 @@
 package equipoilerntale.model.entity;
 
 /**
- * REPRESENTA LAS DIRECCIONES POSIBLES DE MOVIMIENTO Y ESTADO DEL PERSONAJE.
+ * Representa las direcciones posibles de movimiento y estado de las entidades.
  */
 public enum Direction {
+    /** Dirección hacia arriba. */
     UP("arriba"),
+    /** Dirección hacia abajo. */
     DOWN("abajo"),
+    /** Dirección hacia la izquierda. */
     LEFT("izquierda"),
+    /** Dirección hacia la derecha. */
     RIGHT("derecha"),
+    /** Estado de inactividad (por defecto mirando hacia abajo). */
     IDLE("abajo");
 
+    /** Valor de texto asociado a la dirección para carga de recursos. */
     private final String value;
 
     /**
-     * CONSTRUCTOR DE LA ENUMERACIÓN DE DIRECCIONES.
+     * Constructor de la enumeración.
+     * 
+     * @param value Texto identificador.
      */
     Direction(String value) {
         this.value = value;
     }
 
     /**
-     * OBTIENE EL VALOR DE TEXTO ASOCIADO A LA DIRECCIÓN.
+     * Obtiene el valor de texto asociado a la dirección.
+     * 
+     * @return Cadena de texto.
      */
     public String getValue() {
         return value;
     }
 
     /**
-     * CONVIERTE UNA CADENA DE TEXTO A UN VALOR DE DIRECTION.
+     * Convierte una cadena de texto a un valor de Direction.
+     * 
+     * @param text Texto a convertir.
+     * @return Dirección correspondiente o DOWN por defecto.
      */
     public static Direction fromString(String text) {
         for (Direction d : Direction.values()) {

@@ -6,20 +6,34 @@ import java.io.InputStream;
 import java.util.logging.Logger;
 
 /**
- * SERVICIO CENTRALIZADO PARA LA GESTIÓN DE SONIDO.
- * Permite reproducir música de fondo (BGM) en bucle y efectos de sonido (SFX).
+ * Servicio centralizado para la gestión de audio y sonido.
+ * Proporciona soporte para música de fondo (BGM) en bucle y efectos de sonido (SFX).
+ * Implementa el patrón Singleton.
  */
 public class SoundService {
+    /** Registrador de eventos. */
     private static final Logger LOG = Logger.getLogger(SoundService.class.getName());
+    /** Instancia única del servicio. */
     private static SoundService instance;
 
+    /** Clip actual utilizado para la música de fondo. */
     private Clip bgmClip;
+    /** Ruta del archivo de audio cargado actualmente como BGM. */
     private String currentBGMPath;
-    private float volume = 0.5f; // Volumen predeterminado al 50%
+    /** Nivel de volumen global (rango 0.0 a 1.0). */
+    private float volume = 0.5f;
 
+    /**
+     * Constructor privado.
+     */
     private SoundService() {
     }
 
+    /**
+     * Obtiene la instancia única de SoundService.
+     * 
+     * @return La instancia Singleton.
+     */
     public static SoundService getInstance() {
         if (instance == null) {
             instance = new SoundService();
@@ -28,7 +42,9 @@ public class SoundService {
     }
 
     /**
-     * AJUSTA EL VOLUMEN GLOBAL (0.0 a 1.0).
+     * Ajusta el volumen maestro de todos los sonidos y lo aplica al clip de música actual.
+     * 
+     * @param volume Nivel de volumen entre 0.0 (silencio) y 1.0 (máximo).
      */
     public void setVolume(float volume) {
         this.volume = Math.max(0.0f, Math.min(1.0f, volume));
@@ -37,17 +53,25 @@ public class SoundService {
         }
     }
 
+    /**
+     * Recupera el volumen global configurado.
+     * 
+     * @return Valor entre 0.0 y 1.0.
+     */
     public float getVolume() {
         return volume;
     }
 
+    /**
+     * Aplica el volumen actual a un clip de audio específico mediante su control maestro de ganancia.
+     * 
+     * @param clip El clip al que aplicar el cambio de volumen.
+     */
     private void applyVolume(Clip clip) {
         try {
             if (clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-                FloatControl gainControl = (FloatControl.Type.MASTER_GAIN).equals(null) ? null
-                        : (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+                FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
                 if (gainControl != null) {
-                    // Mapeo lineal de 0.0-1.0 a decibelios (-80dB a 6dB aprox)
                     float dB = (float) (Math.log(volume <= 0.0001 ? 0.0001 : volume) / Math.log(10.0) * 20.0);
                     gainControl.setValue(Math.max(gainControl.getMinimum(), Math.min(gainControl.getMaximum(), dB)));
                 }
@@ -58,9 +82,10 @@ public class SoundService {
     }
 
     /**
-     * REPRODUCE MÚSICA DE FONDO EN BUCLE.
-     * Si ya está sonando la misma música, no hace nada.
-     * Si es una música diferente, detiene la anterior y empieza la nueva.
+     * Inicia la reproducción de una pista de música de fondo en bucle.
+     * Si la pista solicitada ya está sonando, no se interrumpe.
+     * 
+     * @param path Ruta absoluta al recurso de audio.
      */
     public void playBGM(String path) {
         if (path == null || path.equals(currentBGMPath)) {
@@ -76,14 +101,12 @@ public class SoundService {
                 return;
             }
 
-            // Usar BufferedInputStream para soporte de mark/reset requerido por
-            // AudioInputStream
             InputStream bufferedIn = new BufferedInputStream(is);
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
 
             bgmClip = AudioSystem.getClip();
             bgmClip.open(audioStream);
-            applyVolume(bgmClip); // Aplicar volumen actual
+            applyVolume(bgmClip);
             bgmClip.loop(Clip.LOOP_CONTINUOUSLY);
             bgmClip.start();
 
@@ -95,7 +118,7 @@ public class SoundService {
     }
 
     /**
-     * DETIENE LA MÚSICA DE FONDO ACTUAL.
+     * Detiene por completo la música de fondo y libera los recursos asociados.
      */
     public void stopBGM() {
         if (bgmClip != null && bgmClip.isRunning()) {
@@ -107,7 +130,9 @@ public class SoundService {
     }
 
     /**
-     * REPRODUCE UN EFECTO DE SONIDO (UNA SOLA VEZ).
+     * Reproduce un efecto de sonido de corta duración una sola vez.
+     * 
+     * @param path Ruta al recurso de audio SFX.
      */
     public void playSFX(String path) {
         try {
@@ -121,10 +146,9 @@ public class SoundService {
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
             Clip sfxClip = AudioSystem.getClip();
             sfxClip.open(audioStream);
-            applyVolume(sfxClip); // Aplicar volumen actual
+            applyVolume(sfxClip);
             sfxClip.start();
 
-            // Cerrar el clip automáticamente cuando termine
             sfxClip.addLineListener(event -> {
                 if (event.getType() == LineEvent.Type.STOP) {
                     sfxClip.close();

@@ -16,11 +16,22 @@ import javax.swing.event.ChangeListener;
 import equipoilerntale.view.MainFrame;
 import equipoilerntale.service.SoundService;
 
+/**
+ * Panel que se muestra cuando el juego está en pausa.
+ * Permite al usuario reanudar la partida o salir al menú principal, 
+ * además de ajustar el volumen general del sonido.
+ */
 public class PausePanel extends JPanel {
+    /** Referencia al marco principal para gestionar la navegación de pantallas. */
     private MainFrame mainFrame;
+    /** Botón para reanudar la partida. */
     private JButton btnReanudar;
+    /** Botón para volver al menú principal. */
     private JButton btnSalir;
 
+    /**
+     * Panel interno con fondo semi-transparente para oscurecer la pantalla de juego.
+     */
     private static class TransparentPanel extends JPanel {
         private final Color overlayColor;
 
@@ -42,17 +53,28 @@ public class PausePanel extends JPanel {
         }
     }
 
+    /**
+     * Constructor del Panel de Pausa.
+     * Configura el diseño, carga recursos e inicializa los botones de control.
+     * 
+     * @param frame Referencia al marco principal de la aplicación.
+     */
+    /**
+     * Constructor del Panel de Pausa.
+     * Inicializa el diseño, los bloqueadores de entrada y los componentes de la interfaz.
+     * 
+     * @param frame Referencia al marco principal de la aplicación.
+     */
     public PausePanel(MainFrame frame) {
         this.mainFrame = frame;
 
         setLayout(new BorderLayout());
-        setOpaque(false); // Importante para ver lo que hay debajo
+        setOpaque(false);
         setPreferredSize(new Dimension(800, 600));
 
         TransparentPanel fondoOscuro = new TransparentPanel(new Color(0, 0, 0, 150));
         fondoOscuro.setLayout(new GridBagLayout());
 
-        // BLOQUEO DE INPUT: Consumir todos los eventos de ratón
         MouseAdapter blocker = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -104,7 +126,7 @@ public class PausePanel extends JPanel {
         menuContainer.setBackground(Color.BLACK);
         menuContainer.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
         menuContainer.setLayout(new BoxLayout(menuContainer, BoxLayout.Y_AXIS));
-        // Añadir padding interno al contenedor
+
         menuContainer.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.WHITE, 2),
                 BorderFactory.createEmptyBorder(20, 40, 20, 40)));
@@ -146,12 +168,10 @@ public class PausePanel extends JPanel {
         menuContainer.add(titulo);
         menuContainer.add(Box.createVerticalStrut(20));
 
-        // CONTROLES DE VOLUMEN
         JLabel lblVolumen = new JLabel("VOLUMEN");
         lblVolumen.setForeground(Color.WHITE);
         lblVolumen.setAlignmentX(CENTER_ALIGNMENT);
 
-        // Intentar usar la misma fuente que el título pero más pequeña
         lblVolumen.setFont(titulo.getFont().deriveFont(24f));
 
         JSlider sliderVolumen = new JSlider(JSlider.HORIZONTAL, 0, 100,
@@ -182,6 +202,20 @@ public class PausePanel extends JPanel {
 
     }
 
+    /**
+     * Crea un botón personalizado con una imagen y un efecto visual al ser pulsado.
+     * 
+     * @param imagePath Ruta a la imagen del botón.
+     * @param fallbackText Texto alternativo si la imagen no se carga.
+     * @return El botón configurado.
+     */
+    /**
+     * Crea un botón gráfico con imagen y efectos visuales de interacción.
+     * 
+     * @param imagePath Ruta a la imagen del botón.
+     * @param fallbackText Texto de respaldo si falla la carga de imagen.
+     * @return JButton configurado.
+     */
     private JButton createImageButton(String imagePath, String fallbackText) {
         JButton button = new JButton();
 

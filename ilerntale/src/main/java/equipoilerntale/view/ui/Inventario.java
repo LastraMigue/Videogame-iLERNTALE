@@ -5,11 +5,23 @@ import java.util.List;
 
 import equipoilerntale.model.entity.ItemModel;
 
+/**
+ * Sistema de inventario global del juego (Singleton).
+ * Gestiona la colección de objetos que el jugador posee, permitiendo agregar,
+ * eliminar y filtrar objetos para el combate.
+ */
 public class Inventario {
 
+    /** Única instancia del inventario. */
     private static Inventario instance;
+    /** Lista de modelos de ítems contenidos en el inventario. */
     private List<ItemModel> items;
 
+    /**
+     * Obtiene la instancia única del Inventario.
+     * 
+     * @return Instancia Singleton de Inventario.
+     */
     public static Inventario getInstance() {
         if (instance == null) {
             instance = new Inventario();
@@ -17,21 +29,28 @@ public class Inventario {
         return instance;
     }
 
+    /**
+     * Constructor privado del Inventario.
+     * Inicializa la lista de ítems con algunos objetos predeterminados.
+     */
     private Inventario() {
         this.items = new ArrayList<>();
-        // Agregar objetos principales (Podemos comentarlos luego si queremos empezar de
-        // cero)
         this.agregarItem(new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 0, true));
         this.agregarItem(new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 0, true));
         this.agregarItem(new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 0, true));
         this.agregarItem(new ItemModel("Llave", "Abre una puerta\ncerrada.", "/objects/llave.png", 0, false));
     }
 
+    /**
+     * Agrega un ítem al inventario. Si el ítem ya existe por nombre,
+     * incrementa su cantidad acumulada.
+     * 
+     * @param item Modelo del ítem a agregar.
+     */
     public void agregarItem(ItemModel item) {
         if (item == null)
             return;
 
-        // Si el ítem ya existe, aumentamos su cantidad
         for (ItemModel existing : items) {
             if (existing.getNombre().equals(item.getNombre())) {
                 existing.setCantidad(existing.getCantidad() + item.getCantidad());
@@ -39,7 +58,6 @@ public class Inventario {
             }
         }
 
-        // Si no existe, lo añadimos
         items.add(item);
     }
 
@@ -58,10 +76,17 @@ public class Inventario {
         }
     }
 
+    /** @return Lista completa de ítems en el inventario. */
     public List<ItemModel> getItems() {
         return items;
     }
 
+    /**
+     * Obtiene un ítem por su índice en la lista.
+     * 
+     * @param index Índice del ítem.
+     * @return ItemModel si el índice es válido, null en caso contrario.
+     */
     public ItemModel getItem(int index) {
         if (index >= 0 && index < items.size()) {
             return items.get(index);
@@ -69,9 +94,11 @@ public class Inventario {
         return null;
     }
 
+    /**
+     * Vacía el inventario y restablece los objetos iniciales predeterminados.
+     */
     public void limpiar() {
         this.items.clear();
-        // Agregar objetos principales nuevamente
         this.agregarItem(new ItemModel("Botella Vida", "PS +30", "/objects/botellavida.png", 0, true));
         this.agregarItem(new ItemModel("Patito Aguante", "DEFENSA +3", "/objects/patitoaguante.png", 0, true));
         this.agregarItem(new ItemModel("Pelota Ataque", "GOLPES x2\n(RONDA)", "/objects/pelotaataque.png", 0, true));

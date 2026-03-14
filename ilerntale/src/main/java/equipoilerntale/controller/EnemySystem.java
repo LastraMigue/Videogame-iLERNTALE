@@ -10,34 +10,46 @@ import equipoilerntale.model.entity.Zombie;
 import equipoilerntale.model.entity.Boss;
 
 /**
- * SISTEMA QUE GESTIONA TODOS LOS ENEMIGOS ACTIVOS (ZOMBIES).
+ * Sistema que gestiona todos los enemigos activos (Zombies y Jefes).
  */
 public class EnemySystem {
 
+    /** Lista de zombies presentes en la sala actual. */
     private final List<Zombie> zombies = new CopyOnWriteArrayList<>();
+    /** Lista de jefes presentes en el mapa. */
     private final List<Boss> bosses = new CopyOnWriteArrayList<>();
+    /** Generador de números aleatorios para lógica de dispersión y spawn. */
     private final Random random = new Random();
+    /** Indica si el sistema de enemigos está procesando actualizaciones. */
     private boolean active = false;
 
+    /** Coordenada X actual del jugador mapeada para lógica de seguimiento. */
     private int playerX;
+    /** Coordenada Y actual del jugador mapeada para lógica de seguimiento. */
     private int playerY;
+    /** Lista de rectángulos que representan los muros del mapa actual. */
     private List<Rectangle> walls = new ArrayList<>();
 
-    private static final int MIN_SPAWN_FROM_PLAYER = 300; // Antes 900
-    private static final int MIN_SPAWN_BETWEEN_ZOMBIES = 60; // Antes 300 (ZOMBIE_SIZE es 50)
+    /** Distancia mínima en píxeles para generar un enemigo lejos del jugador. */
+    private static final int MIN_SPAWN_FROM_PLAYER = 300;
+    /** Distancia mínima entre zombies durante el proceso de spawn. */
+    private static final int MIN_SPAWN_BETWEEN_ZOMBIES = 60;
 
     /**
-     * CONSTRUCTOR DEL SISTEMA DE ENEMIGOS.
+     * Constructor del sistema de enemigos.
      */
     public EnemySystem() {
     }
 
     /**
-     * GENERA UNA LISTA DE ZOMBIES EN UBICACIONES SEGURAS.
-     */
-    /**
-     * GENERA ZOMBIES EN EL ÁREA ESPECIFICADA.
-     * ASEGURA QUE NO APAREZCAN DEMASIADO CERCA DEL JUGADOR NI ENTRE SÍ.
+     * Genera zombies en un área específica, asegurando que no colisionen con muros
+     * ni aparezcan demasiado cerca del jugador o entre sí.
+     * 
+     * @param count Cantidad de zombies a generar.
+     * @param area Área del mapa donde pueden aparecer.
+     * @param px Posición X inicial del jugador.
+     * @param py Posición Y inicial del jugador.
+     * @param currentWalls Lista de colisiones del mapa.
      */
     public void spawnZombies(int count, Rectangle area, int px, int py, List<Rectangle> currentWalls) {
         this.playerX = px;
@@ -54,7 +66,9 @@ public class EnemySystem {
     }
 
     /**
-     * GENERA LOS JEFES FINALES EN LAS ÁREAS ESPECIFICADAS POR CADA SALA.
+     * Genera un jefe final en la posición especificada.
+     * 
+     * @param area Rectángulo que define la posición del jefe.
      */
     public void spawnBoss(Rectangle area) {
         if (area != null) {
@@ -64,6 +78,12 @@ public class EnemySystem {
         active = true;
     }
 
+    /**
+     * Busca una posición segura y válida para spawnear un zombie.
+     * 
+     * @param area Área de búsqueda.
+     * @return Una instancia de Zombie en una posición segura, o null si falla tras varios intentos.
+     */
     private Zombie findSafeSpawn(Rectangle area) {
         int maxAttempts = 200;
 
@@ -74,23 +94,18 @@ public class EnemySystem {
             Rectangle spawnBounds = new Zombie(rx, ry, GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT).getHitbox(rx,
                     ry);
 
-            // Margen de seguridad: expandir el hitbox de prueba para no nacer pegado a
-            // muros
             Rectangle safetyBounds = new Rectangle(
                     spawnBounds.x - 10, spawnBounds.y - 10,
                     spawnBounds.width + 20, spawnBounds.height + 20);
 
-            // Verificar que no colisione con muros
             boolean hitsWall = walls.stream().anyMatch(w -> w.intersects(safetyBounds));
             if (hitsWall)
                 continue;
 
-            // Verificar distancia mínima al jugador
             double distFromPlayer = Math.sqrt(Math.pow(rx - playerX, 2) + Math.pow(ry - playerY, 2));
             if (distFromPlayer < MIN_SPAWN_FROM_PLAYER)
                 continue;
 
-            // Verificar distancia mínima entre zombies (evitar agrupaciones en spawn)
             boolean tooCloseToOtherZombie = zombies.stream()
                     .anyMatch(z -> Math
                             .sqrt(Math.pow(z.getX() - rx, 2) + Math.pow(z.getY() - ry, 2)) < MIN_SPAWN_BETWEEN_ZOMBIES);
@@ -102,6 +117,12 @@ public class EnemySystem {
         return null;
     }
 
+    /**
+     * Actualiza el movimiento y comportamiento de todos los enemigos activos.
+     * 
+     * @param px Posición X del jugador.
+     * @param py Posición Y del jugador.
+     */
     public void update(int px, int py) {
         if (!active)
             return;
@@ -109,35 +130,33 @@ public class EnemySystem {
         this.playerX = px;
         this.playerY = py;
 
-        // Pasar la lista completa de zombies para que cada uno calcule separación de
-        // sus vecinos
         for (Zombie z : zombies) {
             z.updateMovement(playerX, playerY, walls, zombies);
         }
     }
 
     /**
-     * ALEJA A LOS ENEMIGOS QUE ESTÉN DEMASIADO CERCA DE UNA POSICIÓN.
-     * Se usa para dar un margen al jugador tras salir de un combate.
+     * Aleja a los enemigos que estén en un radio cercano a la posición del jugador.
+     * Se utiliza para dar un margen de seguridad tras el combate.
+     * 
+     * @param px Posición X del foco.
+     * @param py Posición Y del foco.
+     * @param minDistance Distancia mínima de alejamiento.
      */
     public void disperseEnemiesFrom(int px, int py, int minDistance) {
         for (Zombie z : zombies) {
             double dist = Math.sqrt(Math.pow(z.getX() - px, 2) + Math.pow(z.getY() - py, 2));
             if (dist < minDistance) {
-                // Vector de alejamiento
                 double angle = Math.atan2(z.getY() - py, z.getX() - px);
                 if (dist < 1)
                     angle = random.nextDouble() * Math.PI * 2;
 
-                // Intentar alejar al zombie a una posición segura (fuera de muros)
                 int pushDist = 600;
 
-                // Intentamos desde el alejamiento máximo hacia abajo hasta encontrar sitio
                 for (int d = pushDist; d >= 100; d -= 20) {
                     int nextX = px + (int) (Math.cos(angle) * d);
                     int nextY = py + (int) (Math.sin(angle) * d);
 
-                    // Límites del mapa (evitar salir por los bordes)
                     nextX = Math.max(20, Math.min(nextX, GameSettings.MAP_WIDTH - Zombie.SIZE - 20));
                     nextY = Math.max(250, Math.min(nextY, GameSettings.MAP_HEIGHT - Zombie.SIZE - 20));
 
@@ -151,13 +170,17 @@ public class EnemySystem {
                     }
                 }
 
-                z.setDetectedPlayer(false); // Olvidar al jugador momentáneamente
+                z.setDetectedPlayer(false);
             }
         }
-        // Los bosses no se dispersan ya que suelen ser estáticos o importantes en su
-        // sitio
     }
 
+    /**
+     * Busch un enemigo que colisione con el hitbox del jugador.
+     * 
+     * @param playerHitbox Hitbox del jugador.
+     * @return El enemigo encontrado (Zombie o Boss), o null si no hay colisión.
+     */
     public Object getEnemyAt(Rectangle playerHitbox) {
         for (Zombie z : zombies) {
             if (z.isAlive() && playerHitbox.intersects(z.getHitbox(z.getX(), z.getY()))) {
@@ -172,34 +195,45 @@ public class EnemySystem {
         return null;
     }
 
+    /**
+     * Indica si el jugador está colisionando con algún enemigo.
+     * 
+     * @param playerHitbox Hitbox del jugador.
+     * @return true si hay colisión, false en caso contrario.
+     */
     public boolean collidesWithPlayer(Rectangle playerHitbox) {
         return getEnemyAt(playerHitbox) != null;
     }
 
     /**
-     * DETIENE LA ACTIVIDAD DE LOS ENEMIGOS Y LIMPIA LA LISTA.
+     * Detiene la actividad del sistema y libera la lista de enemigos.
      */
     public void stop() {
         active = false;
         zombies.clear();
+        bosses.clear();
     }
 
     /**
-     * OBTIENE LA LISTA DE ZOMBIES ACTIVOS.
+     * Obtiene la lista de zombies activos en el sistema.
+     * 
+     * @return Lista de zombies.
      */
     public List<Zombie> getZombies() {
         return zombies;
     }
 
     /**
-     * OBTIENE LA LISTA DE JEFES ACTIVOS.
+     * Obtiene la lista de jefes activos en el sistema.
+     * 
+     * @return Lista de jefes.
      */
     public List<Boss> getBosses() {
         return bosses;
     }
 
     /**
-     * LIMPIA TODOS LOS ZOMBIES Y DESACTIVA EL SISTEMA.
+     * Limpia todas las listas de enemigos y desactiva el sistema.
      */
     public void clear() {
         zombies.clear();

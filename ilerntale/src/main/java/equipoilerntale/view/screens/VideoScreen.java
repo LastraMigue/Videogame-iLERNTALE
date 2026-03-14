@@ -16,28 +16,40 @@ import javafx.scene.media.MediaView;
 
 import equipoilerntale.view.MainFrame;
 
+/**
+ * Pantalla que reproduce el vídeo introductorio del juego.
+ * Utiliza JavaFX para la reproducción multimedia dentro de un entorno Swing.
+ */
 public class VideoScreen extends JPanel {
 
+    /** Referencia al marco principal para gestionar la navegación tras el vídeo. */
     private MainFrame mainFrame;
+    /** Panel puente para integrar contenido de JavaFX en Swing. */
     private JFXPanel jfxPanel;
+    /** Reproductor de medios para el vídeo de introducción. */
     private MediaPlayer mediaPlayer;
 
+    /**
+     * Constructor de la pantalla de vídeo de introducción.
+     * 
+     * @param frame Referencia al marco principal.
+     */
     public VideoScreen(MainFrame frame) {
         this.mainFrame = frame;
 
-        // Usamos BorderLayout para que el panel de video ocupe todo el espacio
         setLayout(new BorderLayout());
         setBackground(Color.BLACK);
 
-        // Inicializamos el panel puente de JavaFX y lo añadimos al centro
         jfxPanel = new JFXPanel();
         add(jfxPanel, BorderLayout.CENTER);
 
-        // Previene que JavaFX se cierre cuando termina el video
         Platform.setImplicitExit(false);
     }
 
-    // Este método ahora es llamado por el MainFrame
+    /**
+     * Inicia la reproducción del vídeo de introducción en el hilo de JavaFX.
+     * Configura la finalización para volver al menú principal.
+     */
     public void playVideo() {
         Platform.runLater(() -> {
             try {
@@ -46,7 +58,6 @@ public class VideoScreen extends JPanel {
                     mediaPlayer.dispose();
                 }
 
-                // Ruta del video (JAR compatible)
                 java.net.URL resource = getClass().getResource("/vid/intro.mp4");
                 if (resource == null) {
                     throw new java.io.FileNotFoundException("No se encontró el video de intro en resources");
@@ -59,7 +70,7 @@ public class VideoScreen extends JPanel {
 
                 // Creamos la Escena
                 StackPane root = new StackPane();
-                root.setStyle("-fx-background-color: black;"); // Fondo negro con CSS integrado
+                root.setStyle("-fx-background-color: black;");
                 root.getChildren().add(mediaView);
 
                 Scene scene = new Scene(root);
@@ -72,7 +83,6 @@ public class VideoScreen extends JPanel {
 
                 mediaPlayer.play();
 
-                // Cuando termine el video, volvemos al panel de MENU (como solicitó el usuario)
                 mediaPlayer.setOnEndOfMedia(() -> {
                     SwingUtilities.invokeLater(() -> {
                         mainFrame.cambiarPantalla("MENU");
@@ -82,7 +92,6 @@ public class VideoScreen extends JPanel {
             } catch (Exception ex) {
                 System.err.println("Error al cargar el video: " + ex.getMessage());
                 ex.printStackTrace();
-                // Si el video falla, volvemos al MENU para evitar bloqueos
                 SwingUtilities.invokeLater(() -> {
                     mainFrame.cambiarPantalla("MENU");
                 });

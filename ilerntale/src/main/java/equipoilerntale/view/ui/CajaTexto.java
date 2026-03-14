@@ -4,7 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * COMPONENTE REUTILIZABLE PARA PANTALLAS DE DIÁLOGO Y ANUNCIOS.
+ * Clase de utilidad para crear paneles de texto reutilizables.
+ * Proporciona un estilo visual consistente para diálogos y anuncios.
  */
 public class CajaTexto {
 
@@ -20,13 +21,11 @@ public class CajaTexto {
      * @return El panel de diálogo configurado.
      */
     public static JPanel crearPanel(String texto) {
-        // Panel principal del diálogo (negro con borde blanco fino)
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.BLACK);
         panel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
         panel.setSize(500, 120);
 
-        // Área de texto estilizada
         JTextArea area = new JTextArea(texto);
         area.setBounds(20, 20, 460, 80);
         area.setEditable(false);

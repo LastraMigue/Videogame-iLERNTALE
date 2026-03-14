@@ -8,20 +8,33 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
 
+/**
+ * Componente visual que representa una barra de salud.
+ * Maneja tanto la lógica de puntos de vida como la renderización gráfica.
+ */
 public class BarraVida {
 
-    // Lógica Barra de Vida
-    // Vida máxima y Vida actual
+    /** Vida máxima permitida. */
     private int maxHealth;
+    /** Vida actual del personaje. */
     private int currentHealth;
 
-    // Dimensiones
+    /** Ancho de la barra en píxeles. */
     private int width = 200;
+    /** Alto de la barra en píxeles. */
     private int height = 20;
 
+    /** Nombre asociado a la barra (e.g. "JUGADOR"). */
     private String name;
+    /** Fuente personalizada para el nombre y los números. */
     private Font customFont;
 
+    /**
+     * Constructor de la barra de vida.
+     * 
+     * @param maxHealth Vida máxima inicial.
+     * @param name Nombre a mostrar sobre la barra.
+     */
     public BarraVida(int maxHealth, String name) {
         this.maxHealth = maxHealth;
         this.currentHealth = maxHealth;
@@ -29,6 +42,9 @@ public class BarraVida {
         cargarFuente();
     }
 
+    /**
+     * Carga la fuente "Deltarune" desde los recursos.
+     */
     private void cargarFuente() {
         try {
             java.net.URL fontUrl = getClass().getResource("/font/deltarune.ttf");
@@ -44,10 +60,20 @@ public class BarraVida {
         }
     }
 
+    /**
+     * Actualiza la vida actual, asegurando que esté dentro de los límites [0, maxHealth].
+     * 
+     * @param health Nueva cantidad de vida.
+     */
     public void setHealth(int health) {
         this.currentHealth = Math.max(0, Math.min(health, maxHealth));
     }
 
+    /**
+     * Establece una nueva vida máxima y ajusta la vida actual si es necesario.
+     * 
+     * @param maxHealth Nueva vida máxima.
+     */
     public void setMaxHealth(int maxHealth) {
         this.maxHealth = maxHealth;
         // Opcionalmente ajustamos la vida actual a la nueva vida máxima si es menor
@@ -56,7 +82,11 @@ public class BarraVida {
         }
     }
 
-    // Métodos para recibir daño y posible curación
+    /**
+     * Reduce la vida actual por una cantidad de daño recibida.
+     * 
+     * @param damage Puntos de vida a restar.
+     */
     public void takeDamage(int damage) {
         currentHealth -= damage;
         if (currentHealth < 0) {
@@ -64,6 +94,11 @@ public class BarraVida {
         }
     }
 
+    /**
+     * Incrementa la vida actual por una cantidad de curación.
+     * 
+     * @param amount Puntos de vida a añadir.
+     */
     public void heal(int amount) {
         currentHealth += amount;
         if (currentHealth > maxHealth) {
@@ -71,19 +106,26 @@ public class BarraVida {
         }
     }
 
+    /** @return Vida actual. */
     public int getHealth() {
         return currentHealth;
     }
 
+    /** @return Vida máxima. */
     public int getMaxHealth() {
         return maxHealth;
     }
 
-    // Apartado Gráfico de la Barra de Vida para dibujarla
-
+    /**
+     * Dibuja la barra de vida en el contexto gráfico proporcionado.
+     * Incluye el nombre, fondo, barra de color (dinámica según HP) y texto numérico.
+     * 
+     * @param g Contexto gráfico.
+     * @param x Coordenada X.
+     * @param y Coordenada Y.
+     */
     public void draw(Graphics g, int x, int y) {
 
-        // Dibujar el nombre
         if (name != null && !name.isEmpty()) {
             g.setColor(Color.WHITE);
             g.setFont(customFont);
@@ -92,11 +134,9 @@ public class BarraVida {
 
         int healthWidth = (int) ((currentHealth / (double) maxHealth) * width);
 
-        // Fondo
         g.setColor(Color.GRAY);
         g.fillRect(x, y, width, height);
 
-        // Color según porcentaje de vida
         double percent = (double) currentHealth / maxHealth;
         if (percent > 0.60) {
             g.setColor(Color.GREEN);
@@ -106,10 +146,8 @@ public class BarraVida {
             g.setColor(Color.RED);
         }
 
-        // Vida actual
         g.fillRect(x, y, healthWidth, height);
 
-        // Borde igualando el tamaño de trazo
         Graphics2D g2d = (Graphics2D) g;
         Stroke oldStroke = g2d.getStroke();
         g2d.setStroke(new BasicStroke(3));
@@ -117,7 +155,6 @@ public class BarraVida {
         g2d.drawRect(x, y, width, height);
         g2d.setStroke(oldStroke);
 
-        // Texto (e.g. 50/50)
         String textoVida = currentHealth + " / " + maxHealth;
         g.setColor(Color.BLACK);
         g.setFont(new Font("Monospaced", Font.BOLD, 14));

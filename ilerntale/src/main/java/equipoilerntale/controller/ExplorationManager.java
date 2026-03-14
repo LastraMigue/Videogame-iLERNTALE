@@ -49,8 +49,6 @@ public class ExplorationManager {
     private int animationFrameIndex = 0;
     private long lastAnimationTime = 0;
 
-    // Flag que protege la lógica de juego: solo true cuando EXPLORACION es la
-    // pantalla visible
     private boolean active = false;
 
     /**
@@ -66,11 +64,9 @@ public class ExplorationManager {
         this.player = new Player(GameSettings.MAP_WIDTH, GameSettings.MAP_HEIGHT);
         this.enemySystem = new EnemySystem();
 
-        // INICIALIZAR CACHÉ CON LA SALA INICIAL
         AbstractRoom startRoom = new RoomPasillo();
         roomCache.put(startRoom.getName(), startRoom);
 
-        // CARGAMOS LA SALA INICIAL POR DEFECTO AL CREAR EL MANAGER
         loadRoom(startRoom, Player.START_X, Player.START_Y);
     }
 
@@ -79,17 +75,14 @@ public class ExplorationManager {
      * DETIENE ENEMIGOS PREVIOS Y ESTABLECE LOS NUEVOS DATOS DEL MAPA.
      */
     public void loadRoom(AbstractRoom room, int playerStartX, int playerStartY) {
-        enemySystem.clear(); // Limpiar zombies
+        enemySystem.clear();
 
         this.currentRoom = room;
-        this.lastRoomName = room.getName(); // Registrar sala cargada
+        this.lastRoomName = room.getName();
 
-        // POSICIONAMOS AL JUGADOR EN LA ENTRADA
         this.player.setX(playerStartX);
         this.player.setY(playerStartY);
 
-        // Si la pantalla ya estaba activa, generar los nuevos zombies.
-        // Si no (estamos en intro o pausa), se generarán al hacer activate().
         if (active) {
             spawnZombies();
         }
@@ -102,23 +95,18 @@ public class ExplorationManager {
     public void activate() {
         if (!active) {
             active = true;
-            // Siempre limpiar teclas al volver a EXPLORACION, evita teclas atascadas
             if (inputHandler != null) {
                 inputHandler.reset();
             }
-            // Solo regeneramos si hemos cambiado de sala o si no hay enemigos
             String roomName = (currentRoom != null) ? currentRoom.getName() : null;
             if (roomName != null && !roomName.equals(lastRoomName)) {
                 enemySystem.clear();
                 spawnZombies();
                 lastRoomName = roomName;
             } else if (enemySystem.getZombies().isEmpty() && enemySystem.getBosses().isEmpty()) {
-                // Si la sala es la misma pero está vacía (ej: reload), spawnear
                 spawnZombies();
                 lastRoomName = (currentRoom != null) ? currentRoom.getName() : "";
             } else {
-                // Si la sala es la misma y hay enemigos (volvemos de un combate)
-                // Dispersamos a los enemigos cercanos para dar un respiro al jugador
                 enemySystem.disperseEnemiesFrom(player.getX(), player.getY(), 450);
             }
         }
@@ -147,7 +135,7 @@ public class ExplorationManager {
 
     public void update() {
         if (!active)
-            return; // Protección: no correr lógica si la pantalla no está activa
+            return;
         handlePlayerMovement();
         enemySystem.update(player.getX(), player.getY());
         updateAnimationFrame();
@@ -175,7 +163,6 @@ public class ExplorationManager {
             else if (dy != 0)
                 player.setDirection((dy < 0) ? Direction.UP : Direction.DOWN);
 
-            // COMPROBAR COLISIONES CON LOS MUROS DE LA SALA ACTUAL
             List<Rectangle> roomWalls = currentRoom.getWalls();
             player.moveIfNoCollision(dx, 0, roomWalls);
             player.moveIfNoCollision(0, dy, roomWalls);
@@ -336,8 +323,6 @@ public class ExplorationManager {
      * DESACTIVA LA EXPLORACIÓN Y ELIMINA LOS ZOMBIES.
      */
     public void cleanup() {
-        // IMPORTANTE: No llamar AssetService.dispose() aquí.
-        // Destruir el singleton borraría todos los sprites para futuros usos.
         deactivate();
         enemySystem.clear();
     }

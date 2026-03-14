@@ -7,15 +7,29 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import equipoilerntale.model.combat.ProjectileModel;
 
+/**
+ * Renderizador de proyectiles y balas en el sistema de combate.
+ */
 public class BulletRenderer {
+    /** Imagen utilizada para los ataques de enemigos. */
     private Image imagenMalo;
+    /** Imagen utilizada para los ataques del jugador. */
     private Image imagenBueno;
 
+    /**
+     * Constructor que carga las imágenes de los proyectiles desde los recursos.
+     */
     public BulletRenderer() {
         imagenMalo = cargar("/attack/malo.png");
         imagenBueno = cargar("/attack/bueno.png");
     }
 
+    /**
+     * Carga una imagen desde una ruta de recurso.
+     * 
+     * @param ruta Camino al archivo de imagen.
+     * @return El objeto Image cargado o null si falla.
+     */
     private Image cargar(String ruta) {
         try (InputStream is = getClass().getResourceAsStream(ruta)) {
             if (is != null) {
@@ -27,6 +41,13 @@ public class BulletRenderer {
         return null;
     }
 
+    /**
+     * Renderiza una lista de proyectiles en el contexto gráfico.
+     * Maneja diferentes tipos de renderizado según el tipo de bala (jugador, enemigo, obstáculos).
+     * 
+     * @param g2d   Contexto gráfico 2D.
+     * @param balas Lista de modelos de proyectiles a dibujar.
+     */
     public void render(Graphics2D g2d, List<ProjectileModel> balas) {
         if (balas == null)
             return;
@@ -36,7 +57,6 @@ public class BulletRenderer {
                 continue;
 
             if (bala.getType() == 99) {
-                // Bala del jugador (blanca circular)
                 g2d.setColor(new java.awt.Color(0, 255, 255));
                 g2d.fillOval(bala.getX(), bala.getY(), bala.getWidth(), bala.getHeight());
             } else if (bala.getType() == 10) {

@@ -4,9 +4,22 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.InputStream;
 
+/**
+ * Ventana emergente tipo "jumpscare" o aviso rápido que aparece sobre todas las demás.
+ * Utiliza {@link JWindow} para no tener bordes ni controles de ventana típicos.
+ */
 public class PopupScare extends JWindow {
+    /** Fuente personalizada compartida para todos los popups. */
     private static Font customFont;
 
+    /**
+     * Constructor del PopupScare.
+     * 
+     * @param x Coordenada X de aparición.
+     * @param y Coordenada Y de aparición.
+     * @param width Ancho de la ventana.
+     * @param height Alto de la ventana.
+     */
     public PopupScare(int x, int y, int width, int height) {
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.BLACK);
@@ -27,6 +40,9 @@ public class PopupScare extends JWindow {
         setAlwaysOnTop(true);
     }
 
+    /**
+     * Carga la fuente "Deltarune" si no ha sido cargada previamente.
+     */
     private void loadFont() {
         if (customFont == null) {
             try (InputStream is = getClass().getResourceAsStream("/font/deltarune.ttf")) {
@@ -39,6 +55,11 @@ public class PopupScare extends JWindow {
         }
     }
 
+    /**
+     * Muestra el popup durante un tiempo determinado y luego lo cierra automáticamente.
+     * 
+     * @param millis Tiempo en milisegundos que permanecerá visible.
+     */
     public void showFor(int millis) {
         setVisible(true);
         Timer timer = new Timer(millis, e -> {

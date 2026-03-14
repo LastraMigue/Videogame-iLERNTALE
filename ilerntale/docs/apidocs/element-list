@@ -1,0 +1,12 @@
+equipoilerntale
+equipoilerntale.controller
+equipoilerntale.model.combat
+equipoilerntale.model.combat.minigames
+equipoilerntale.model.combat.projectiles
+equipoilerntale.model.entity
+equipoilerntale.model.map
+equipoilerntale.service
+equipoilerntale.view
+equipoilerntale.view.render
+equipoilerntale.view.screens
+equipoilerntale.view.ui

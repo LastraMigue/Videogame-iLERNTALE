@@ -12,25 +12,36 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * SERVICIO UNIFICADO DE CARGA DE RECURSOS.
- * GESTIONA SPRITES, FONDOS Y CACHÉ MEDIANTE UN PATRÓN SINGLETON.
+ * Servicio centralizado para la carga y gestión de recursos visuales (imágenes y sprites).
+ * Implementa el patrón Singleton para asegurar un único punto de acceso a la caché de recursos.
  */
 public class AssetService {
+    /** Registrador de eventos para depuración y errores. */
     private static final Logger LOG = Logger.getLogger(AssetService.class.getName());
+    /** Instancia única del servicio. */
     private static AssetService instance;
 
+    /** Caché de imágenes individuales cargadas mediante ruta. */
     private final Map<String, Image> imageCache = new HashMap<>();
+    /** Caché de listas de frames (animaciones) de personajes. */
     private final Map<String, List<Image>> spriteCache = new HashMap<>();
+    /** Sprites por defecto generados dinámicamente en caso de error de carga. */
     private final Map<Direction, List<Image>> defaultSprites = new HashMap<>();
 
-    private int spriteSize = 48; // VALOR POR DEFECTO
+    /** Tamaño de referencia para el escalado de sprites. */
+    private int spriteSize = 48;
 
+    /**
+     * Constructor privado para cumplir con el patrón Singleton.
+     */
     private AssetService() {
         initializeDefaultSprites();
     }
 
     /**
-     * OBTIENE LA INSTANCIA ÚNICA DEL SERVICIO (PATRÓN SINGLETON).
+     * Obtiene la instancia única del servicio.
+     * 
+     * @return Instancia de {@link AssetService}.
      */
     public static AssetService getInstance() {
         if (instance == null) {
@@ -40,8 +51,9 @@ public class AssetService {
     }
 
     /**
-     * INICIALIZA EL SERVICIO CON UN TAMAÑO DE SPRITE ESPECÍFICO Y LIMPIA LA CACHÉ
-     * ACTUAL.
+     * Inicializa el servicio con un nuevo tamaño de sprite y limpia la caché.
+     * 
+     * @param size Nuevo tamaño de los sprites.
      */
     public void initialize(int size) {
         this.spriteSize = size;
@@ -49,6 +61,9 @@ public class AssetService {
         initializeDefaultSprites();
     }
 
+    /**
+     * Genera sprites de reserva (rectángulos de colores) para usar cuando los archivos no existen.
+     */
     private void initializeDefaultSprites() {
         Color[] colors = { Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.GRAY };
         Direction[] directions = { Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT, Direction.IDLE };
@@ -71,7 +86,11 @@ public class AssetService {
     }
 
     /**
-     * CARGA LOS SPRITES DE ANIMACIÓN DEL PERSONAJE PARA TODAS LAS DIRECCIONES.
+     * Carga todos los frames de un personaje específico desde el sistema de archivos.
+     * Los archivos deben seguir la convención: /{personaje}/{dirección}{número}{personaje}.png
+     * 
+     * @param characterName Nombre de la carpeta del personaje.
+     * @param size Tamaño al que se deben escalar los frames.
      */
     public void loadCharacterSprites(String characterName, int size) {
         String baseName = characterName.toLowerCase().trim();
@@ -82,8 +101,6 @@ public class AssetService {
             boolean foundExtraFrames = true;
 
             while (foundExtraFrames && frameIdx <= 10) {
-                // FORMATO REAL DEL ARCHIVO: {dirección}{nº}{personaje}.png
-                // Ejemplo: /player/migue/abajo1migue.png
                 String path = "/player/" + baseName + "/" + dir.getValue() + frameIdx + baseName + ".png";
                 LOG.info("  Probando ruta: '" + path + "'");
                 Image img = loadImage(path);
@@ -100,11 +117,8 @@ public class AssetService {
 
             String cacheKey = baseName + "_" + dir.name();
             if (frames.isEmpty()) {
-                // DEJAR LA CLAVE VACÍA: getCharacterSprite devolverá null, y PlayerRenderer
-                // usará su propio fallback de color sólido — más claro que un rectángulo
-                // generado
                 LOG.warning("NO SE ENCONTRARON FRAMES REALES PARA: " + cacheKey + ". El renderer usará fallback.");
-                spriteCache.put(cacheKey, new ArrayList<>()); // Lista vacía → sprite null → fallback visible
+                spriteCache.put(cacheKey, new ArrayList<>());
             } else {
                 LOG.info("Frames cargados para [" + cacheKey + "]: " + frames.size());
                 spriteCache.put(cacheKey, frames);
@@ -113,36 +127,45 @@ public class AssetService {
         LOG.info("======= FIN CARGA SPRITES =======");
     }
 
-    // ============ RECUPERACIÓN DE RECURSOS ============
-
     /**
-     * OBTIENE LOS FRAMES DE ANIMACIÓN PARA UN PERSONAJE Y DIRECCIÓN.
+     * Recupera la lista completa de frames para un personaje y dirección.
+     * 
+     * @param characterName Nombre del personaje.
+     * @param direction Dirección del movimiento.
+     * @return Lista de imágenes o los sprites por defecto si no se han cargado.
      */
     public List<Image> getCharacterFrames(String characterName, Direction direction) {
         String key = characterName.toLowerCase().trim() + "_" + direction.name();
-        // Solo devolver defaultSprites si la clave ni siquiera existe en caché
-        // Si existe pero está vacía (carga fallida) → devolver null para que el
-        // renderer use su fallback
         if (!spriteCache.containsKey(key)) {
-            return defaultSprites.get(direction); // Primera vez, antes de cargar
+            return defaultSprites.get(direction);
         }
         List<Image> cached = spriteCache.get(key);
         return cached.isEmpty() ? null : cached;
     }
 
     /**
-     * OBTIENE UN SPRITE ESPECÍFICO DEL PERSONAJE SEGÚN DIRECCIÓN Y FRAME.
+     * Obtiene un frame específico de la animación de un personaje.
+     * 
+     * @param characterName Nombre del personaje.
+     * @param direction Dirección deseada.
+     * @param frameIndex Índice del frame (se aplica módulo para rotación infinita).
+     * @return Imagen del frame o null si no hay recursos disponibles.
      */
     public Image getCharacterSprite(String characterName, Direction direction, int frameIndex) {
         List<Image> frames = getCharacterFrames(characterName, direction);
         if (frames == null || frames.isEmpty())
-            return null; // PlayerRenderer dibujará un rectángulo de fallback visible
-        int idx = frameIndex % frames.size(); // Índice circular seguro
+            return null;
+        int idx = frameIndex % frames.size();
         return frames.get(idx);
     }
 
     /**
-     * CARGADOR ESPECÍFICO PARA SPRITES DE ZOMBIE.
+     * Recupera un sprite de zombie con escalado automático.
+     * 
+     * @param type Tipo de zombie.
+     * @param direction Dirección actual.
+     * @param frameIndex Índice del frame de animación.
+     * @return Imagen escalada.
      */
     public Image getZombieSprite(int type, Direction direction, int frameIndex) {
         String cacheKey = String.format("zombie_%d_%s_%d", type, direction.name(), frameIndex);
@@ -166,7 +189,10 @@ public class AssetService {
     }
 
     /**
-     * CARGADOR ESPECÍFICO PARA SPRITES DE JEFES FINALES.
+     * Recupera el sprite del jefe final.
+     * 
+     * @param bossName Nombre del jefe.
+     * @return Imagen escalada a las dimensiones del jefe.
      */
     public Image getBossSprite(String bossName) {
         String cacheKey = "boss_" + bossName;
@@ -174,7 +200,6 @@ public class AssetService {
             return imageCache.get(cacheKey);
         }
 
-        // FORMATO: /boss/sergio/sergionormal.png
         String path = String.format("/boss/%s/%snormal.png", bossName.toLowerCase(), bossName.toLowerCase());
         Image img = loadImage(path);
 
@@ -190,8 +215,11 @@ public class AssetService {
     }
 
     /**
-     * CARGA UNA IMAGEN DESDE LA RUTA ESPECIFICADA.
-     * UTILIZA CACHÉ PARA EVITAR CARGAR LA MISMA IMAGEN VARIAS VECES.
+     * Carga una imagen de forma segura desde los recursos del classpath.
+     * Gestiona una caché interna para evitar lecturas de disco redundantes.
+     * 
+     * @param path Ruta absoluta interna al recurso.
+     * @return Objeto {@link Image} o null en caso de error.
      */
     public Image loadImage(String path) {
         if (imageCache.containsKey(path))
@@ -212,7 +240,12 @@ public class AssetService {
     }
 
     /**
-     * ESCALA UNA IMAGEN AL TAMAÑO ESPECIFICADO.
+     * Escala una imagen utilizando interpolación bilineal para mantener la calidad.
+     * 
+     * @param original Imagen de origen.
+     * @param targetWidth Ancho final.
+     * @param targetHeight Alto final.
+     * @return Nueva imagen reescalada.
      */
     public Image scaleImage(Image original, int targetWidth, int targetHeight) {
         if (original == null)
@@ -228,14 +261,17 @@ public class AssetService {
     }
 
     /**
-     * CARGA UNA IMAGEN DE FONDO DESDE LA RUTA ESPECIFICADA.
+     * Carga un fondo mediante {@link #loadImage(String)}.
+     * 
+     * @param path Ruta del fondo.
+     * @return Imagen del fondo.
      */
     public Image loadBackground(String path) {
         return loadImage(path);
     }
 
     /**
-     * LIMPIA LA CACHÉ DE IMÁGENES Y SPRITES.
+     * Limpia todas las cachés de imágenes y animaciones.
      */
     public void clearCache() {
         imageCache.clear();
@@ -243,8 +279,7 @@ public class AssetService {
     }
 
     /**
-     * LIBERA TODOS LOS RECURSOS DEL SERVICIO.
-     * ELIMINA LA INSTANCIA SINGLETON.
+     * Libera los recursos y elimina la instancia del Singleton.
      */
     public void dispose() {
         clearCache();

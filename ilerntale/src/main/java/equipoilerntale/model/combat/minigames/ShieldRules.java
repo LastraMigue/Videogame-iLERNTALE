@@ -11,13 +11,20 @@ import equipoilerntale.model.combat.MouseModel;
 import equipoilerntale.model.combat.ProjectileModel;
 import equipoilerntale.model.combat.projectiles.StraightProjectile;
 
+/**
+ * Implementación de las reglas para el minijuego de escudo.
+ * El jugador debe orientar un escudo para bloquear proyectiles que vienen desde los cuatro puntos cardinales hacia el centro.
+ */
 public class ShieldRules implements MinigameRules {
 
+    /** Contador de ticks para gestionar la generación de proyectiles. */
     private int tickCounter = 0;
+    /** Tipo del próximo proyectil (alterna entre 0 y 1). */
     private int nextType = 0;
+    /** Generador de números aleatorios. */
     private Random rand = new Random();
 
-    // 0: Arriba, 1: Derecha, 2: Abajo, 3: Izquierda
+    /** Dirección actual del escudo (0: Arriba, 1: Derecha, 2: Abajo, 3: Izquierda). */
     private int shieldDirection = 0;
 
     @Override
@@ -27,7 +34,6 @@ public class ShieldRules implements MinigameRules {
         nextType = 0;
         shieldDirection = 0;
 
-        // Centrar ratón
         MouseModel mouse = arena.getMouse();
         if (mouse != null) {
             mouse.setX(500 - (mouse.getAncho() / 2));
@@ -41,11 +47,9 @@ public class ShieldRules implements MinigameRules {
         if (mouse == null)
             return;
 
-        // Mantener al ratón en el centro siempre
         mouse.setX(500 - (mouse.getAncho() / 2));
         mouse.setY(365 - (mouse.getAlto() / 2));
 
-        // Cambiar dirección del escudo
         if (input.isUpPressed())
             shieldDirection = 0;
         else if (input.isRightPressed())
@@ -55,11 +59,9 @@ public class ShieldRules implements MinigameRules {
         else if (input.isLeftPressed())
             shieldDirection = 3;
 
-        // Proyectiles
         if (arena.getProjectiles() != null) {
             arena.updateProjectiles();
 
-            // Colisiones propias con el escudo
             Rectangle shieldBounds = getShieldBounds(mouse);
 
             for (int i = 0; i < arena.getProjectiles().size(); i++) {
@@ -67,29 +69,33 @@ public class ShieldRules implements MinigameRules {
                 if (!p.isActive())
                     continue;
 
-                // Si choca con el escudo, se destruye y no hace daño
                 if (shieldBounds.intersects(p.getBounds())) {
                     p.setActive(false);
                 }
             }
 
-            // Chequea ratón contra las balas que hayan sobrevivido al escudo
             arena.checkCollisions();
 
             tickCounter++;
-            if (tickCounter >= 40) { // Spawn rate
+            if (tickCounter >= 40) {
                 spawnShieldProjectile(arena);
                 tickCounter = 0;
             }
         }
     }
 
+    /**
+     * Calcula los límites de colisión del escudo según la dirección actual y la posición del ratón.
+     * 
+     * @param mouse Modelo del ratón (jugador).
+     * @return Rectángulo que representa el área del escudo.
+     */
     private Rectangle getShieldBounds(MouseModel mouse) {
         int x = mouse.getX();
         int y = mouse.getY();
         int w = mouse.getAncho();
         int h = mouse.getAlto();
-        int offset = 14; // Distancia del ratón al escudo
+        int offset = 14;
         int thickness = 6;
         int length = w + 20;
 
@@ -107,10 +113,14 @@ public class ShieldRules implements MinigameRules {
         }
     }
 
+    /**
+     * Genera un proyectil recto que se dirige hacia el centro desde un lado aleatorio.
+     * 
+     * @param arena Modelo donde añadir el proyectil.
+     */
     private void spawnShieldProjectile(ArenaModel arena) {
         int size = rand.nextInt(11) + 15;
         
-        // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
         int round = arena.getCurrentRound();
         double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
         int baseSpeed = rand.nextInt(2) + 2;
@@ -118,10 +128,12 @@ public class ShieldRules implements MinigameRules {
         int type = nextType;
         nextType = (nextType == 0) ? 1 : 0;
 
-        int side = rand.nextInt(4); // 0: Top, 1: Right, 2: Bottom, 3: Left
+        int side = rand.nextInt(4);
 
-        int spawnX = 0, spawnY = 0;
-        int dx = 0, dy = 0;
+        int spawnX = 0;
+        int spawnY = 0;
+        int dx = 0;
+        int dy = 0;
 
         switch (side) {
             case 0: // Desde arriba hacia abajo
@@ -144,6 +156,8 @@ public class ShieldRules implements MinigameRules {
                 spawnY = 365 - (size / 2);
                 dx = speed;
                 break;
+            default:
+                break;
         }
 
         arena.addProjectile(new StraightProjectile(spawnX, spawnY, size, dx, dy, type));
@@ -157,13 +171,11 @@ public class ShieldRules implements MinigameRules {
 
         Rectangle sb = getShieldBounds(mouse);
 
-        g2d.setColor(new Color(0, 255, 255)); // Celeste brillante para el escudo
+        g2d.setColor(new Color(0, 255, 255));
         if (shieldDirection == 0 || shieldDirection == 2) {
-            // Horizontal shield
             int arc = sb.height;
             g2d.fillRoundRect(sb.x, sb.y, sb.width, sb.height, arc, arc);
         } else {
-            // Vertical shield
             int arc = sb.width;
             g2d.fillRoundRect(sb.x, sb.y, sb.width, sb.height, arc, arc);
         }
@@ -176,7 +188,7 @@ public class ShieldRules implements MinigameRules {
 
     @Override
     public boolean isFinished(ArenaModel arena) {
-        return false; // Termina por tiempo
+        return false;
     }
 
     @Override

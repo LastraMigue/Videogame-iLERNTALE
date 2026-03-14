@@ -18,14 +18,25 @@ import equipoilerntale.model.combat.ProjectileModel;
 import equipoilerntale.model.combat.projectiles.PlayerBullet;
 import equipoilerntale.model.combat.projectiles.StraightProjectile;
 
+/**
+ * Implementación de las reglas para el minijuego de disparos (Shooter).
+ * El jugador controla el ratón en la parte inferior y puede disparar balas hacia arriba para destruir proyectiles enemigos.
+ */
 public class ShooterRules implements MinigameRules {
 
+    /** Contador de ticks para gestionar la generación de proyectiles. */
     private int tickCounter = 0;
+    /** Enfriamiento entre disparos del jugador. */
     private int shootCooldown = 0;
+    /** Generador de números aleatorios. */
     private Random rand = new Random();
+    /** Fuente personalizada para el texto de introducción. */
     private Font customFont;
+    /** Fuente de gran tamaño para mensajes destacados. */
     private Font giantFont;
+    /** Imagen de la tecla Enter para las instrucciones. */
     private Image enterBtnImage;
+    /** Tiempo de vida de la pantalla de introducción en ticks. */
     private int introTicks = 120;
 
     @Override
@@ -36,7 +47,7 @@ public class ShooterRules implements MinigameRules {
 
         MouseModel mouse = arena.getMouse();
         if (mouse != null) {
-            mouse.setY(490 - mouse.getAlto() - 5); // Pegado abajo
+            mouse.setY(490 - mouse.getAlto() - 5);
         }
 
         introTicks = 120;
@@ -47,10 +58,8 @@ public class ShooterRules implements MinigameRules {
                 enterBtnImage = new ImageIcon(imgUrl).getImage();
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
 
-        // Cargar fuente
         try {
             URL fontUrl = getClass().getResource("/font/deltarune.ttf");
             if (fontUrl != null) {
@@ -62,7 +71,6 @@ public class ShooterRules implements MinigameRules {
                 giantFont = new Font("Monospaced", Font.BOLD, 40);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             customFont = new Font("Monospaced", Font.BOLD, 24);
             giantFont = new Font("Monospaced", Font.BOLD, 40);
         }
@@ -78,7 +86,6 @@ public class ShooterRules implements MinigameRules {
             shootCooldown--;
         }
 
-        // Movimiento solo horizontal
         int dx = 0;
         if (input.isLeftPressed())
             dx = -1;
@@ -86,10 +93,9 @@ public class ShooterRules implements MinigameRules {
             dx = 1;
 
         if (dx != 0) {
-            arena.intentarMoverMouse(dx, 0); // dy=0
+            arena.intentarMoverMouse(dx, 0);
         }
 
-        // Mantener abajo
         mouse.setY(490 - mouse.getAlto() - 15);
 
         if (introTicks > 0) {
@@ -97,21 +103,16 @@ public class ShooterRules implements MinigameRules {
             return;
         }
 
-        // Disparar
         if (input.isEnterPressed() && shootCooldown == 0) {
-            // Bala del jugador (tipo 99)
             arena.addProjectile(new PlayerBullet(mouse.getX() + (mouse.getAncho() / 2) - 5, mouse.getY() - 10, 10, 10));
             shootCooldown = 15;
         }
 
-        // Projectiles
         if (arena.getProjectiles() != null) {
             arena.updateProjectiles();
 
-            // Chequeamos colisión entre balas del jugador y proyectiles enemigos
             checkBulletVsBullet(arena);
 
-            // Check boundaries for despawning
             for (ProjectileModel p : arena.getProjectiles()) {
                 if (!p.isActive())
                     continue;
@@ -120,7 +121,6 @@ public class ShooterRules implements MinigameRules {
                     if (p.getY() <= 240)
                         p.setActive(false);
                 } else {
-                    // Si sale por los lados
                     if (p.getX() < 180 || p.getX() > 820) {
                         p.setActive(false);
                     }
@@ -128,13 +128,18 @@ public class ShooterRules implements MinigameRules {
             }
 
             tickCounter++;
-            if (tickCounter >= 35) { // Spawn más frecuente
+            if (tickCounter >= 35) {
                 spawnHorizontalProjectile(arena);
                 tickCounter = 0;
             }
         }
     }
 
+    /**
+     * Verifica colisiones entre las balas del jugador (tipo 99) y los proyectiles enemigos.
+     * 
+     * @param arena Modelo donde se encuentran los proyectiles.
+     */
     private void checkBulletVsBullet(ArenaModel arena) {
         List<ProjectileModel> projectiles = arena.getProjectiles();
         for (int i = 0; i < projectiles.size(); i++) {
@@ -153,10 +158,9 @@ public class ShooterRules implements MinigameRules {
                     p1.setActive(false);
                     p2.setActive(false);
 
-                    // Lógica de impacto según tipo
-                    if (p2.getType() == 1) { // PUÑO VERDE -> Daño a enemigo
+                    if (p2.getType() == 1) {
                         arena.addGoodCollision();
-                    } else { // CALAVERA ROJA -> Daño a jugador
+                    } else {
                         arena.addBadCollision();
                     }
                     break;
@@ -165,26 +169,32 @@ public class ShooterRules implements MinigameRules {
         }
     }
 
+    /**
+     * Genera un proyectil horizontal que se mueve por uno de los dos carriles disponibles.
+     * 
+     * @param arena Modelo donde añadir el proyectil.
+     */
     private void spawnHorizontalProjectile(ArenaModel arena) {
-        int size = 30; // Tamaño fijo para mejor visibilidad
+        int size = 30;
 
-        // Escalado dinámico por ronda (Limitado al 200% de la velocidad base)
         int round = arena.getCurrentRound();
         double multiplier = Math.min(2.0, 1.0 + (round - 1) * 0.1);
         int baseSpeed = rand.nextInt(2) + 4;
         int speed = (int) (baseSpeed * multiplier);
-        int type = rand.nextInt(2); // 0 malas, 1 buenas
+        int type = rand.nextInt(2);
 
         boolean fromLeft = rand.nextBoolean();
-        int spawnX, spawnY, dx;
+        int spawnX;
+        int spawnY;
+        int dx;
 
         if (fromLeft) {
             spawnX = 185;
-            spawnY = 270; // Carril superior
+            spawnY = 270;
             dx = speed;
         } else {
             spawnX = 815 - size;
-            spawnY = 350; // Carril inferior
+            spawnY = 350;
             dx = -speed;
         }
 
@@ -215,10 +225,6 @@ public class ShooterRules implements MinigameRules {
                     g2d.drawImage(enterBtnImage, startX + w1, y - 35, imgW, imgH, null);
                 }
                 g2d.drawString(msg2, startX + w1 + imgW, y);
-            }
-        } else {
-            if (customFont != null) {
-                // If you want any text during the minigame, can be placed here
             }
         }
     }

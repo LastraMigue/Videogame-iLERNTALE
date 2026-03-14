@@ -16,12 +16,24 @@ import javafx.scene.media.MediaView;
 
 import equipoilerntale.view.MainFrame;
 
+/**
+ * Pantalla que reproduce el vídeo de transformación del jefe a su fase 2.
+ * Utiliza JavaFX para la reproducción multimedia dentro de un entorno Swing.
+ */
 public class TransformacionVideoScreen extends JPanel {
 
+    /** Referencia al marco principal para activar la fase 2 tras el vídeo. */
     private MainFrame mainFrame;
+    /** Panel puente para integrar contenido de JavaFX en Swing. */
     private JFXPanel jfxPanel;
+    /** Reproductor de medios para el vídeo de transformación. */
     private MediaPlayer mediaPlayer;
 
+    /**
+     * Constructor de la pantalla de vídeo de transformación.
+     * 
+     * @param frame Referencia al marco principal.
+     */
     public TransformacionVideoScreen(MainFrame frame) {
         this.mainFrame = frame;
 
@@ -34,6 +46,10 @@ public class TransformacionVideoScreen extends JPanel {
         Platform.setImplicitExit(false);
     }
 
+    /**
+     * Inicia la reproducción del vídeo de transformación en el hilo de JavaFX.
+     * Configura la finalización para disparar la lógica de la Fase 2 del jefe.
+     */
     public void playVideo() {
         Platform.runLater(() -> {
             try {
@@ -42,7 +58,6 @@ public class TransformacionVideoScreen extends JPanel {
                     mediaPlayer.dispose();
                 }
 
-                // Ruta del video (JAR compatible)
                 java.net.URL resource = getClass().getResource("/vid/transformacion.mp4");
                 if (resource == null) {
                     throw new java.io.FileNotFoundException("No se encontró el video de transformación en resources");

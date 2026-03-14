@@ -6,9 +6,16 @@ import java.io.InputStream;
 import javax.imageio.ImageIO;
 import equipoilerntale.model.combat.MouseModel;
 
+/**
+ * Renderizador del ratón (jugador en modo combate).
+ */
 public class MouseRenderer {
+    /** Imagen visual del ratón. */
     private Image imagenMouse;
 
+    /**
+     * Constructor que carga la imagen del ratón desde los recursos.
+     */
     public MouseRenderer() {
         try (InputStream is = getClass().getResourceAsStream("/attack/raton.png")) {
             if (is != null) {
@@ -21,9 +28,16 @@ public class MouseRenderer {
         }
     }
 
+    /**
+     * Dibuja el ratón en la posición indicada.
+     * Implementa un efecto de parpadeo si el ratón ha recibido daño recientemente.
+     * 
+     * @param g2d              Contexto gráfico 2D.
+     * @param raton            Modelo del ratón con su posición y dimensiones.
+     * @param standsForDamage Indica si el ratón está en periodo de invulnerabilidad tras recibir daño.
+     */
     public void render(Graphics2D g2d, MouseModel raton, boolean standsForDamage) {
         if (raton != null && imagenMouse != null) {
-            // Si está en modo daño, parpadea (visible 100ms, invisible 100ms)
             if (standsForDamage && (System.currentTimeMillis() % 200 < 100)) {
                 return;
             }

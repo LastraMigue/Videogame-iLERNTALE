@@ -5,12 +5,15 @@ import equipoilerntale.model.entity.Zombie;
 import equipoilerntale.service.AssetService;
 
 /**
- * ESPECIALISTA EN RENDERIZAR ZOMBIES.
+ * Especialista en renderizar enemigos tipo Zombie en el mapa.
  */
 public class ZombieRenderer {
     /**
-     * DIBUJA AL ZOMBIE EN EL CONTEXTO ESPECIFICADO.
-     * SOLO DIBUJA SI EL ZOMBIE ESTÁ VIVO.
+     * Dibuja un zombie en el contexto de renderizado utilizando su sprite animado correspondiente.
+     * Solo realiza el dibujado si el zombie está vivo.
+     * 
+     * @param ctx    Contexto de renderizado.
+     * @param zombie Instancia del zombie a dibujar.
      */
     public void drawZombie(RenderContext ctx, Zombie zombie) {
         if (!zombie.isAlive())
@@ -21,6 +24,5 @@ public class ZombieRenderer {
         if (sprite != null) {
             g2d.drawImage(sprite, zombie.getX(), zombie.getY(), zombie.getSize(), zombie.getSize(), null);
         }
-        // drawHealthBar(ctx, zombie); // Eliminado a petición para que no se vea en el mapa
     }
 }

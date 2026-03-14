@@ -5,96 +5,122 @@ import java.util.List;
 import equipoilerntale.GameSettings;
 
 /**
- * IMPLEMENTACIÓN CONCRETA DE UN ENEMIGO ZOMBIE.
+ * Implementación concreta de un enemigo Zombie.
+ * Gestiona comportamientos de detección, persecución y separación de grupo.
  */
 public class Zombie extends Entity {
 
+    /** Salud actual. */
     private int health;
+    /** Salud máxima asignada aleatoriamente al aparecer. */
     private int maxHealth;
+    /** Indica si el zombie sigue activo. */
     private boolean isAlive;
-    private final int type; // 1-8
+    /** Identificador de tipo visual (1-8). */
+    private final int type;
+    /** Índice actual para la animación de caminata. */
     private int frameIndex = 1;
+    /** Marca de tiempo del último cambio de frame. */
     private long lastAnimationTime = 0;
 
+    /** Velocidad personalizada para variar entre individuos. */
     private double customSpeed;
+    /** Grado de precisión al girar hacia el jugador. */
     private double trackingPrecision;
+    /** Distancia a la que el zombie se activa ante el jugador. */
     private int detectionRadius;
+    /** Estado que indica si ha detectado al jugador al menos una vez. */
     private boolean hasDetectedPlayer = false;
 
+    /** Tamaño base de los zombies. */
     public static final int SIZE = GameSettings.ZOMBIE_TAMANO;
+    /** Velocidad base de los zombies. */
     public static final int SPEED = GameSettings.ZOMBIE_VELOCIDAD;
+    /** Salud base de los zombies. */
     public static final int MAX_HEALTH = GameSettings.ZOMBIE_SALUD;
+    /** Daño causado por contacto. */
     public static final int DAMAGE = GameSettings.ZOMBIE_DANO;
 
     /**
-     * CONSTRUCTOR DEL ZOMBIE CON POSICIÓN ESPECIFICADA.
-     * ASIGNA UN TIPO ALEATORIO (1-8) Y ESTABLECE SALUD MÁXIMA.
+     * Constructor del zombie con posición especificada.
+     * Genera atributos aleatorios para dar variedad al comportamiento de la horda.
+     * 
+     * @param x Posición X inicial.
+     * @param y Posición Y inicial.
+     * @param mapWidth Límite horizontal del mapa.
+     * @param mapHeight Límite vertical del mapa.
      */
     public Zombie(int x, int y, int mapWidth, int mapHeight) {
         super(x, y, SIZE, "Zombie", mapWidth, mapHeight);
-        // Salud aleatoria entre 25 y 50 para cada Zombie
         this.health = 25 + (int) (Math.random() * 26);
         this.maxHealth = this.health;
         this.isAlive = true;
         this.type = (int) (Math.random() * 8) + 1;
         this.direction = Direction.DOWN;
 
-        // ALEATORIEDAD DE ATRIBUTOS
-        // Velocidad: SPEED +/- 1.5
         this.customSpeed = SPEED + (Math.random() * 3.0 - 1.5);
-        // Seguimiento: 0.7 a 1.0 (cuánto de su vector va al jugador vs inercia/error)
         this.trackingPrecision = 0.7 + (Math.random() * 0.3);
-        // Radio de detección: GameSettings.ZOMBIE_DETECTION_RADIUS +/- 150px
         this.detectionRadius = GameSettings.ZOMBIE_DETECTION_RADIUS + (int) (Math.random() * 300 - 150);
     }
 
-    // ============ ESTADO Y ATRIBUTOS ============
-
     /**
-     * OBTIENE LA SALUD ACTUAL DEL ZOMBIE.
+     * Obtiene la salud actual del zombie.
+     * 
+     * @return Puntos de salud restantes.
      */
     public int getHealth() {
         return health;
     }
 
     /**
-     * OBTIENE LA SALUD MÁXIMA ESPECÍFICA DE ESTE ZOMBIE.
+     * Obtiene la salud máxima con la que apareció el zombie.
+     * 
+     * @return Salud máxima individual.
      */
     public int getMaxHealth() {
         return maxHealth;
     }
 
     /**
-     * INDICA SI EL ZOMBIE ESTÁ VIVO.
+     * Indica si el zombie está vivo.
+     * 
+     * @return true si tiene salud.
      */
     public boolean isAlive() {
         return isAlive;
     }
 
     /**
-     * OBTIENE EL TIPO DE ZOMBIE (1-8).
+     * Obtiene el tipo visual del zombie.
+     * 
+     * @return Entero entre 1 y 8.
      */
     public int getType() {
         return type;
     }
 
     /**
-     * OBTIENE EL ÍNDICE DE ANIMACIÓN ACTUAL.
+     * Obtiene el índice de frame para la animación actual.
+     * 
+     * @return 1 o 2.
      */
     public int getFrameIndex() {
         return frameIndex;
     }
 
     /**
-     * ESTABLECE SI EL ZOMBIE HA DETECTADO AL JUGADOR.
+     * Establece manualmente si el zombie ha detectado al jugador.
+     * 
+     * @param detected true para forzar detección.
      */
     public void setDetectedPlayer(boolean detected) {
         this.hasDetectedPlayer = detected;
     }
 
     /**
-     * REDUCE LA SALUD DEL ZOMBIE POR EL MONTO ESPECIFICADO.
-     * SI LA SALUD LLEGA A CERO, EL ZOMBIE MUERE.
+     * Aplica daño al zombie y actualiza su estado vital.
+     * 
+     * @param amount Cantidad de daño.
      */
     public void takeDamage(int amount) {
         this.health -= amount;
@@ -105,18 +131,23 @@ public class Zombie extends Entity {
     }
 
     /**
-     * ACTUALIZA LA ANIMACIÓN DE LOS FRAMES DEL ZOMBIE.
+     * Cicla los frames de animación basándose en el tiempo transcurrido.
      */
     public void updateAnimation() {
         long now = System.currentTimeMillis();
-        if (now - lastAnimationTime > 200) { // CAMBIO CADA 200MS
+        if (now - lastAnimationTime > 200) {
             frameIndex = (frameIndex == 1) ? 2 : 1;
             lastAnimationTime = now;
         }
     }
 
     /**
-     * ACTUALIZA EL MOVIMIENTO HACIA EL JUGADOR CON SEPARACIÓN DE VECINOS.
+     * Gestiona el movimiento del zombie hacia un objetivo, considerando obstáculos y otros zombies.
+     * 
+     * @param targetX Coordenada X del objetivo (jugador).
+     * @param targetY Coordenada Y del objetivo (jugador).
+     * @param walls Lista de colisiones del mapa.
+     * @param allZombies Lista de todos los zombies para la fuerza de separación.
      */
     public void updateMovement(int targetX, int targetY, List<Rectangle> walls, List<? extends Object> allZombies) {
         if (!isAlive)
@@ -126,7 +157,6 @@ public class Zombie extends Entity {
         double diffY = targetY - this.y;
         double distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
-        // Detección del jugador
         if (!hasDetectedPlayer && distance < detectionRadius) {
             hasDetectedPlayer = true;
         }
@@ -143,21 +173,26 @@ public class Zombie extends Entity {
         }
     }
 
+    /**
+     * Calcula el vector de movimiento resultante combinando persecución y separación.
+     * 
+     * @param diffX Diferencia en X al objetivo.
+     * @param diffY Diferencia en Y al objetivo.
+     * @param distance Distancia al objetivo.
+     * @param allZombies Lista de zombies cercanos.
+     * @return Array con las componentes [dx, dy] del movimiento.
+     */
     private double[] calculateMoveVector(double diffX, double diffY, double distance,
             List<? extends Object> allZombies) {
-        // Vector base con wobble (zig-zag)
-
         double targetDx = (diffX / distance) * trackingPrecision + (Math.random() * 0.4 - 0.2);
         double targetDy = (diffY / distance) * trackingPrecision + (Math.random() * 0.4 - 0.2);
 
-        // Re-normalizar y aplicar velocidad
         double finalDist = Math.sqrt(targetDx * targetDx + targetDy * targetDy);
         double dx = (targetDx / finalDist) * customSpeed;
         double dy = (targetDy / finalDist) * customSpeed;
 
-        // Fuerza de separación
         double[] separation = calculateSeparation(allZombies);
-        if (separation[2] > 0) { // neighborCount
+        if (separation[2] > 0) {
             dx = dx * 0.7 + separation[0] * customSpeed * 0.3;
             dy = dy * 0.7 + separation[1] * customSpeed * 0.3;
         }
@@ -165,6 +200,12 @@ public class Zombie extends Entity {
         return new double[] { dx, dy };
     }
 
+    /**
+     * Calcula una fuerza de separación para evitar que los zombies se amontonen excesivamente.
+     * 
+     * @param allZombies Lista de posibles vecinos.
+     * @return Array con [sepX, sepY, neighborCount].
+     */
     private double[] calculateSeparation(List<? extends Object> allZombies) {
         double sepX = 0, sepY = 0;
         int neighborCount = 0;
@@ -193,6 +234,12 @@ public class Zombie extends Entity {
         return new double[] { sepX, sepY, neighborCount };
     }
 
+    /**
+     * Actualiza la dirección visual del sprite basada en el movimiento predominante.
+     * 
+     * @param dx Movimiento en X.
+     * @param dy Movimiento en Y.
+     */
     private void updateSpriteDirection(double dx, double dy) {
         if (Math.abs(dx) > Math.abs(dy)) {
             this.direction = (dx > 0) ? Direction.RIGHT : Direction.LEFT;
@@ -202,24 +249,24 @@ public class Zombie extends Entity {
     }
 
     /**
-     * Sobrecarga sin lista de vecinos (retrocompatibilidad).
+     * Variante de actualización de movimiento para compatibilidad o simplificación.
      */
     public void updateMovement(int targetX, int targetY, List<Rectangle> walls) {
         updateMovement(targetX, targetY, walls, List.of());
     }
 
     /**
-     * SOBRESCRIBE EL HITBOX PARA REDUCIRLO A LOS "PIES" DEL ZOMBIE.
+     * Obtiene el hitbox ajustado a los pies del zombie.
+     * 
+     * @param currentX Posición X.
+     * @param currentY Posición Y.
+     * @return Rectángulo de hitbox.
      */
     @Override
     public Rectangle getHitbox(int currentX, int currentY) {
-        // Reducimos el ancho a aproximadamente el 60%
         int hitboxWidth = (int) (SIZE * 0.6);
-        // Reducimos el alto, colocando el hitbox solo en el tercio inferior del sprite
         int hitboxHeight = (int) (SIZE * 0.35);
-        // Centramos horizontalmente
         int hitboxX = currentX + (SIZE - hitboxWidth) / 2;
-        // Colocamos en la parte inferior
         int hitboxY = currentY + SIZE - hitboxHeight;
 
         return new Rectangle(hitboxX, hitboxY, hitboxWidth, hitboxHeight);

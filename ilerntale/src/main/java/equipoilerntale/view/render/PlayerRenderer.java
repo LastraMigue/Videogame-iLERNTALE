@@ -4,13 +4,17 @@ import java.awt.*;
 import equipoilerntale.model.entity.Player;
 
 /**
- * ESPECIALISTA EN RENDERIZAR AL JUGADOR.
- * SI EL SPRITE ES NULL (FALLO DE CARGA), DIBUJA UN INDICADOR DE DEBUG VISIBLE.
+ * Especialista en renderizar al jugador en el mapa de exploración.
+ * Incluye lógica de fallback en caso de que no se carguen correctamente los sprites.
  */
 public class PlayerRenderer {
     /**
-     * DIBUJA AL JUGADOR EN EL CONTEXTO ESPECIFICADO.
-     * USA SPRITE O FALLBACK DE DEBUG SI NO HAY SPRITE.
+     * Dibuja al jugador en el contexto especificado utilizando su sprite actual.
+     * Si el sprite es nulo, dibuja una representación geométrica de depuración.
+     * 
+     * @param ctx    Contexto de renderizado.
+     * @param sprite Imagen del sprite a dibujar.
+     * @param player Instancia del jugador para obtener posición y tamaño.
      */
     public void drawPlayer(RenderContext ctx, Image sprite, Player player) {
         Graphics2D g = ctx.getGraphics();
@@ -19,8 +23,7 @@ public class PlayerRenderer {
         int size = player.getSize();
 
         if (sprite == null) {
-            // FALLBACK DE DEBUG: rectángulo magenta con borde y letra "P"
-            g.setColor(new Color(180, 0, 180)); // Magenta oscuro
+            g.setColor(new Color(180, 0, 180));
             g.fillRect(x, y, size, size);
             g.setColor(Color.WHITE);
             g.drawRect(x, y, size - 1, size - 1);

@@ -12,14 +12,33 @@ import javax.swing.JPanel;
 
 import equipoilerntale.view.MainFrame;
 
+/**
+ * Pantalla que se muestra cuando el jugador es derrotado.
+ * Presenta una imagen de fondo y un botón para salir al menú principal.
+ */
 public class DerrotaScreen extends JPanel {
+    /** Referencia al marco principal para gestionar el cambio de pantallas. */
     private MainFrame mainFrame;
+    /** Imagen de fondo de la pantalla de derrota. */
     private Image backgroundImage;
+    /** Botón para salir y volver al menú principal. */
     private JButton btnSalir;
 
+    /**
+     * Constructor de la pantalla de derrota.
+     * Configura el diseño, carga los recursos visuales e inicializa el botón de salida.
+     * 
+     * @param frame Referencia al MainFrame.
+     */
+    /**
+     * Constructor de la pantalla de derrota.
+     * Configura el diseño, carga los recursos visuales e inicializa el botón de salida.
+     * 
+     * @param frame Referencia al MainFrame.
+     */
     public DerrotaScreen(MainFrame frame) {
         this.mainFrame = frame;
-        setLayout(null); // Absolute positioning
+        setLayout(null);
 
         try (InputStream is = getClass().getResourceAsStream("/title/derrota.jpg")) {
             if (is != null) {
@@ -39,9 +58,6 @@ public class DerrotaScreen extends JPanel {
                 btnSalir.setFocusPainted(false);
                 btnSalir.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
 
-                // Posicionar el boton justo debajo del centro o donde se requiera
-                // The user said "justo debajo" which means in the lower part of the screen
-                // Standard resolution is 1000x600 based on MainFrame
                 btnSalir.setBounds(500 - (300 / 2), 400, 300, 100);
 
                 btnSalir.addActionListener(new ActionListener() {
@@ -59,11 +75,15 @@ public class DerrotaScreen extends JPanel {
         }
     }
 
+    /**
+     * Dibuja los componentes visuales del panel, incluyendo la imagen de fondo.
+     * 
+     * @param g El contexto gráfico para realizar el dibujo.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (backgroundImage != null) {
-            // Draw background image scaled to the panel size
             g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
         }
     }

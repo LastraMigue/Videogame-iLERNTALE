@@ -3,15 +3,25 @@ package equipoilerntale.view.render;
 import java.awt.Graphics2D;
 
 /**
- * CONTEXTO ENCAPSULADO PARA EL RENDERIZADO.
+ * Contexto que encapsula los elementos necesarios para el renderizado coordinado.
+ * Almacena el objeto gráfico y la posición de la cámara (desplazamiento).
  */
 public class RenderContext {
+    /** Contexto gráfico principal donde se realizan los dibujos. */
     private final Graphics2D g2d;
+    /** Desplazamiento horizontal de la cámara. */
     private final int cameraX;
+    /** Desplazamiento vertical de la cámara. */
     private final int cameraY;
 
     /**
-     * CONSTRUCTOR DEL CONTEXTO DE RENDERIZADO.
+     * Crea un nuevo contexto de renderizado con una cámara definida.
+     * 
+     * @param g2d          Objeto Graphics2D.
+     * @param screenWidth  Ancho de la pantalla.
+     * @param screenHeight Alto de la pantalla.
+     * @param cameraX      Posición X de desplazamiento de cámara.
+     * @param cameraY      Posición Y de desplazamiento de cámara.
      */
     public RenderContext(Graphics2D g2d, int screenWidth, int screenHeight, int cameraX, int cameraY) {
         this.g2d = g2d;
@@ -20,35 +30,36 @@ public class RenderContext {
     }
 
     /**
-     * OBTIENE EL CONTEXTO GRÁFICO 2D.
+     * @return El contexto gráfico Graphics2D.
      */
     public Graphics2D getGraphics() {
         return g2d;
     }
 
     /**
-     * OBTIENE LA POSICIÓN X DE LA CÁMARA.
+     * @return Desplazamiento X de la cámara.
      */
     public int getCameraX() {
         return cameraX;
     }
 
     /**
-     * OBTIENE LA POSICIÓN Y DE LA CÁMARA.
+     * @return Desplazamiento Y de la cámara.
      */
     public int getCameraY() {
         return cameraY;
     }
 
     /**
-     * APLICA LA TRANSFORMACIÓN DE CÁMARA AL CONTEXTO GRÁFICO.
+     * Aplica la traslación negativa de la cámara al contexto gráfico.
+     * Esto hace que los objetos dibujados después se muevan acorde al desplazamiento de la cámara.
      */
     public void translateCamera() {
         g2d.translate(-cameraX, -cameraY);
     }
 
     /**
-     * RESTAURA LA TRANSFORMACIÓN DE CÁMARA AL CONTEXTO GRÁFICO.
+     * Restaura la traslación de la cámara (vuelve al origen).
      */
     public void restoreCamera() {
         g2d.translate(cameraX, cameraY);

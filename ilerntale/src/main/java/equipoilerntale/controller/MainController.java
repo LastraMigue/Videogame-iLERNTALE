@@ -5,42 +5,45 @@ import equipoilerntale.view.screens.CombatPanel;
 import javax.swing.JPanel;
 
 /**
- * CONTROLADOR PRINCIPAL DEL JUEGO.
- * GESTIONA EL HILO DEL JUEGO Y LA ACTUALIZACIÓN DE LOS CONTROLADORES
- * ESPECÍFICOS.
+ * Controlador principal del juego.
+ * Gestiona el hilo principal del juego (Game Loop) y la actualización de los controladores específicos.
  */
 public class MainController implements Runnable {
 
+    /** Marco principal de la aplicación. */
     private MainFrame mainFrame;
+    /** Hilo de ejecución del juego. */
     private Thread gameThread;
+    /** Indica si el bucle principal del juego está en funcionamiento. */
     private boolean running;
+    /** Fotogramas por segundo (FPS) del bucle de juego. */
     private final int FPS = 60;
 
-    // CONTROLADORES DE FASES DEL JUEGO
+    /** Gestor de la fase de exploración. */
     private ExplorationManager explorationManager;
 
     /**
-     * CONSTRUCTOR DEL CONTROLADOR PRINCIPAL.
-     * INICIALIZA LOS CONTROLADORES ESPECÍFICOS SEGÚN EL PERSONAJE SELECCIONADO.
+     * Constructor del controlador principal.
+     * 
+     * @param mainFrame Referencia al marco principal de la interfaz.
+     * @param personaje Identificador del personaje seleccionado.
      */
     public MainController(MainFrame mainFrame, String personaje) {
         this.mainFrame = mainFrame;
-        // NOTA: NO llamar initialize() aquí — borraría los sprites cargados por
-        // ExplorationManager
         inicializarControladores(personaje);
     }
 
     /**
-     * INICIALIZA LOS CONTROLADORES ESPECÍFICOS DEL JUEGO.
-     * CREA EL EXPLORATIONMANAGER CON EL PERSONAJE SELECCIONADO.
+     * Inicializa los controladores específicos del juego.
+     * 
+     * @param personaje Nombre del personaje para configurar sus recursos.
      */
     private void inicializarControladores(String personaje) {
-        // INICIALIZAR EXPLORATIONMANAGER CON EL PERSONAJE SELECCIONADO
         explorationManager = new ExplorationManager(mainFrame, personaje);
     }
 
     /**
-     * INICIA EL HILO DE EJECUCIÓN DEL JUEGO.
+     * Inicia el hilo de ejecución del juego si no está ya corriendo.
      */
     public void startGameThread() {
         running = true;
@@ -49,7 +52,7 @@ public class MainController implements Runnable {
     }
 
     /**
-     * DETIENE EL HILO DE EJECUCIÓN DEL JUEGO.
+     * Detiene el hilo de ejecución del juego de forma segura.
      */
     public void stopGameThread() {
         running = false;
@@ -58,10 +61,13 @@ public class MainController implements Runnable {
                 gameThread.join();
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
     }
 
+    /**
+     * Bucle principal del juego que controla la tasa de actualización mediante el uso de delta-timing.
+     */
     @Override
     public void run() {
         double drawInterval = 1000000000.0 / FPS;
@@ -81,56 +87,55 @@ public class MainController implements Runnable {
         }
     }
 
-    // Enum para los estados Jugando o en Pausa
+    /**
+     * Enumeración de los posibles estados lógicos del juego.
+     */
     public enum GameState {
+        /** El juego se está ejecutando normalmente. */
         PLAYING,
+        /** El juego está pausado, la lógica no se actualiza. */
         PAUSED
     }
 
-    // Estado en pausa
+    /** Estado actual del juego. */
     private GameState state = GameState.PLAYING;
 
     /**
-     * ACTUALIZA LA LÓGICA DE JUEGO SEGÚN EL ESTADO ACTUAL Y LA PANTALLA VISIBLE.
-     * ESTE MÉTODO ES LLAMADO DESDE EL HILO DEL JUEGO A UN RITMO DE 60 FPS.
+     * Actualiza la lógica de juego según el estado actual y la pantalla visible.
+     * Se ejecuta periódicamente según la tasa de FPS.
      */
     private void update() {
-        // SI EL JUEGO ESTÁ EN PAUSA, NO SE ACTUALIZA NADA (EL TIEMPO SE DETIENE)
         if (state == GameState.PAUSED) {
             return;
         }
 
         JPanel panelActual = mainFrame.getPanelActual();
 
-        // 1. ACTUALIZAR LÓGICA DE COMBATE (SI CORRESPONDE)
         if (panelActual instanceof CombatPanel) {
             ((CombatPanel) panelActual).updateCombat();
         }
 
-        // 2. ACTUALIZAR LÓGICA DE EXPLORACIÓN
-        // (ExplorationManager ya filtra internamente si debe correr o no mediante su
-        // flag 'active')
         if (explorationManager != null) {
             explorationManager.update();
         }
     }
 
     /**
-     * PAUSA LA EJECUCIÓN DE LA LÓGICA DEL JUEGO.
+     * Establece el estado del juego como pausado.
      */
     public void pauseGame() {
         state = GameState.PAUSED;
     }
 
     /**
-     * REANUDA LA EJECUCIÓN DE LA LÓGICA DEL JUEGO.
+     * Establece el estado del juego como en ejecución.
      */
     public void resumeGame() {
         state = GameState.PLAYING;
     }
 
     /**
-     * CAMBIA ENTRE EL ESTADO DE PAUSA Y EL DE JUEGO.
+     * Alterna entre el estado de pausa y ejecución.
      */
     public void togglePause() {
         if (state == GameState.PLAYING) {
@@ -140,30 +145,35 @@ public class MainController implements Runnable {
         }
     }
 
+    /**
+     * Obtiene el estado actual del juego.
+     * 
+     * @return El GameState actual.
+     */
     public GameState getGameState() {
         return state;
     }
 
-    // ============ GETTERS ============
-
     /**
-     * OBTIENE EL GESTOR DE EXPLORACIÓN ACTUAL.
+     * Obtiene el gestor de exploración activo.
+     * 
+     * @return Instancia de ExplorationManager.
      */
     public ExplorationManager getExplorationManager() {
         return explorationManager;
     }
 
     /**
-     * INDICA SI EL HILO DEL JUEGO ESTÁ EN EJECUCIÓN.
+     * Indica si el hilo del juego está activo.
+     * 
+     * @return true si el bucle principal está corriendo.
      */
     public boolean isRunning() {
         return running;
     }
 
-    // ============ CICLO DE VIDA ============
-
     /**
-     * LIBERA LOS RECURSOS DEL CONTROLADOR.
+     * Detiene el hilo y limpia los recursos de los gestores dependientes.
      */
     public void dispose() {
         stopGameThread();

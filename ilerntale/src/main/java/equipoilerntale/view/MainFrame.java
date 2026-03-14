@@ -31,56 +31,92 @@ import equipoilerntale.view.ui.CajaTexto;
 import equipoilerntale.view.ui.BarraVida;
 
 /**
- * MARCO PRINCIPAL DE LA APLICACIÓN.
- * GESTIONA EL INTERCAMBIO DE PANTALLAS Y LA INICIALIZACIÓN DE CONTROLADORES.
+ * Marco principal (ventana) de la aplicación.
+ * Centraliza la gestión del flujo entre pantallas, la inicialización de controladores,
+ * la gestión del HUD, diálogos y el bucle de renderizado.
  */
 public class MainFrame extends JFrame {
 
+    /** Registrador de eventos para la clase MainFrame. */
     private static final Logger LOG = Logger.getLogger(MainFrame.class.getName());
 
-    // CONSTANTES DE PANTALLAS
     public static final String SCREEN_MENU = "MENU";
+    /** Nombre de la pantalla de selección de personajes. */
     public static final String SCREEN_PERSONAJES = "PERSONAJES";
+    /** Nombre de la pantalla de combate (minijuegos). */
     public static final String SCREEN_COMBATE = "COMBATE";
+    /** Nombre de la pantalla de derrota (Game Over). */
     public static final String SCREEN_DERROTA = "DERROTA";
+    /** Nombre de la pantalla de video introductorio. */
     public static final String SCREEN_VIDEO = "VIDEO";
+    /** Nombre de la pantalla de video de transformación del jefe. */
     public static final String SCREEN_TRANSFORMACION = "TRANSFORMACION_VIDEO";
+    /** Nombre de la pantalla de video final de créditos. */
     public static final String SCREEN_FINAL_VIDEO = "FINAL_VIDEO";
+    /** Nombre de la pantalla de exploración libre (mapas). */
     public static final String SCREEN_EXPLORACION = "EXPLORACION";
+    /** Nombre de la pantalla de diálogos o eventos (GamePanel). */
     public static final String SCREEN_GAME = "GAME";
+    /** Nombre de la pantalla del tutorial. */
     public static final String SCREEN_TUTORIAL = "TUTORIAL";
 
+    /** Gestor de diseño para intercambiar entre pantallas. */
     private CardLayout cardLayout;
+    /** Panel de capas para superponer HUD, diálogos, efectos y menús. */
     private JLayeredPane layeredPane;
+    /** Contenedor principal donde residen todas las pantallas del CardLayout. */
     private JPanel contenedor;
+    /** Identificador de la pantalla que se muestra actualmente. */
     private String pantallaActual = SCREEN_MENU;
+    
+    /** Panel del menú principal. */
     private MainMenu menu;
+    /** Panel de selección de personajes. */
     private CharacterSelector personajes;
+    /** Panel de pausa superpuesto. */
     private PausePanel pause;
+    /** Panel de gestión del combate. */
     private CombatPanel combate;
+    /** Pantalla de derrota. */
     private DerrotaScreen derrota;
+    /** Pantalla de video inicial. */
     private VideoScreen videoScreen;
+    /** Pantalla de video de transformación de jefe. */
     private TransformacionVideoScreen transformacionVideo;
+    /** Pantalla de video de créditos finales. */
     private FinalVideoScreen finalVideoScreen;
+    /** Panel de exploración en tiempo real. */
     private ExplorationPanel exploracion;
+    /** Panel para secuencias de juego y diálogos. */
     private GamePanel gamePanel;
+    /** Panel con las instrucciones del tutorial. */
     private TutorialPanel tutorial;
+    /** Contenedor invisible para mostrar cajas de texto de diálogo. */
     private JPanel dialogueContainer;
+    /** Panel de overlay para efectos de fundido (fade) entre pantallas. */
     private JPanel transitionOverlay;
+    /** Nombre del personaje seleccionado por el usuario. */
     private String personajeSeleccionado = "";
 
-    // CONTROLADORES ACCESIBLES
+    /** Controlador central de la lógica del juego. */
     private MainController mainController;
+    /** Gestor específico de la exploración y eventos del mapa. */
     private ExplorationManager explorationManager;
 
+    /** Barra de salud visual del jugador en el HUD. */
     private BarraVida playerHealthBar;
+    /** Panel de la capa superior para elementos de interfaz. */
     private JPanel hudPanel;
+    /** Icono visual que indica si el jugador posee la llave. */
     private Image keyIcon;
 
-    // TEMPORIZADOR DE DIÁLOGOS
+    /** Temporizador para gestionar la desaparición de diálogos automáticos. */
     private javax.swing.Timer dialogueTimer;
+    /** Momento exacto en ms en el que debe finalizar el diálogo actual. */
     private long dialogueEndTime;
+    /** Tiempo restante del diálogo pausado al entrar en el menú de pausa. */
     private int remainingDialogueTime = 0;
+    /** Último texto mostrado en un diálogo temporizado. */
     private String currentTimedText = "";
 
     /**
@@ -88,13 +124,11 @@ public class MainFrame extends JFrame {
      * CONFIGURA LA VENTANA, INICIALIZA CONTROLADORES Y PANELES.
      */
     public MainFrame() {
-        // CONFIGURACIÓN BÁSICA DE LA VENTANA
         cardLayout = new CardLayout();
         contenedor = new JPanel(cardLayout);
         setTitle("iLERNTALE");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
-        // ESTABLECER ICONO DEL JFRAME (JAR compatible)
         try (InputStream is = getClass().getResourceAsStream("/title/titozeio.png")) {
             if (is != null) {
                 setIconImage(ImageIO.read(is));
@@ -105,47 +139,37 @@ public class MainFrame extends JFrame {
             LOG.severe("Error cargando icono de ventana: " + e.getMessage());
         }
 
-        // INICIALIZAR CONTROLADORES
         inicializarControladores();
 
-        // INICIALIZAR VIDA
         playerHealthBar = new BarraVida(50, "JUGADOR");
 
-        // INICIALIZAR PANELES DE LAS PANTALLAS
         setupScreens();
 
-        // CARGAR ICONO DE LLAVE
         this.keyIcon = equipoilerntale.service.AssetService.getInstance().loadImage("/objects/llave.png");
 
-        // Configuramos el LayeredPane para el overlay
         layeredPane = new JLayeredPane();
         layeredPane.setPreferredSize(new Dimension(1000, 600));
 
-        // Capa inferior: El contenedor principal con CardLayout
         contenedor.setBounds(0, 0, 1000, 600);
         layeredPane.add(contenedor, JLayeredPane.DEFAULT_LAYER);
 
-        // Capa para diálogos
         dialogueContainer = new JPanel(null);
         dialogueContainer.setBounds(0, 0, 1000, 600);
         dialogueContainer.setOpaque(false);
         dialogueContainer.setVisible(false);
-        dialogueContainer.setFocusable(false); // No bloquear clics
+        dialogueContainer.setFocusable(false);
         layeredPane.add(dialogueContainer, JLayeredPane.POPUP_LAYER);
 
-        // HUD: Vida del jugador
         hudPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if ((pantallaActual.equals("EXPLORACION") || pantallaActual.equals("COMBATE"))
                         && !dialogueContainer.isVisible()) {
-                    // Dibujar arriba a la derecha (Barra de vida)
                     int healhX = getWidth() - 220;
                     int healthY = 35;
                     playerHealthBar.draw(g, healhX, healthY);
 
-                    // Dibujar icono de llave si la tiene
                     if (keyIcon != null) {
                         boolean tieneLlave = false;
                         for (equipoilerntale.model.entity.ItemModel item : equipoilerntale.view.ui.Inventario.getInstance().getItems()) {
@@ -166,12 +190,10 @@ public class MainFrame extends JFrame {
         hudPanel.setFocusable(false);
         layeredPane.add(hudPanel, JLayeredPane.POPUP_LAYER);
 
-        // Capa para el panel de pausa (encima de todo)
         pause.setBounds(0, 0, 1000, 600);
         pause.setVisible(false);
         layeredPane.add(pause, JLayeredPane.DRAG_LAYER);
 
-        // Capa para transiciones (entre HUD y Pausa)
         transitionOverlay = new JPanel(null);
         transitionOverlay.setBounds(0, 0, 1000, 600);
         transitionOverlay.setOpaque(false);
@@ -181,12 +203,11 @@ public class MainFrame extends JFrame {
 
         add(layeredPane);
 
-        // Registro global de la tecla ESC
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
             if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                 if (puedePausar()) {
                     togglePause();
-                    return true; // Consumir el evento
+                    return true;
                 }
             }
             return false;
@@ -196,19 +217,17 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
 
-        // Cambiar a la pantalla inicial del MENU
         cambiarPantalla(SCREEN_MENU);
-
-        // INICIAR EL HILO LÓGICO DEL JUEGO (GAME LOOP)
         mainController.startGameThread();
 
-        // INICIAR BUCLE DE RENDERIZADO (60 FPS)
         iniciarRenderLoop();
     }
 
+    /**
+     * Instancia o recrea los paneles de todas las pantallas posibles.
+     * Algunos paneles dependen del personaje seleccionado y se reconstruyen.
+     */
     private void setupScreens() {
-        // Solo instanciamos los paneles que son estáticos (no cambian con el personaje)
-        // si no han sido creados ya.
         if (menu == null) menu = new MainMenu(this);
         if (personajes == null) personajes = new CharacterSelector(this);
         if (pause == null) pause = new PausePanel(this);
@@ -222,11 +241,9 @@ public class MainFrame extends JFrame {
         if (finalVideoScreen == null) finalVideoScreen = new FinalVideoScreen(this);
         if (tutorial == null) tutorial = new TutorialPanel(this);
 
-        // Los paneles que dependen del personaje se recrean siempre
         exploracion = new ExplorationPanel(this, personajeSeleccionado, explorationManager);
         gamePanel = new GamePanel(this);
 
-        // Refrescar el contenedor
         contenedor.removeAll();
         contenedor.add(menu, SCREEN_MENU);
         contenedor.add(personajes, SCREEN_PERSONAJES);
@@ -243,19 +260,21 @@ public class MainFrame extends JFrame {
         contenedor.repaint();
     }
 
+    /**
+     * Inicializa los controladores principales con el personaje actual o el predeterminado.
+     */
     private void inicializarControladores() {
-        // USAR PERSONAJE SELECCIONADO OR "MIGUE" POR DEFECTO
         String personaje = (personajeSeleccionado == null || personajeSeleccionado.isEmpty()) ? "migue"
                 : personajeSeleccionado;
 
-        // CREAR MAINCONTROLLER Y OBTENER EL MANAGER DE EXPLORACIÓN
         mainController = new MainController(this, personaje);
         explorationManager = mainController.getExplorationManager();
     }
 
+    /**
+     * Inicia un temporizador de Swing para solicitar el renderizado del HUD y paneles activos.
+     */
     private void iniciarRenderLoop() {
-        // TIMER PARA REPINTAR EL PANEL ACTIVO A 60 FPS
-        // El isShowing() del ExplorationPanel ya filtra renders innecesarios
         javax.swing.Timer renderTimer = new javax.swing.Timer(16, e -> {
             if (exploracion != null) {
                 exploracion.requestRender();
@@ -274,19 +293,14 @@ public class MainFrame extends JFrame {
         String pantallaAnterior = this.pantallaActual;
         this.pantallaActual = nombre;
 
-        // No transicionar si es la misma pantalla (evita fallos al inicio)
         if (pantallaAnterior.equals(nombre)) {
             ejecutarCambioInstantaneo(nombre);
             return;
         }
 
-        // Determinar si se requiere transición
         boolean deMenuATutorial = (pantallaAnterior.equals(SCREEN_MENU) && nombre.equals(SCREEN_TUTORIAL)) 
                                || (pantallaAnterior.equals(SCREEN_TUTORIAL) && nombre.equals(SCREEN_MENU));
         
-        // El usuario pidió omitir transiciones desde el PausePanel.
-        // Como el PausePanel no es una "pantalla" en el CardLayout per se,
-        // detectamos si el panel de pausa estaba visible antes de cambiar.
         boolean desdePausa = (pause != null && pause.isVisible());
 
         boolean requiereTransicion = !deMenuATutorial && !desdePausa;
@@ -298,14 +312,24 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /**
+     * Ejecuta el cambio de pantalla sin animaciones.
+     * 
+     * @param nombre Destino.
+     */
     private void ejecutarCambioInstantaneo(String nombre) {
         logicaCambioPantalla(nombre);
         cardLayout.show(contenedor, nombre);
         postCambioPantalla(nombre);
     }
 
+    /**
+     * Ejecuta un cambio de pantalla con efecto de fade out.
+     * Captura el estado actual del contenedor para el fundido.
+     * 
+     * @param nombre Destino.
+     */
     private void ejecutarCambioConTransicion(String nombre) {
-        // 1. Capturar pantalla actual (solo si el contenedor tiene tamaño válido)
         final BufferedImage snapshot;
         if (contenedor.getWidth() > 0 && contenedor.getHeight() > 0) {
             snapshot = new BufferedImage(contenedor.getWidth(), contenedor.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -316,16 +340,10 @@ public class MainFrame extends JFrame {
             snapshot = null;
         }
 
-        // 2. Ejecutar lógica de cambio (detener sonidos, diálogos, etc)
         logicaCambioPantalla(nombre);
-
-        // 3. Cambiar panel en el CardLayout (invisible debajo del overlay)
         cardLayout.show(contenedor, nombre);
-
-        // 4. Ejecutar lógica post-cambio INMEDIATAMENTE para evitar fallos de lógica
         postCambioPantalla(nombre);
 
-        // 5. Iniciar overlay de transición
         if (snapshot != null) {
             transitionOverlay.removeAll();
             FadeOverlay fade = new FadeOverlay(snapshot);
@@ -347,24 +365,31 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /**
+     * Limpia el estado de diálogos y audio antes de realizar un cambio de pantalla.
+     * 
+     * @param nombre Próxima pantalla.
+     */
     private void logicaCambioPantalla(String nombre) {
-        // DETENER DIÁLOGOS ANTES DE CAMBIAR (HARD STOP)
         detenerDialogosExistentes();
 
-        // DETENER CUALQUIER MÚSICA DE FONDO ANTERIOR AL CAMBIAR DE PANTALLA
         if (!nombre.equals(SCREEN_COMBATE) && !nombre.equals(SCREEN_TUTORIAL) && !nombre.equals(SCREEN_PERSONAJES)
                 && !nombre.equals(SCREEN_MENU)) {
             SoundService.getInstance().stopBGM();
         }
     }
 
+    /**
+     * Realiza gestiones posteriores al cambio de visibilidad de una pantalla,
+     * como iniciar audio específico o transferir el foco del teclado.
+     * 
+     * @param nombre Pantalla recién activada.
+     */
     private void postCambioPantalla(String nombre) {
-        // Si vamos a la pantalla del video intro, iniciamos el video
         if (nombre.equals(SCREEN_VIDEO)) {
             videoScreen.playVideo();
         }
 
-        // GESTIÓN DE MÚSICA DE FONDO (BGM)
         switch (nombre) {
             case SCREEN_MENU:
             case SCREEN_TUTORIAL:
@@ -402,7 +427,6 @@ public class MainFrame extends JFrame {
             exploracion.dispose();
         }
 
-        // Foco
         if ("EXPLORACION".equals(nombre) && exploracion != null) {
             exploracion.reset();
             exploracion.requestFocusInWindow();
@@ -417,7 +441,9 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * INICIA EL COMBATE CON UN ENEMIGO ESPECÍFICO.
+     * Inicia el modo combate, preparando el panel de combate y cambiando la pantalla.
+     * 
+     * @param enemy Objeto que representa al enemigo contra el que se lucha.
      */
     public void entrarCombate(Object enemy) {
         if (combate != null) {
@@ -427,9 +453,10 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * FINALIZA EL COMBATE Y VUELVE A LA EXPLORACIÓN.
+     * Termina el combate, aplicando consecuencias (como eliminar enemigos) y volviendo al mapa.
      * 
-     * @param victoria Indica si el jugador ganó (elimina al enemigo) o no.
+     * @param victoria true si el jugador derrotó al enemigo.
+     * @param enemy El enemigo involucrado.
      */
     public void finalizarCombate(boolean victoria, Object enemy) {
         if (victoria && explorationManager != null) {
@@ -439,9 +466,9 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * DERROTA AL BOSS FASE 1, LO ELIMINA DEL MAPA Y REPRODUCE EL VIDEO DE
-     * TRANSFORMACIÓN.
-     * Al terminar el video, se inicia automáticamente la Fase 2.
+     * Activa el evento de derrota de un jefe en fase de exploración y lanza el video.
+     * 
+     * @param boss Instancia del jefe derrotado.
      */
     public void triggerBossDefeated(Object boss) {
         if (explorationManager != null) {
@@ -451,8 +478,7 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * INICIA LA FASE 2 DEL BOSS DIRECTAMENTE en el CombatPanel.
-     * Se llama desde TransformacionVideoScreen al terminar el video.
+     * Prepara e inicia la fase 2 de combate final.
      */
     public void triggerPhase2() {
         if (combate != null) {
@@ -461,16 +487,17 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /**
+     * Alterna la visibilidad del menú de pausa y detiene/reanuda la lógica del juego.
+     */
     public void togglePause() {
         if (pause.isVisible()) {
             pause.setVisible(false);
             if (mainController != null)
                 mainController.resumeGame();
 
-            // REANUDAR DIÁLOGOS SI ES NECESARIO
             reanudarDialogosExistentes();
 
-            // REANUDAR TEMPORIZADOR DE DIÁLOGO
             if (remainingDialogueTime > 0) {
                 showTimedDialogue(currentTimedText, remainingDialogueTime);
                 remainingDialogueTime = 0;
@@ -481,10 +508,8 @@ public class MainFrame extends JFrame {
                 comp.requestFocusInWindow();
 
         } else {
-            // DETENER DIÁLOGOS AL PAUSAR, PERO SIN OCULTARLOS VISUALMENTE
             pausarDialogosExistentes();
 
-            // PAUSAR TEMPORIZADOR DE DIÁLOGO
             if (dialogueTimer != null && dialogueTimer.isRunning()) {
                 remainingDialogueTime = (int) (dialogueEndTime - System.currentTimeMillis());
                 if (remainingDialogueTime < 0)
@@ -495,13 +520,12 @@ public class MainFrame extends JFrame {
             pause.setVisible(true);
             if (mainController != null)
                 mainController.pauseGame();
-            // Asegurar que el panel de pausa se redibuje
             pause.repaint();
         }
     }
 
     /**
-     * PAUSA LOS DIÁLOGOS EN CUALQUIER PANEL QUE ESTÉ ACTIVO SIN OCULTARLOS.
+     * Pausa las animaciones de texto o bucles de diálogo en el GamePanel.
      */
     private void pausarDialogosExistentes() {
         JPanel actual = getPanelActual();
@@ -511,7 +535,7 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * DETIENE Y OCULTA LOS DIÁLOGOS COMPLETAMENTE (al cambiar de pantalla).
+     * Detiene y limpia cualquier diálogo que se esté mostrando actualmente.
      */
     private void detenerDialogosExistentes() {
         hideDialogue();
@@ -522,7 +546,7 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * REANUDA LOS DIÁLOGOS SI EL PANEL LO SOPORTA.
+     * Reanuda los bucles de diálogo pausados.
      */
     private void reanudarDialogosExistentes() {
         JPanel actual = getPanelActual();
@@ -531,25 +555,37 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /**
+     * Muestra una caja de diálogo con texto en la posición por defecto.
+     * 
+     * @param text El contenido del diálogo.
+     */
     public void showDialogue(String text) {
         showDialogue(text, 450);
     }
 
+    /**
+     * Muestra un diálogo en una coordenada Y específica.
+     * 
+     * @param text Texto del mensaje.
+     * @param y Altura de la caja de texto.
+     */
     public void showDialogue(String text, int y) {
         dialogueContainer.removeAll();
         JPanel panel = CajaTexto.crearPanel(text);
-        // Posicionamiento dinámico: centrado horizontalmente, Y ajustable
         panel.setLocation(250, y);
         dialogueContainer.add(panel);
 
-        // Solo mostrar si la pantalla actual lo permite o es necesario
         dialogueContainer.setVisible(true);
         dialogueContainer.revalidate();
         dialogueContainer.repaint();
     }
 
     /**
-     * Muestra un diálogo que desaparece automáticamente tras el tiempo indicado.
+     * Muestra un diálogo que se cerrará automáticamente tras un retraso.
+     * 
+     * @param text El contenido del diálogo.
+     * @param delay Tiempo de permanencia en milisegundos.
      */
     public void showTimedDialogue(String text, int delay) {
         if (dialogueTimer != null) {
@@ -563,6 +599,9 @@ public class MainFrame extends JFrame {
         dialogueTimer.start();
     }
 
+    /**
+     * Oculta y limpia el contenedor de diálogos actual.
+     */
     public void hideDialogue() {
         if (dialogueTimer != null) {
             dialogueTimer.stop();
@@ -570,25 +609,32 @@ public class MainFrame extends JFrame {
         remainingDialogueTime = 0;
         currentTimedText = "";
         dialogueContainer.removeAll();
-        dialogueContainer.setVisible(false); // Ocultar al cerrar diálogo
+        dialogueContainer.setVisible(false);
         dialogueContainer.revalidate();
         dialogueContainer.repaint();
     }
 
+    /**
+     * Verifica si se permite pausar el juego en el estado actual.
+     * 
+     * @return true si el juego no está en pantallas restringidas (Menú, Video, etc).
+     */
     private boolean puedePausar() {
-        // No permitir pausa en ciertas pantallas
         return !pantallaActual.equals(SCREEN_MENU) &&
                 !pantallaActual.equals(SCREEN_VIDEO) &&
                 !pantallaActual.equals(SCREEN_TUTORIAL) &&
                 !pantallaActual.equals(SCREEN_PERSONAJES);
     }
 
+    /** @param controller El nuevo controlador principal. */
     public void setMainController(MainController controller) {
         this.mainController = controller;
     }
 
     /**
-     * DEFINE EL PERSONAJE SELECCIONADO Y RECONSTRUYE LOS CONTROLADORES.
+     * Establece el personaje del jugador y reconstruye el estado necesario.
+     * 
+     * @param nombre Nombre del nuevo personaje seleccionado.
      */
     public void setPersonajeSeleccionado(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
@@ -597,7 +643,6 @@ public class MainFrame extends JFrame {
         }
         this.personajeSeleccionado = nombre.trim();
 
-        // Limpiar el manager anterior
         if (mainController != null) {
             mainController.dispose();
         }
@@ -608,6 +653,11 @@ public class MainFrame extends JFrame {
         setupScreens();
     }
 
+    /**
+     * Obtiene el componente JPanel que está visible en el CardLayout.
+     * 
+     * @return Panel actual o null si no se encuentra.
+     */
     public JPanel getPanelActual() {
         for (Component comp : contenedor.getComponents()) {
             if (comp.isVisible() && comp instanceof JPanel) {
@@ -618,82 +668,82 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * REINICIA EL ESTADO COMPLETO DEL JUEGO.
+     * Restablece completamente el estado del juego (inventario, vida, enemigos, combate)
+     * para permitir una nueva partida.
      */
     public void reiniciarJuego() {
-        // Reiniciar inventario
         equipoilerntale.view.ui.Inventario.getInstance().limpiar();
-        // Reiniciar vida
         if (playerHealthBar != null) {
             playerHealthBar.setHealth(playerHealthBar.getMaxHealth());
         }
-        // Reiniciar estados de combate (fase boss, controles, etc)
         if (combate != null) {
             combate.reiniciarEstado();
         }
-        // Reiniciar variables y controladores reconstruyendo el ExplorationManager
         setPersonajeSeleccionado(getPersonajeSeleccionado());
     }
 
     // ============ GETTERS ============
 
-    /**
-     * OBTIENE EL NOMBRE DEL PERSONAJE SELECCIONADO.
-     */
+    /** @return Nombre del personaje activo. */
     public String getPersonajeSeleccionado() {
         return personajeSeleccionado;
     }
 
+    /** @return Panel de exploración actual. */
     public ExplorationPanel getExploracion() {
         return exploracion;
     }
 
-    /**
-     * OBTIENE EL SELECTOR DE PERSONAJES.
-     */
+    /** @return Selector de personajes. */
     public CharacterSelector getPersonajes() {
         return personajes;
     }
 
-    /**
-     * OBTIENE EL CONTROLADOR PRINCIPAL DEL JUEGO.
-     */
+    /** @return Controlador principal. */
     public MainController getMainController() {
         return mainController;
     }
 
-    /**
-     * OBTIENE EL GESTOR DE EXPLORACIÓN.
-     */
+    /** @return Gestor de exploración. */
     public ExplorationManager getExplorationManager() {
         return explorationManager;
     }
 
+    /** @return Representación visual de la barra de salud del jugador. */
     public BarraVida getPlayerHealthBar() {
         return playerHealthBar;
     }
 
     /**
-     * CLASE INTERNA PARA EFECTO DE TRANSICIÓN (FADE OUT).
+     * Clase interna para gestionar superposiciones con canales alfa variables (fundidos).
      */
     private static class FadeOverlay extends JPanel {
         private final BufferedImage previousScreen;
         private float alpha = 1.0f;
         private boolean finished = false;
 
+        /**
+         * Crea un overlay basado en una captura de pantalla previa.
+         * 
+         * @param previousScreen Imagen capturada de la pantalla saliente.
+         */
         public FadeOverlay(BufferedImage previousScreen) {
             this.previousScreen = previousScreen;
             setOpaque(false);
         }
 
+        /**
+         * Reduce el canal alfa para simular la desaparición del panel.
+         */
         public void updateAlpha() {
-            alpha -= 0.05f; // Ajustar para velocidad (aprox 400ms a 60fps)
+            alpha -= 0.05f;
             if (alpha <= 0) {
                 alpha = 0;
                 finished = true;
             }
         }
 
+        /** @return true si el fundido se ha completado (alpha = 0). */
         public boolean isFinished() {
             return finished;
         }

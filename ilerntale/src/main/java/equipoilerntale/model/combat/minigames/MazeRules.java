@@ -11,13 +11,17 @@ import equipoilerntale.model.combat.ProjectileModel;
 import equipoilerntale.model.combat.projectiles.WallProjectile;
 
 /**
- * Minijuego de Laberinto: Navegar hasta la meta sin tocar las paredes.
- * Las paredes ahora son proyectiles tipo WallProjectile que BLOQUEAN el paso.
+ * Implementación de las reglas para el minijuego de laberinto.
+ * El jugador debe navegar hasta una meta verde evitando el contacto prolongado con las paredes.
+ * Las paredes bloquean el movimiento pero infligen daño si el ratón se mantiene pegado a ellas.
  */
 public class MazeRules implements MinigameRules {
 
+    /** Área que representa la meta o salida del laberinto. */
     private Rectangle goal;
+    /** Indica si el jugador ha llegado con éxito a la meta. */
     private boolean finished = false;
+    /** Temporizador para gestionar el daño por contacto continuo con muros. */
     private int contactTimer = 0;
 
     @Override
@@ -27,7 +31,6 @@ public class MazeRules implements MinigameRules {
         finished = false;
         contactTimer = 0;
 
-        // Configurar posición inicial (abajo izquierda)
         MouseModel mouse = arena.getMouse();
         if (mouse != null) {
             mouse.setX(210);
@@ -35,12 +38,10 @@ public class MazeRules implements MinigameRules {
         }
 
         // Crear Laberinto usando WallProjectile (tipo 10)
-        // Arena: 200, 240, 600, 250
-        arena.addProjectile(new WallProjectile(200, 420, 530, 15)); // Muro 1
-        arena.addProjectile(new WallProjectile(270, 360, 530, 15)); // Muro 2
-        arena.addProjectile(new WallProjectile(200, 300, 530, 15)); // Muro 3
+        arena.addProjectile(new WallProjectile(200, 420, 530, 15));
+        arena.addProjectile(new WallProjectile(270, 360, 530, 15));
+        arena.addProjectile(new WallProjectile(200, 300, 530, 15));
         
-        // Meta (Arriba derecha)
         goal = new Rectangle(740, 245, 50, 45);
     }
 
@@ -51,8 +52,8 @@ public class MazeRules implements MinigameRules {
         MouseModel mouse = arena.getMouse();
         if (mouse == null) return;
 
-        // 1. Obtener dirección deseada
-        int dx = 0, dy = 0;
+        int dx = 0;
+        int dy = 0;
         if (input.isUpPressed()) dy = -1;
         if (input.isDownPressed()) dy = 1;
         if (input.isLeftPressed()) dx = -1;
@@ -60,12 +61,10 @@ public class MazeRules implements MinigameRules {
 
         boolean touchingWall = false;
 
-        // 2. Movimiento con bloqueo (Deslizamiento)
         if (dx != 0 || dy != 0) {
             int oldX = mouse.getX();
             int oldY = mouse.getY();
 
-            // Intentar mover en horizontal
             if (dx != 0) {
                 arena.intentarMoverMouse(dx, 0);
                 if (isCollidingWithWalls(arena, mouse.getBounds())) {
@@ -74,7 +73,6 @@ public class MazeRules implements MinigameRules {
                 }
             }
 
-            // Intentar mover en vertical
             if (dy != 0) {
                 arena.intentarMoverMouse(0, dy);
                 if (isCollidingWithWalls(arena, mouse.getBounds())) {
@@ -84,21 +82,17 @@ public class MazeRules implements MinigameRules {
             }
         }
 
-        // 3. Comprobar si está "pegado" a la pared (incluso sin moverse o tras bloquear)
-        // Usamos un margen de 1 píxel para detectar contacto visual/físico
         Rectangle contactBounds = new Rectangle(mouse.getX() - 1, mouse.getY() - 1, mouse.getAncho() + 2, mouse.getAlto() + 2);
         if (isCollidingWithWalls(arena, contactBounds)) {
             touchingWall = true;
         }
 
-        // 4. Lógica de daño
         if (touchingWall) {
             if (contactTimer == 0) {
-                arena.addBadCollision(); // Daño al chocar
+                arena.addBadCollision();
             }
             contactTimer++;
             
-            // Daño cada segundo (60 frames aprox) mientras se mantenga el contacto
             if (contactTimer >= 60) {
                 arena.addBadCollision();
                 contactTimer = 1; 
@@ -107,7 +101,6 @@ public class MazeRules implements MinigameRules {
             contactTimer = 0;
         }
 
-        // 5. Comprobar Meta
         if (mouse.getBounds().intersects(goal)) {
             for (int i = 0; i < 5; i++) {
                 arena.addGoodCollision();
@@ -117,7 +110,11 @@ public class MazeRules implements MinigameRules {
     }
 
     /**
-     * Comprueba si los límites proporcionados colisionan con algún proyectil de tipo pared (10).
+     * Verifica si un área específica colisiona con proyectiles de tipo pared.
+     * 
+     * @param arena Modelo de la arena.
+     * @param bounds Área a comprobar.
+     * @return true si hay colisión con un muro.
      */
     private boolean isCollidingWithWalls(ArenaModel arena, Rectangle bounds) {
         if (arena.getProjectiles() == null) return false;
@@ -131,8 +128,7 @@ public class MazeRules implements MinigameRules {
 
     @Override
     public void render(Graphics2D g2d, ArenaModel arena) {
-        // Dibujar Meta
-        g2d.setColor(new Color(50, 255, 50, 150)); // Verde meta
+        g2d.setColor(new Color(50, 255, 50, 150));
         g2d.fillRect(goal.x, goal.y, goal.width, goal.height);
         g2d.setColor(Color.GREEN);
         g2d.drawRect(goal.x, goal.y, goal.width, goal.height);

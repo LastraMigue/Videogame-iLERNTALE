@@ -20,13 +20,23 @@ import javax.swing.SwingConstants;
 
 import equipoilerntale.view.MainFrame;
 
+/**
+ * Panel de selección de personajes.
+ * Permite al usuario elegir entre diferentes personajes (Antonio, Baku, Migue) 
+ * antes de comenzar la partida.
+ */
 public class CharacterSelector extends JPanel {
 
+    /** Referencia al marco principal para gestionar el cambio de pantallas. */
     private MainFrame mainFrame;
+    /** Nombre del personaje actualmente seleccionado. */
     private String selectedCharacter = "";
 
     /**
-     * CONSTRUCTOR DEL SELECTOR DE PERSONAJES.
+     * Constructor del selector de personajes.
+     * Configura la interfaz visual, carga la fuente personalizada y crea los botones de selección.
+     * 
+     * @param frame Referencia al MainFrame de la aplicación.
      */
     public CharacterSelector(MainFrame frame) {
         this.mainFrame = frame;
@@ -67,6 +77,13 @@ public class CharacterSelector extends JPanel {
         add(charactersPanel, BorderLayout.CENTER);
     }
 
+    /**
+     * Crea un botón personalizado para un personaje específico.
+     * Configura el icono, el color de fondo y los eventos de ratón y acción.
+     * 
+     * @param characterName Nombre del personaje para el cual se crea el botón.
+     * @return Un objeto JButton configurado para el personaje.
+     */
     private JButton createCharacterButton(String characterName) {
         JButton button = new JButton();
 
