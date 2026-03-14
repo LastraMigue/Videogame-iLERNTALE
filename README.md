@@ -79,7 +79,7 @@ Enfréntate a **Sergio**, el jefe final, en un combate épico de dos fases que p
 ## 🧠 Reflexión sobre el Modelado (RA5.d)
 En el desarrollo de **iLERNTALE**, el modelado previo ha sido fundamental para el éxito del proyecto. La transición entre la **Ingeniería Directa** (diseño inicial) y la **Ingeniería Inversa** (análisis del código final) nos ha permitido valorar los siguientes puntos:
 
-1.  **Reducción de la Complejidad**: El uso del patrón **MVC** permitió desacoplar la lógica de los minijuegos de la interfaz visual, evitando que el código se volviera inmanejable.
+1.  **Reducción de la Complejidad**: El uso del patrón **MVC** permitió desacoplar la lógica de los minijuegos de la interfaz visual, evitando que el código se volviera inmanejable. Adecuar el código a este patrón de diseño agilizó el proceso de refactorización, simplificándolo y haciéndolo más directo al eliminar redundancias. Asimismo, incorporar durante el desarrollo el patrón Singleton también favoreció la eficiencia del código, al permitir crear una sola instancia de una clase que permite un punto de acceso global a ella. Esto fue especialmente conveniente en el tratamiento de las clases destinadas a recursos (sonidos e imágenes), para así gestionarlos de manera más eficaz.
 2.  **Detección de Brechas**: Al contrastar el diseño original con el código real en `DESIGN.md`, observamos cómo surgieron necesidades técnicas imprevistas (como el `EnemySystem`) que fueron integradas armónicamente gracias a que la base arquitectónica era sólida.
 3.  **Valor Académico y Profesional**: Documentar mediante diagramas de Casos de Uso, Secuencia y Estados no es solo un requisito; es una hoja de ruta que minimiza errores de lógica y facilita el trabajo en equipo.
 
