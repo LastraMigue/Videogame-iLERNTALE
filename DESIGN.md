@@ -1,260 +1,485 @@
-# iLERNTALE - Diseño técnico
+# iLERNTALE - Ingeniería Directa (RA5.d)
 
-## UML de Clases
+Este documento define la arquitectura técnica del videojuego **iLERNTALE**, estructurada bajo el patrón de diseño **Modelo-Vista-Controlador (MVC)** para garantizar una separación de responsabilidades clara, escalabilidad y facilidad de mantenimiento.
+
+## 1. Diagrama de Clases (MVC)
+
+El siguiente diagrama representa las entidades, interfaces de usuario y controladores, así como sus relaciones fundamentales.
 
 ```mermaid
 classDiagram
     direction TB
 
+    %% CAPA MODELO (Entities & State)
+    namespace Modelo {
+        class Entity {
+            <<abstract>>
+            -int x
+            -int y
+            -int size
+            -Direction direction
+            +getHitbox() Rectangle
+            +moveIfNoCollision() void
+        }
+        class Player {
+            -int health
+            -int maxHealth
+            +takeDamage(int) void
+            +heal(int) void
+        }
+        class Zombie {
+            -int type
+            -int detectionRadius
+            +updateMovement() void
+            +takeDamage(int) void
+        }
+        class Boss {
+            -int health
+            -boolean isAlive
+            +takeDamage(int) void
+        }
+        class ItemModel {
+            -String nombre
+            -int cantidad
+            -boolean usableEnCombate
+            +consumir() void
+        }
+        class ArenaModel {
+            -List projectiles
+            -MouseModel mouse
+            +update() void
+            +checkCollisions() void
+        }
+        class AbstractRoom {
+            <<abstract>>
+            -String name
+            -List walls
+            -List doors
+            +getZombiesToSpawn() int
+        }
+    }
+
+    %% CAPA VISTA (Rendering & UI)
+    namespace Vista {
+        class MainFrame {
+            -JPanel currentPanel
+            +cambiarPantalla(String) void
+        }
+        class ExplorationPanel {
+            -MapRenderer mapRenderer
+            +paintComponent(Graphics) void
+        }
+        class CombatPanel {
+            -BarraVida healthBar
+            -BulletRenderer bulletRenderer
+            +paintComponent(Graphics) void
+        }
+        class AssetService {
+            <<singleton>>
+            -Map imageCache
+            +getCharacterSprite() Image
+            +loadBackground() Image
+        }
+    }
+
+    %% CAPA CONTROLADOR (Logic & Handlers)
+    namespace Controlador {
+        class MainController {
+            -GameState currentState
+            +update() void
+        }
+        class ExplorationManager {
+            -Player player
+            -AbstractRoom currentRoom
+            +handlePlayerMovement() void
+            +checkInteractions() void
+        }
+        class CombatController {
+            -ArenaModel arena
+            -MinigameRules rules
+            +update() void
+            +isMinigameFinished() boolean
+        }
+        class InputHandler {
+            -boolean upPressed
+            -boolean enterPressed
+            +keyPressed(KeyEvent) void
+        }
+    }
+
+    %% RELACIONES
+    Entity <|-- Player : Herencia
+    Entity <|-- Zombie : Herencia
+    Entity <|-- Boss : Herencia
+    
+    ExplorationManager *-- Player : Composición
+    ExplorationManager *-- AbstractRoom : Composición
+    CombatController *-- ArenaModel : Composición
+    
+    ExplorationPanel --> ExplorationManager : Consulta datos
+    CombatPanel --> CombatController : Consulta datos
+    
+    ExplorationManager --> InputHandler : Usa
+    CombatController --> InputHandler : Usa
+    
+    MainFrame *-- ExplorationPanel : Contiene
+    MainFrame *-- CombatPanel : Contiene
+```
+
+## 2. Definición de Responsabilidades
+
+Siguiendo el principio de **Responsabilidad Única (SRP)**, el sistema se divide de la siguiente manera:
+
+### A. Modelo (Model)
+Contiene la lógica de negocio y los datos puros. No conoce la interfaz gráfica.
+*   **Entity / Player / Zombie**: Gestionan sus propios atributos (vida, posición) y reglas internas (recibir daño, cálculo de colisiones).
+*   **ArenaModel**: Mantiene el estado físico del combate (posiciones de proyectiles y colisiones detectadas).
+*   **ItemModel**: Define las propiedades de los objetos y su lógica de consumo.
+
+### B. Vista (View)
+Se encarga exclusivamente de la representación visual del Modelo.
+*   **MainFrame**: El contenedor principal que orquestra el cambio entre paneles (Pantalla de Selección, Exploración, Combate).
+*   **Panels (Combat/Exploration)**: Interpretan los datos del controlador para dibujarlos mediante `Graphics2D`.
+*   **AssetService**: Centraliza la carga de recursos (imágenes, sonidos) para evitar redundancia en memoria.
+
+### C. Controlador (Controller)
+Actúa como puente entre el Modelo y la Vista, gestionando el flujo del juego.
+*   **MainController**: Controla el ciclo de vida del juego (estados, pausas, transiciones).
+*   **ExplorationManager / CombatController**: Traducen las entradas del usuario (`InputHandler`) en cambios del estado del Modelo y coordinan la lógica temporal (frames, actualizaciones).
+*   **InputHandler**: Captura los eventos de hardware (teclado/ratón) y los expone de forma desacoplada.
+
+## 3. Beneficios del Diseño
+1.  **Ingeniería Directa / Inversa**: La estructura modular permite mapear directamente estas clases con los archivos `.java`, facilitando la actualización del diagrama si el código cambia.
+2.  **Desacoplamiento**: Es posible cambiar el motor gráfico (Vista) sin alterar la lógica de los personajes (Modelo).
+3.  **Testeo**: La lógica del Modelo puede probarse mediante tests unitarios sin necesidad de levantar una interfaz gráfica.
+
+## 4. Diagrama de Casos de Uso 
+
+Los siguientes diagramas exponen tres casos de uso de iLERNTALE, es decir, tres interacciones que puede llevar a cabo el jugador con el videojuego.
+
+Caso de Uso 1: Iniciar Partida
+
+``` mermaid
+
+graph LR
+%% DIAGRAMA DE CASOS DE USO - INICIAR PARTIDA
+
+%% Definir Actores
+Player((Player))
+
+%% Definir límite del Sistema y Acciones
+subgraph "iLERNTALE"
+CU1([Start Game])
+CU2([Select Play In Main Menu])
+CU3([Select Character])
+CU4([Skip Prologue])
+
+%% Definir relaciones especiales (include y extend)
+
+%% Relación include (obligatoria). Es obligatorio seleccionar Personaje para Iniciar Partida
+CU1 -.->|&lt;&lt;include&gt;&gt;| CU3
+
+%% Relación include (obligatoria). Es obligatorio pulsar Play para Iniciar Partida (y seleccionar personaje)
+CU3 -.->|&lt;&lt;include&gt;&gt;| CU2
+
+%% Relación extend (opcional). Es opcional saltar el prólogo al Iniciar Partida
+CU4 -.->|&lt;&lt;extend&gt;&gt;| CU1
+end
+
+%% Definir relaciones Actor/Casos de Uso
+Player --- CU1
+
+```
+
+Caso de Uso 2: Atacar
+
+``` mermaid
+
+graph LR
+%% DIAGRAMA DE CASOS DE USO - ATACAR
+
+%% Definir Actores
+Player((Player))
+Foe((Foe))
+
+%% Definir límite del Sistema y Acciones
+subgraph "iLERNTALE Combat"
+CU1([Attack])
+CU2([Select Fight Option])
+CU3([Engage In Battle])
+CU4([Inflict Damage])
+CU5([Dodge Enemy Attack])
+CU6([Foe Attack])
+
+%% Definir relaciones especiales (include y extend)
+
+%% Relación include (obligatoria). Hay que entrar en combate para Atacar
+CU1 -.->|&lt;&lt;include&gt;&gt;| CU2
+
+%% Relación include (obligatoria). Hay que seleccionar opción Luchar (Fight) para Atacar
+CU2 -.->|&lt;&lt;include&gt;&gt;| CU3
+
+%% Relación extend (opcional). Aunque para infligir daño hay que atacar, en la pantalla de atacar es opcional infligir daño, ya que se puede fallar el minijuego que daña al enemigo (no recoger los puños verdes), aunque recomendable
+CU1 -.->|&lt;&lt;extend&gt;&gt;| CU4
+
+%% Relación extend (opcional). Es opcional esquivar los ataques del enemigo para Atacar (aunque recomendable)
+CU1 -.->|&lt;&lt;extend&gt;&gt;| CU5
+end
+
+%% Definir relaciones Actor/Casos de Uso
+Player --- CU1
+Foe --- CU6
+
+```
+
+Caso de Uso 3: Utilizar objeto en Combate
+
+``` mermaid
+
+graph LR
+%% DIAGRAMA DE CASOS DE USO - USAR OBJETO EN COMBATE
+
+%% Definir Actores
+Player((Player))
+Foe((Foe))
+
+%% Definir límite del Sistema y Acciones
+subgraph "iLERNTALE Combat"
+CU1([Use Battle Item])
+CU2([Select Item Option])
+CU3([Select Item])
+CU4([Engage In Battle])
+CU5([Pick Up Item])
+CU6([Await Player's Decision])
+
+%% Definir relaciones especiales (include y extend)
+
+%% Relación include (obligatoria). Hay que seleccionar un objeto para usarlo
+CU1 -.->|&lt;&lt;include&gt;&gt;| CU3
+
+%% Relación include (obligatoria). Para seleccionar un objeto, hay que seleccionar la opción Item
+CU3 -.->|&lt;&lt;include&gt;&gt;| CU2
+
+%% Relación include (obligatoria). Para seleccionar la opción item
+CU2 -.->|&lt;&lt;include&gt;&gt;| CU4
+
+%% Para usar un objeto, es obligatorio haberlo recogido del mapa antes de entrar en combate
+CU4 -.->|&lt;&lt;include&gt;&gt;| CU5
+end
+
+%% Definir relaciones Actor/Casos de Uso
+Player --- CU1
+%% Mientras el jugador utiliza un objeto, el enemigo no ataca, espera que tome la decisión de usar objeto, atacar u otra
+Foe --- CU6
+
+```
+
+## 5. Diagrama de Secuencia
+
+El siguiente diagrama representa de manera detallada una interacción crítica y concreta de iLERNTALE, en este caso, el flujo desde que el jugador pulsa el botón de luchar (Fight) hasta que se resta vida al enemigo (o al propio jugador).
+
+``` mermaid
+
+sequenceDiagram
+autonumber
+%% Diagrama de Secuencia para el proceso de atacar y restar vida en iLERNTALE
+
+%% Actores y participantes
+actor Player
+%% Paneles participantes
+
+%%  Fight Button activa el minijuego de combate
+participant FightButton
+%% El minijuego es donde transcurre el combate
+participant BattleMinigame
+%% En el minijuego se restará vida según condiciones
+%% Enemigo
+participant Foe
+
+%% Secuencia
+%% El Jugador entra en combate con el enemigo y selecciona el botón de Luchar (Fight)
+Player->>FightButton: selectFightButton()
+activate FightButton
+%% Al activarse el botón Fight, se genera el Minijuego y se activa éste y después la pelea con el enemigo
+FightButton->>BattleMinigame: generateMinigame()
+activate BattleMinigame
+BattleMinigame->>Foe: triggerFoeCombat()
+activate Foe
+%% Dentro del minijuego se resta vida según las siguientes condiciones
+%% Si el jugador contacta con los puños verdes, inflige daño al enemigo y le resta vida
+alt player collects green fists
+BattleMinigame->>Foe: FoeTakesDamage
+Foe-->>BattleMinigame: retrieveFoeRemainingHP()
+%% Si el jugador contacta con las calaveras rojas, será el enemigo quien le inflija daño
+else player collects red skulls
+BattleMinigame->>Foe: FoeInflictsDamage
+Foe-->>BattleMinigame: retrievePlayerRemainingHP()
+end
+
+deactivate Foe
+BattleMinigame-->> FightButton: resetMinigame()
+deactivate BattleMinigame
+FightButton-->> Player: endFightTurn()
+deactivate FightButton
+
+```
+
+## 6. Diagrama de Estados
+
+El siguiente diagrama representa los estados posibles en iLERNTALE, para así mostrar con más detalle la lógica de control del videojuego.
+
+
+``` mermaid
+
+stateDiagram-v2
+%% Diagrama de Estados del juego iLERNTALE
+
+%% Se inicia el juego y va al Menú Principal
+[*] --> Menu
+%%% En el Menú puede elegir varias opciones
+
+%% Playing: Estado jugando - Se cuenta la parte del prólogo
+Menu --> Playing: selectOptionPlay()
+
+%% Quit: Estado de cerrar el juego
+Menu --> Quit: selectOptionQuit()
+
+%% Playing: Estado jugando - Llevará a "Game Beaten" si se pasa el juego 
+Playing --> GameBeaten : beatGame()
+
+%% Playing: Estado jugando - Llevará a "Game Over" si muere 
+
+Playing --> GameOver : defeatPlayer()
+
+%% Playing: Estado jugando - Llevará a Pausa al pulsar Esc (cambio a estado Paused)
+Playing --> Paused : pause()
+
+%% Pausa: Seleccionar opción "Salir", que lleva de vuelta al Menú principal
+Paused --> Menu: selectPauseOptionQuit()
+
+%% Pausa: Seleccionar opción "Reanudar", que devuelve al juego (mapa o combate)
+Paused --> Playing : selectOptionResume()
+
+GameBeaten --> [*]
+GameOver --> [*]
+Quit--> [*]
+
+```
+
+---
+
+## 7. Ingeniería Inversa (Contraste con la Implementación)
+
+Tras completar el desarrollo, se ha realizado una labor de **Ingeniería Inversa** para extraer el diseño real a partir del código fuente. Este proceso permite verificar si la arquitectura implementada se desvió del diseño original (Ingeniería Directa) y documentar el estado final del sistema.
+
+### Diagrama de Clases Real (Extraído del Código)
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Main {
+        +main(String[] args) void
+    }
+
     class MainFrame {
-        <<JFrame>>
-        -GamePanel panelJuego
-        +MainFrame()
+        -MainController mainController
+        -ExplorationManager explorationManager
+        -CombatPanel combate
+        -ExplorationPanel exploracion
+        +cambiarPantalla(String) void
+        +entrarCombate(Object) void
     }
 
-    class GamePanel {
-        <<JPanel +Runnable>>
-        -Thread hiloJuego
-        -int ANCHO, ALTO
-        -int tamanoTile, FPS
-        +KeyHandler manejadorTeclado
-        +TileManager gestorTiles
-        +CollisionChecker detectorColisiones
-        +Jugador jugador
-        +EstadoJuego estadoJuego
-        +iniciarHiloJuego()
-        +actualizar()
-        +paintComponent(Graphics)
+    class MainController {
+        -GameState state
+        -ExplorationManager explorationManager
+        +run() void
+        +update() void
     }
 
-    class KeyHandler {
-        <<KeyListener>>
-        +arribaPulsado, abajoPulsado, izquierdaPulsado, derechaPulsado
-        +keyPressed(KeyEvent)
-        +keyReleased(KeyEvent)
+    class ExplorationManager {
+        -Player player
+        -AbstractRoom currentRoom
+        -EnemySystem enemySystem
+        +update() void
+        +checkInteractions() void
     }
 
-    class TileManager {
-        -GamePanel gp
-        -int[][] datosMapa
-        -int tamanoTile, anchoMapa, altoMapa
-        +dibujar(Graphics2D, int, int)
-        +esSolido(int, int)
+    class CombatController {
+        -ArenaModel arenaModel
+        -MinigameRules currentRules
+        +update() void
     }
 
-    class CollisionChecker {
-        -GamePanel gp
-        -int tamanoTile
-        +verificarTile(Entity)
-        +verificarColision(int, int, int, int)
+    class CombatPanel {
+        -CombatController combatController
+        -ArenaModel arenaModel
+        +updateCombat() void
+        +paintComponent(Graphics) void
     }
 
-    class Entidad {
+    class Entity {
         <<abstract>>
-        #int x, y, velocidad
-        #String direccion
-        #Rectangle areaSolida
-        #boolean colisionActiva
-        +getX(), setX(int)
-        +getY(), setY(int)
-        +getDireccion()
-        +actualizarAnimacion()
+        #int x, y
+        #Direction direction
     }
 
-    class Jugador {
-        <<extiende Entidad>>
-        -String nombre
-        -int vidaMaxima, vidaActual
-        -SistemaNivel sistemaNivel
-        +actualizar(KeyHandler, CollisionChecker)
+    class Player {
+        -int health
+        +takeDamage(int) void
     }
 
-    class EntidadEnemigo {
-        <<extiende Entidad>>
-        -GamePanel gp
-        -Thread hiloEnemigo
-        -int tamanoEnemigo, velocidad
-        -boolean ejecutando
-        +iniciar(), detener()
-        +ejecutar()
+    class Zombie {
+        -int health
+        -int detectionRadius
+        +updateMovement() void
     }
 
-    class Jefe {
-        <<extiende EntidadEnemigo>>
-        -int fase, vidaMaxima
-        -boolean cargaActiva
+    class Boss {
+        -int health
+        +takeDamage(int) void
     }
 
-    class EstadoJuego {
-        <<enum>>
-        MENU
-        EXPLORACION
-        COMBATE
-        JUGADOR_TURNO
-        ENEMIGO_TURNO
-        MINIJUEGO
-        GAME_OVER
-        VICTORIA
+    class AssetService {
+        <<singleton>>
+        +getZombieSprite() Image
+        +getBossSprite() Image
     }
 
-    class SistemaNivel {
-        -int nivel, experiencia
-        -int experienciaParaSiguienteNivel
-        +añadirExperiencia(int)
+    class SoundService {
+        <<singleton>>
+        +playBGM(String) void
+        +playSFX(String) void
     }
 
-    class Minijuego {
-        <<interface>>
-        +iniciar(int)
-        +procesarInput(String)
-        +estaCompletado()
-        +esExitoso()
-    }
-
-    class PresentadorJuego {
-        -GamePanel vista
-        -Jugador jugador
-        -TileManager[] mapas
-        -EntidadEnemigo[] enemigos
-        -Jefe jefe
-        -PresentadorCombate presentadorCombate
-        -EstadoJuego estadoJuego
-        +nuevaPartida()
-        +actualizar()
-    }
-
-    class PresentadorCombate {
-        -Jugador jugador
-        -EntidadEnemigo enemigoActual
-        -Minijuego minijuegoActual
-        +iniciarCombate(EntidadEnemigo)
-        +procesarInputMinijuego(String)
-    }
-
-    MainFrame --> GamePanel : contiene
-    GamePanel --> KeyHandler : usa
-    GamePanel --> TileManager : usa
-    GamePanel --> CollisionChecker : usa
-    GamePanel --> PresentadorJuego
-    GamePanel --> EstadoJuego
-    CollisionChecker --> TileManager : consulta
-    Jugador --> SistemaNivel
-    Jugador --> Entidad
-    EntidadEnemigo --> Entidad
-    Jefe --> EntidadEnemigo
-    GamePresenter --> Jugador
-    GamePresenter --> TileManager
-    GamePresenter --> EnemigoEntidad
-    GamePresenter --> Boss
-    GamePresenter --> CombatPresenter
-    CombatPresenter --> Minijuego
+    Main --> MainFrame : Inicia
+    MainFrame *-- MainController : Posee
+    MainController --> ExplorationManager : Orquesta
+    MainController --> CombatPanel : Actualiza lógico
+    ExplorationManager *-- Player : Gestiona
+    ExplorationManager *-- EnemySystem : Posee
+    EnemySystem o-- Zombie : Contiene
+    EnemySystem o-- Boss : Contiene
+    CombatPanel *-- CombatController : Posee
+    CombatController *-- ArenaModel : Posee
+    Player --|> Entity : Hereda
+    Zombie --|> Entity : Hereda
+    Boss --|> Entity : Hereda
+    MainFrame ..> AssetService : Usa
+    MainFrame ..> SoundService : Usa
 ```
+
+### Hallazgos de la Ingeniería Inversa
+1.  **Aparición de clases de soporte**: Se identificó la necesidad de `EnemySystem` para desacoplar la gestión de hordas del `ExplorationManager`, algo que no se previó en el diseño inicial.
+2.  **Sincronización de Renderizado**: La Vista (`MainFrame`) requirió un bucle de renderizado independiente de la lógica del controlador para suavizar la interfaz de usuario (HUD).
+3.  **Patrón Singleton Robusto**: Los servicios de assets y sonido se mantuvieron fieles al diseño, demostrando su eficacia para la gestión de recursos compartidos.
 
 ---
 
-## GamePanel (JPanel)
+## 8. Conclusiones sobre el Modelado del Software
 
-GamePanel es el panel donde se renderiza todo el juego. Implementa Runnable para ejecutar el game loop en un thread separado.
-
-```java
-public class GamePanel extends JPanel implements Runnable {
-
-    public static final int WIDTH = 800;
-    public static final int HEIGHT = 600;
-
-    public final int originalTileSize = 48;
-    public final int scale = 4;
-    public final int tileSize = originalTileSize * scale;
-
-    private Thread gameThread;
-    private boolean running;
-    private final int FPS = 60;
-
-    public KeyHandler keyH = new KeyHandler();
-    public TileManager tileM = new TileManager(this);
-    public CollisionChecker cChecker = new CollisionChecker(this);
-    public Jugador jugador = new Jugador("Migue");
-
-    public EstadoJuego gameState = EstadoJuego.EXPLORACION;
-
-    public GamePanel() {
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setBackground(Color.BLACK);
-        setDoubleBuffered(true);
-        setFocusable(true);
-        addKeyListener(keyH);
-    }
-
-    public void startGameThread() {
-        gameThread = new Thread(this);
-        running = true;
-        gameThread.start();
-    }
-
-    @Override
-    public void run() {
-        double drawInterval = 1000000000.0 / FPS;
-        double delta = 0;
-        long lastTime = System.nanoTime();
-
-        while (gameThread != null && running) {
-            long currentTime = System.nanoTime();
-            delta += (currentTime - lastTime) / drawInterval;
-            lastTime = currentTime;
-
-            if (delta >= 1) {
-                update();
-                delta--;
-            }
-
-            repaint();
-        }
-    }
-
-    private void update() {
-        if (gameState == EstadoJuego.EXPLORACION) {
-            jugador.update(keyH, cChecker);
-        }
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-
-        if (gameState == EstadoJuego.EXPLORACION) {
-            tileM.draw(g2);
-
-            BufferedImage image = ResourceManager.getPlayerSprite(
-                    jugador.getNombre(),
-                    jugador.getDireccion(),
-                    jugador.getSpriteNum());
-
-            if (image != null) {
-                g2.drawImage(image, jugador.getX(), jugador.getY(), tileSize, tileSize, null);
-            }
-        }
-
-        if (gameState == EstadoJuego.MENU) {
-            // Dibujar menú
-        }
-
-        g2.dispose();
-    }
-}
-```
-
----
-
-## Puntos clave
-
-1. **MainFrame** solo crea la ventana y arranca el game thread
-2. **GamePanel** maneja todo el renderizado y la lógica
-3. **Game loop** usa delta time para mantener 60 FPS constantes
-4. **Doble buffer** activado para evitar parpadeo
-5. **Thread separado** para no bloquear el EDT de Swing
+El proceso de alternar entre la **Ingeniería Directa** (planificación) y la **Ingeniería Inversa** (análisis del resultado) ha demostrado ser vital para:
+*   Identificar cuellos de botella antes de escribir código.
+*   Mantener la coherencia del patrón MVC durante todo el desarrollo.
+*   Documentar de forma automática cambios que surgen por necesidades técnicas imprevistas.
