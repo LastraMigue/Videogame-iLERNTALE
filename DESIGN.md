@@ -155,7 +155,7 @@ Actúa como puente entre el Modelo y la Vista, gestionando el flujo del juego.
 
 ## 4. Diagrama de Casos de Uso 
 
-Los siguientes diagramas exponen tres casos de uso de iLERNTALE
+Los siguientes diagramas exponen tres casos de uso de iLERNTALE, es decir, tres interacciones que puede llevar a cabo el jugador con el videojuego.
 
 Caso de Uso 1: Iniciar Partida
 
@@ -276,7 +276,7 @@ Foe --- CU6
 
 ## 5. Diagrama de Secuencia
 
-El siguiente diagrama representa de manera detallada una interacción crítica y concreta de iLERNTALE, en este caso, el flujo desde que el jugador pulsa el botón de luchar (Fight) hasta que se resta vida al enemigo (o al propio jugador)
+El siguiente diagrama representa de manera detallada una interacción crítica y concreta de iLERNTALE, en este caso, el flujo desde que el jugador pulsa el botón de luchar (Fight) hasta que se resta vida al enemigo (o al propio jugador).
 
 ``` mermaid
 
@@ -323,6 +323,49 @@ FightButton-->> Player: endFightTurn()
 deactivate FightButton
 
 ```
+
+## 6. Diagrama de Estados
+
+El siguiente diagrama representa los estados posibles en iLERNTALE, para así mostrar con más detalle la lógica de control del videojuego.
+
+
+``` mermaid
+
+stateDiagram-v2
+%% Diagrama de Estados del juego iLERNTALE
+
+%% Se inicia el juego y va al Menú Principal
+[*] --> Menu
+%%% En el Menú puede elegir varias opciones
+
+%% Playing: Estado jugando - Se cuenta la parte del prólogo
+Menu --> Playing: selectOptionPlay()
+
+%% Quit: Estado de cerrar el juego
+Menu --> Quit: selectOptionQuit()
+
+%% Playing: Estado jugando - Llevará a "Game Beaten" si se pasa el juego 
+Playing --> GameBeaten : beatGame()
+
+%% Playing: Estado jugando - Llevará a "Game Over" si muere 
+
+Playing --> GameOver : defeatPlayer()
+
+%% Playing: Estado jugando - Llevará a Pausa al pulsar Esc (cambio a estado Paused)
+Playing --> Paused : pause()
+
+%% Pausa: Seleccionar opción "Salir", que lleva de vuelta al Menú principal
+Paused --> Menu: selectPauseOptionQuit()
+
+%% Pausa: Seleccionar opción "Reanudar", que devuelve al juego (mapa o combate)
+Paused --> Playing : selectOptionResume()
+
+GameBeaten --> [*]
+GameOver --> [*]
+Quit--> [*]
+
+```
+
 
 
 
