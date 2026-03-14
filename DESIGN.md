@@ -364,9 +364,120 @@ GameBeaten --> [*]
 GameOver --> [*]
 Quit--> [*]
 
+---
+
+## 7. Ingeniería Inversa (Contraste con la Implementación)
+
+Tras completar el desarrollo, se ha realizado una labor de **Ingeniería Inversa** para extraer el diseño real a partir del código fuente. Este proceso permite verificar si la arquitectura implementada se desvió del diseño original (Ingeniería Directa) y documentar el estado final del sistema.
+
+### Diagrama de Clases Real (Extraído del Código)
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Main {
+        +main(String[] args) void
+    }
+
+    class MainFrame {
+        -MainController mainController
+        -ExplorationManager explorationManager
+        -CombatPanel combate
+        -ExplorationPanel exploracion
+        +cambiarPantalla(String) void
+        +entrarCombate(Object) void
+    }
+
+    class MainController {
+        -GameState state
+        -ExplorationManager explorationManager
+        +run() void
+        +update() void
+    }
+
+    class ExplorationManager {
+        -Player player
+        -AbstractRoom currentRoom
+        -EnemySystem enemySystem
+        +update() void
+        +checkInteractions() void
+    }
+
+    class CombatController {
+        -ArenaModel arenaModel
+        -MinigameRules currentRules
+        +update() void
+    }
+
+    class CombatPanel {
+        -CombatController combatController
+        -ArenaModel arenaModel
+        +updateCombat() void
+        +paintComponent(Graphics) void
+    }
+
+    class Entity {
+        <<abstract>>
+        #int x, y
+        #Direction direction
+    }
+
+    class Player {
+        -int health
+        +takeDamage(int) void
+    }
+
+    class Zombie {
+        -int health
+        -int detectionRadius
+        +updateMovement() void
+    }
+
+    class Boss {
+        -int health
+        +takeDamage(int) void
+    }
+
+    class AssetService {
+        <<singleton>>
+        +getZombieSprite() Image
+        +getBossSprite() Image
+    }
+
+    class SoundService {
+        <<singleton>>
+        +playBGM(String) void
+        +playSFX(String) void
+    }
+
+    Main --> MainFrame : Inicia
+    MainFrame *-- MainController : Posee
+    MainController --> ExplorationManager : Orquesta
+    MainController --> CombatPanel : Actualiza lógico
+    ExplorationManager *-- Player : Gestiona
+    ExplorationManager *-- EnemySystem : Posee
+    EnemySystem o-- Zombie : Contiene
+    EnemySystem o-- Boss : Contiene
+    CombatPanel *-- CombatController : Posee
+    CombatController *-- ArenaModel : Posee
+    Player --|> Entity : Hereda
+    Zombie --|> Entity : Hereda
+    Boss --|> Entity : Hereda
+    MainFrame ..> AssetService : Usa
+    MainFrame ..> SoundService : Usa
 ```
 
+### Hallazgos de la Ingeniería Inversa
+1.  **Aparición de clases de soporte**: Se identificó la necesidad de `EnemySystem` para desacoplar la gestión de hordas del `ExplorationManager`, algo que no se previó en el diseño inicial.
+2.  **Sincronización de Renderizado**: La Vista (`MainFrame`) requirió un bucle de renderizado independiente de la lógica del controlador para suavizar la interfaz de usuario (HUD).
+3.  **Patrón Singleton Robusto**: Los servicios de assets y sonido se mantuvieron fieles al diseño, demostrando su eficacia para la gestión de recursos compartidos.
 
+---
 
+## 8. Conclusiones sobre el Modelado del Software
 
-
+El proceso de alternar entre la **Ingeniería Directa** (planificación) y la **Ingeniería Inversa** (análisis del resultado) ha demostrado ser vital para:
+*   Identificar cuellos de botella antes de escribir código.
+*   Mantener la coherencia del patrón MVC durante todo el desarrollo.
+*   Documentar de forma automática cambios que surgen por necesidades técnicas imprevistas.

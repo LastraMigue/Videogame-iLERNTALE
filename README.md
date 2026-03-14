@@ -76,6 +76,17 @@ Enfréntate a **Sergio**, el jefe final, en un combate épico de dos fases que p
 
 ---
 
+## 🧠 Reflexión sobre el Modelado (RA5.d)
+En el desarrollo de **iLERNTALE**, el modelado previo ha sido fundamental para el éxito del proyecto. La transición entre la **Ingeniería Directa** (diseño inicial) y la **Ingeniería Inversa** (análisis del código final) nos ha permitido valorar los siguientes puntos:
+
+1.  **Reducción de la Complejidad**: El uso del patrón **MVC** permitió desacoplar la lógica de los minijuegos de la interfaz visual, evitando que el código se volviera inmanejable.
+2.  **Detección de Brechas**: Al contrastar el diseño original con el código real en `DESIGN.md`, observamos cómo surgieron necesidades técnicas imprevistas (como el `EnemySystem`) que fueron integradas armónicamente gracias a que la base arquitectónica era sólida.
+3.  **Valor Académico y Profesional**: Documentar mediante diagramas de Casos de Uso, Secuencia y Estados no es solo un requisito; es una hoja de ruta que minimiza errores de lógica y facilita el trabajo en equipo.
+
+La importancia del modelado radica en su capacidad para servir como "puente" entre la idea creativa y la implementación técnica, garantizando que el producto final sea robusto y mantenible.
+
+---
+
 ## 👥 Créditos
 Desarrollado con ❤️ por el equipo (Miguel A. Lastra, Antonio Alejandro Duarte y Bakunin Sosa) de **1º DAW de iLERNA**.
 
