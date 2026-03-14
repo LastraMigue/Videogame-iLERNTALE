@@ -87,6 +87,41 @@ La importancia del modelado radica en su capacidad para servir como "puente" ent
 
 ---
 
+## 📋 Gestión del Proyecto (GitHub Projects)
+
+El desarrollo de **iLERNTALE** se ha organizado en cuatro fases clave, utilizando **GitHub Projects** para la gestión de tareas (issues) y la coordinación del equipo. El reparto de responsabilidades se detalla a continuación:
+
+### 🛠️ Fases del Proyecto y Reparto de Tareas
+
+#### **Fase 1: Cimentación y Estructura Base**
+- **Objetivo:** Configuración del entorno Maven, diseño inicial (GDD/DESIGN) y esqueleto del Menú Principal.
+- **Tareas Clave:**
+  - Creación del proyecto Maven e infraestructura básica. (#1, #2, #3) - **Miguel A. / Baku**
+  - Implementación del Menú Principal y gestión de recursos iniciales. (#4, #5, #6) - **Antonio A.**
+
+#### **Fase 2: Mundo y Navegación (Overworld)**
+- **Objetivo:** Implementación del movimiento del jugador, transiciones entre salas y sistema de colisiones.
+- **Tareas Clave:**
+  - Sistema de movimiento y transiciones de pantalla. (#9, #10, #11, #16) - **Baku**
+  - Implementación de diálogos e interacciones básicas. (#8) - **Baku / Antonio A.**
+  - Creación del sistema de enemigos y lógica de patrullaje. (#17) - **Baku**
+
+#### **Fase 3: Núcleo de Combate**
+- **Objetivo:** Desarrollo del motor de combate por turnos y los minijuegos de defensa.
+- **Tareas Clave:**
+  - Lógica central del sistema de combate y acciones. (#12) - **Miguel A.**
+  - Diseño y decoración de la interfaz de combate (CombatPanel). (#13) - **Miguel A. / Antonio A.**
+  - Gestión de estados de victoria/derrota y cierre de flujos de combate. (#14, #15) - **Miguel A.**
+
+#### **Fase 4: Pulido, Mecánicas Avanzadas y Balanceo**
+- **Objetivo:** Implementación de dificultad dinámica, efectos visuales y refinamiento de la experiencia de usuario.
+- **Tareas Clave:**
+  - Implementación de dificultad dinámica y efectos de vibración. (#30) - **Baku**
+  - Refinamiento de botones, menús de diálogo y saltos de escena. (#30) - **Antonio A.**
+  - Corrección de errores críticos y optimización de minijuegos. - **Miguel A.**
+
+---
+
 ## 👥 Créditos
 Desarrollado con ❤️ por el equipo (Miguel A. Lastra, Antonio Alejandro Duarte y Bakunin Sosa) de **1º DAW de iLERNA**.
 
