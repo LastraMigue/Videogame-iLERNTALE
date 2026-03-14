@@ -232,7 +232,6 @@ Foe --- CU6
 
 ```
 
-
 Caso de Uso 3: Utilizar objeto en Combate
 
 ``` mermaid
@@ -275,6 +274,55 @@ Foe --- CU6
 
 ```
 
+## 5. Diagrama de Secuencia
+
+El siguiente diagrama representa de manera detallada una interacción crítica y concreta de iLERNTALE, en este caso, el flujo desde que el jugador pulsa el botón de luchar (Fight) hasta que se resta vida al enemigo (o al propio jugador)
+
+``` mermaid
+
+sequenceDiagram
+autonumber
+%% Diagrama de Secuencia para el proceso de atacar y restar vida en iLERNTALE
+
+%% Actores y participantes
+actor Player
+%% Paneles participantes
+
+%%  Fight Button activa el minijuego de combate
+participant FightButton
+%% El minijuego es donde transcurre el combate
+participant BattleMinigame
+%% En el minijuego se restará vida según condiciones
+%% Enemigo
+participant Foe
+
+%% Secuencia
+%% El Jugador entra en combate con el enemigo y selecciona el botón de Luchar (Fight)
+Player->>FightButton: selectFightButton()
+activate FightButton
+%% Al activarse el botón Fight, se genera el Minijuego y se activa éste y después la pelea con el enemigo
+FightButton->>BattleMinigame: generateMinigame()
+activate BattleMinigame
+BattleMinigame->>Foe: triggerFoeCombat()
+activate Foe
+%% Dentro del minijuego se resta vida según las siguientes condiciones
+%% Si el jugador contacta con los puños verdes, inflige daño al enemigo y le resta vida
+alt player collects green fists
+BattleMinigame->>Foe: FoeTakesDamage
+Foe-->>BattleMinigame: retrieveFoeRemainingHP()
+%% Si el jugador contacta con las calaveras rojas, será el enemigo quien le inflija daño
+else player collects red skulls
+BattleMinigame->>Foe: FoeInflictsDamage
+Foe-->>BattleMinigame: retrievePlayerRemainingHP()
+end
+
+deactivate Foe
+BattleMinigame-->> FightButton: resetMinigame()
+deactivate BattleMinigame
+FightButton-->> Player: endFightTurn()
+deactivate FightButton
+
+```
 
 
 
