@@ -364,6 +364,8 @@ GameBeaten --> [*]
 GameOver --> [*]
 Quit--> [*]
 
+```
+
 ---
 
 ## 7. Ingeniería Inversa (Contraste con la Implementación)
