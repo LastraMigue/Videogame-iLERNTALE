@@ -152,3 +152,130 @@ Actúa como puente entre el Modelo y la Vista, gestionando el flujo del juego.
 1.  **Ingeniería Directa / Inversa**: La estructura modular permite mapear directamente estas clases con los archivos `.java`, facilitando la actualización del diagrama si el código cambia.
 2.  **Desacoplamiento**: Es posible cambiar el motor gráfico (Vista) sin alterar la lógica de los personajes (Modelo).
 3.  **Testeo**: La lógica del Modelo puede probarse mediante tests unitarios sin necesidad de levantar una interfaz gráfica.
+
+## 4. Diagrama de Casos de Uso 
+
+Los siguientes diagramas exponen tres casos de uso de iLERNTALE
+
+Caso de Uso 1: Iniciar Partida
+
+``` mermaid
+
+graph LR
+%% DIAGRAMA DE CASOS DE USO - INICIAR PARTIDA
+
+%% Definir Actores
+Player((Player))
+
+%% Definir límite del Sistema y Acciones
+subgraph "iLERNTALE"
+CU1([Start Game])
+CU2([Select Play In Main Menu])
+CU3([Select Character])
+CU4([Skip Prologue])
+
+%% Definir relaciones especiales (include y extend)
+
+%% Relación include (obligatoria). Es obligatorio seleccionar Personaje para Iniciar Partida
+CU1 -.->|&lt;&lt;include&gt;&gt;| CU3
+
+%% Relación include (obligatoria). Es obligatorio pulsar Play para Iniciar Partida (y seleccionar personaje)
+CU3 -.->|&lt;&lt;include&gt;&gt;| CU2
+
+%% Relación extend (opcional). Es opcional saltar el prólogo al Iniciar Partida
+CU4 -.->|&lt;&lt;extend&gt;&gt;| CU1
+end
+
+%% Definir relaciones Actor/Casos de Uso
+Player --- CU1
+
+```
+
+Caso de Uso 2: Atacar
+
+``` mermaid
+
+graph LR
+%% DIAGRAMA DE CASOS DE USO - ATACAR
+
+%% Definir Actores
+Player((Player))
+Foe((Foe))
+
+%% Definir límite del Sistema y Acciones
+subgraph "iLERNTALE Combat"
+CU1([Attack])
+CU2([Select Fight Option])
+CU3([Engage In Battle])
+CU4([Inflict Damage])
+CU5([Dodge Enemy Attack])
+CU6([Foe Attack])
+
+%% Definir relaciones especiales (include y extend)
+
+%% Relación include (obligatoria). Hay que entrar en combate para Atacar
+CU1 -.->|&lt;&lt;include&gt;&gt;| CU2
+
+%% Relación include (obligatoria). Hay que seleccionar opción Luchar (Fight) para Atacar
+CU2 -.->|&lt;&lt;include&gt;&gt;| CU3
+
+%% Relación extend (opcional). Aunque para infligir daño hay que atacar, en la pantalla de atacar es opcional infligir daño, ya que se puede fallar el minijuego que daña al enemigo (no recoger los puños verdes), aunque recomendable
+CU1 -.->|&lt;&lt;extend&gt;&gt;| CU4
+
+%% Relación extend (opcional). Es opcional esquivar los ataques del enemigo para Atacar (aunque recomendable)
+CU1 -.->|&lt;&lt;extend&gt;&gt;| CU5
+end
+
+%% Definir relaciones Actor/Casos de Uso
+Player --- CU1
+Foe --- CU6
+
+```
+
+
+Caso de Uso 3: Utilizar objeto en Combate
+
+``` mermaid
+
+graph LR
+%% DIAGRAMA DE CASOS DE USO - USAR OBJETO EN COMBATE
+
+%% Definir Actores
+Player((Player))
+Foe((Foe))
+
+%% Definir límite del Sistema y Acciones
+subgraph "iLERNTALE Combat"
+CU1([Use Battle Item])
+CU2([Select Item Option])
+CU3([Select Item])
+CU4([Engage In Battle])
+CU5([Pick Up Item])
+CU6([Await Player's Decision])
+
+%% Definir relaciones especiales (include y extend)
+
+%% Relación include (obligatoria). Hay que seleccionar un objeto para usarlo
+CU1 -.->|&lt;&lt;include&gt;&gt;| CU3
+
+%% Relación include (obligatoria). Para seleccionar un objeto, hay que seleccionar la opción Item
+CU3 -.->|&lt;&lt;include&gt;&gt;| CU2
+
+%% Relación include (obligatoria). Para seleccionar la opción item
+CU2 -.->|&lt;&lt;include&gt;&gt;| CU4
+
+%% Para usar un objeto, es obligatorio haberlo recogido del mapa antes de entrar en combate
+CU4 -.->|&lt;&lt;include&gt;&gt;| CU5
+end
+
+%% Definir relaciones Actor/Casos de Uso
+Player --- CU1
+%% Mientras el jugador utiliza un objeto, el enemigo no ataca, espera que tome la decisión de usar objeto, atacar u otra
+Foe --- CU6
+
+```
+
+
+
+
+
